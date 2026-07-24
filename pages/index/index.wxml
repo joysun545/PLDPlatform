@@ -1,0 +1,6 @@
+<!-- pages/index/index.wxml -->
+<view class="container">
+  <view style="height: 100vh; display: flex; align-items: center; justify-content: center;">
+    <text style="font-size: 28rpx; color: #666;">正在初始化，请稍候…</text>
+  </view>
+</view>

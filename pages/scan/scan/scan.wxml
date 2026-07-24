@@ -1,0 +1,22 @@
+<!-- pages/scan/scan/scan.wxml -->
+<view class="container">
+  <view class="header">
+    <text class="title">渠道管理及\n售后服务系统</text>
+    <text class="role">{{role_name || nickname}}</text>
+    <text class="welcome">欢迎，{{nickname || '用户'}}</text>
+  </view>
+
+  <view class="tourist-mode" wx:if="{{role === 'tourist'}}">
+    <button class="big-scan-btn" bindtap="directScan">
+      <image src="/images/create_qrcode.png" class="big-icon" />
+      <text class="btn-text">扫描二维码</text>
+    </button>
+  </view>
+
+  <view class="user-mode" wx:else>
+    <button class="big-scan-btn" bindtap="directScan">
+      <image src="/images/create_qrcode.png" class="big-icon" />
+      <text class="btn-text">扫描二维码</text>
+    </button>
+  </view>
+</view>

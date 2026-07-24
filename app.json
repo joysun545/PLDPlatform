@@ -1,0 +1,50 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/home/index/index",
+    "pages/home/invite/invite/invite",
+    "pages/home/invite/accept/accept",
+    "pages/personal/center/center",
+    "pages/scan/scan/scan",
+    "pages/logs/logs"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#07c160",
+    "navigationBarTitleText": "渠道管理及售后服务系统",
+    "navigationBarTextStyle": "white"
+  },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "你的位置信息将用于装车位置记录"
+    }
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#07c160",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/home/index/index",
+        "text": "首页",
+        "iconPath": "/images/home.png",
+        "selectedIconPath": "/images/home-active.png"
+      },
+      {
+        "pagePath": "pages/scan/scan/scan",
+        "text": "扫一扫",
+        "iconPath": "/images/scan.png",
+        "selectedIconPath": "/images/scan-active.png"
+      },
+      {
+        "pagePath": "pages/personal/center/center",
+        "text": "我的",
+        "iconPath": "/images/my.png",
+        "selectedIconPath": "/images/my-active.png"
+      }
+    ]
+  }
+}

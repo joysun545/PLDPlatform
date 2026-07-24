@@ -1,0 +1,71 @@
+<!--pages/common/invite/accept/accept.wxml-->
+<view class="container">
+  <view class="header">
+    <view class="user-info-row">
+      <view class="avatar">
+        <image src="{{inviterAvatar}}" mode="aspectFill" />
+      </view>
+      <view class="info-right">
+        <text class="name">{{inviterNickname || '邀请人'}}</text>
+        <text class="role">{{inviterRoleName}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="invite-info">
+    <text class="text">邀请您成为：</text>
+    <text class="highlight-role">{{targetRoleName}}</text>
+    <text class="desc">接受后您将获得该角色权限</text>
+  </view>
+
+  <view class="profile-form">
+    <view class="form-title">完善您的资料（可选）</view>
+    
+    <view class="form-item">
+      <text class="label">昵称</text>
+      <input 
+        type="nickname" 
+        placeholder="点击选择微信昵称" 
+        value="{{nickname}}" 
+        bindinput="onNicknameInput"
+        class="input"
+      />
+    </view>
+
+    <view class="form-item">
+      <text class="label">头像</text>
+      <button open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" class="avatar-btn">
+        <image 
+          src="{{avatarUrl || '/static/wx_icon/default-avatar.png'}}" 
+          class="avatar-preview" 
+          mode="aspectFill"
+        />
+        <text class="avatar-tip">点击选择头像</text>
+      </button>
+    </view>
+
+    <!-- 新增：隐私同意区 -->
+    <view class="form-item tip">
+      <checkbox-group bindchange="onAgreeChange">
+        <label class="checkbox-label">
+          <checkbox value="agree" checked="{{agreed}}" />
+          <text>我已阅读并同意</text>
+          <text class="link" bindtap="openAgreement">《用户服务协议》</text>
+          <text>及</text>
+          <text class="link" bindtap="openPrivacy">《隐私政策》</text>
+        </label>
+      </checkbox-group>
+    </view>
+
+  </view>
+
+  <view class="action">
+    <button class="accept-btn" bindtap="handleAccept">
+      接受邀请并加入
+    </button>
+    <button class="reject-btn" bindtap="handleReject">
+      暂不接受
+    </button>
+  </view>
+</view>
+

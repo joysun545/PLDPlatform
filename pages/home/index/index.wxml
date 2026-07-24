@@ -1,0 +1,60 @@
+<!--pages/home/index/index.wxml-->
+<view class="container">
+  <view class="header">
+    <text class="title">产品全生命周期\n数字化运营平台</text>
+    <text class="role">{{role_name || nickname}}</text>
+    <text class="welcome">{{real_name || nickname || '用户'}}</text>
+  </view>
+
+  <view class="menu-grid">
+
+    <!-- 邀请下级 -->
+    <view class="menu-item" bindtap="goInvite" wx:if="{{showInvite}}">
+      <image src="/images/role_invite.png" class="icon" />
+      <text>邀请下级</text>
+    </view>
+
+    <!-- 管理下级 -->
+    <view class="menu-item" bindtap="goManageRole" wx:if="{{showManageRole}}">
+      <image src="/images/role_manage.png" class="icon" />
+      <text>管理下级</text>
+    </view>
+
+    <!-- 创建销售计划（厂家销售经理） -->
+    <view class="menu-item" bindtap="goCreateSalesPlan" wx:if="{{showCreateSalesPlan}}">
+      <image src="/images/create_plan.png" class="icon" />
+      <text>创建销售计划</text>
+    </view>
+
+    <!-- 组织物料配套（厂家配套经理） -->
+    <view class="menu-item" bindtap="goMatching" wx:if="{{showMatching}}">
+      <image src="/images/matching.png" class="icon" />
+      <text>组织物料配套</text>
+    </view>
+
+    <!-- 我的设备（仅终端用户） -->
+    <view class="menu-item" bindtap="goMyDevice" wx:if="{{showMyDevice}}">
+      <image src="/images/my_device.png" class="icon" />
+      <text>我的设备</text>
+    </view>
+
+    <!-- 售后列表 -->
+    <view class="menu-item" bindtap="goAftersaleList" wx:if="{{showAftersale}}">
+      <image src="/images/aftersale.png" class="icon" />
+      <text>售后列表</text>
+    </view>
+
+    <!-- 出入库管理 -->
+    <view class="menu-item" bindtap="goBatchScan" wx:if="{{showStock}}">
+      <image src="/images/stock_manage.png" class="icon" />
+      <text>出入库管理</text>
+    </view>
+
+    <!-- 数据统计 -->
+    <view class="menu-item" bindtap="goStats" wx:if="{{showStats}}">
+      <image src="/images/data_statistics.png" class="icon" />
+      <text>数据统计</text>
+    </view>
+
+  </view>
+</view>

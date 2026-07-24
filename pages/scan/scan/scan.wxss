@@ -1,0 +1,74 @@
+/* pages/scan/scan/scan.wxss */
+.container {
+  min-height: 100vh;
+  background: linear-gradient(#f0f2f5, #ffffff);
+}
+
+.header {
+  background: linear-gradient(135deg, #07c160, #009688);
+  color: white;
+  text-align: center;
+  padding: 30rpx 0 60rpx;
+  border-bottom-left-radius: 50rpx;
+  border-bottom-right-radius: 50rpx;
+  box-shadow: 0 10rpx 30rpx rgba(7, 193, 96, 0.3);
+}
+
+.title {
+  font-size: 48rpx;
+  font-weight: bold;
+}
+
+.role {
+  font-size: 36rpx;
+  margin: 20rpx 0;
+  display: block;
+  opacity: 0.9;
+}
+
+.welcome {
+  font-size: 32rpx;
+  opacity: 0.8;
+}
+
+.tip {
+  font-size: 36rpx;
+  color: #333;
+  margin-bottom: 80rpx;
+}
+
+/* 新增：控制扫码按钮整体位置 */
+ .tourist-mode,
+.user-mode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 120rpx; 
+}
+
+.big-scan-btn {
+  width: 300rpx;
+  height: 300rpx;
+  background: white;
+  border-radius: 50rpx;
+  box-shadow: 0 15rpx 40rpx rgba(7, 193, 96, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+} 
+
+.big-icon {
+  width: 180rpx;
+  height: 180rpx;
+  margin-bottom: 30rpx;
+}
+
+.btn-text {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #07c160;
+} 
+
+
+

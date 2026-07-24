@@ -1,0 +1,38 @@
+<!-- pages/home/invite/invite/invite.wxml -->
+<view class="container">
+  <view class="header">
+    <text class="title">邀请下级用户</text>
+    <text class="role">{{role_name}}</text>
+    <text class="welcome">欢迎，{{nickname || '用户'}}</text>
+  </view>
+
+  <view class="menu-grid">
+    <block wx:for="{{availableRoles}}" wx:key="role">
+      <button 
+        class="menu-item" 
+        bindtap="selectRole" 
+        data-role="{{item.role}}" 
+        data-name="{{item.name}}"
+      >
+        <image src="/images/role_manage.png" class="icon" />
+        <text>{{item.name}}</text>
+      </button>
+    </block>
+
+    <!-- <button class="menu-item end-user-invite" bindtap="inviteEndUser" wx:if="{{canInviteEndUser}}">
+      <image src="/images/user_invite.png" class="icon" />
+      <text>邀请终端用户</text>
+    </button> -->
+  </view>
+
+  <!-- <view class="qrcode-modal" wx:if="{{showEndUserQrcode}}">
+    <view class="modal-mask" bindtap="closeEndUserQrcode"></view>
+    <view class="modal-content">
+      <text class="modal-title">邀请终端用户</text>
+      <image src="{{endUserQrcodeUrl}}" mode="widthFix" class="qrcode-img" />
+      <text class="modal-tip">请让终端用户扫描此二维码加入团队</text>
+      <text class="modal-tip small">二维码10分钟内有效</text>
+      <button class="close-btn" bindtap="closeEndUserQrcode">关闭</button>
+    </view>
+  </view> -->
+</view>

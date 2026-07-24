@@ -1,0 +1,69 @@
+/* pages/home/index/index.wxss */
+.container {
+  min-height: 100vh;
+  background: linear-gradient(#f0f2f5, #ffffff);
+}
+
+.header {
+  background: linear-gradient(135deg, #07c160, #009688);
+  color: white;
+  text-align: center;
+  padding: 30rpx 0 60rpx;
+  border-bottom-left-radius: 50rpx;
+  border-bottom-right-radius: 50rpx;
+  box-shadow: 0 10rpx 30rpx rgba(7, 193, 96, 0.3);
+}
+
+.title {
+  font-size: 48rpx;
+  font-weight: bold;
+}
+
+.role {
+  font-size: 36rpx;
+  margin: 20rpx 0;
+  display: block;
+  opacity: 0.9;
+}
+
+.welcome {
+  font-size: 32rpx;
+  opacity: 0.8;
+}
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40rpx;
+  padding: 60rpx 60rpx;
+}
+
+.menu-item {
+  background: white;
+  border-radius: 30rpx;
+  box-shadow: 0 10rpx 30rpx rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  aspect-ratio: 1 / 1;
+  padding: 50rpx;
+}
+
+.menu-item:active {
+  transform: scale(0.95);
+  box-shadow: 0 5rpx 15rpx rgba(0,0,0,0.15);
+}
+
+.icon {
+  width: 140rpx;
+  height: 140rpx;
+  margin-bottom: 30rpx;
+}
+
+.menu-item text {
+  font-size: 32rpx;
+  color: #333;
+  font-weight: 500;
+}
