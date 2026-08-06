@@ -1,4 +1,3 @@
-// pages/home/index/index.js
 const app = getApp();
 
 Page({
@@ -7,11 +6,10 @@ Page({
     role_name: '',
     real_name: '',
 
-    // 按钮显示控制
     showInvite: false,
     showManageRole: false,
-    showCreateSalesPlan: false,   // 厂家销售经理
-    showMatching: false,          // 厂家配套经理
+    showCreateSalesPlan: false,
+    showMatching: false,
     showStock: false,
     showStats: false,
     showAftersale: false,
@@ -19,13 +17,17 @@ Page({
   },
 
   onLoad() {
-    this.updateUserInfo();
-    this.updateButtons();
+    this.refreshPage();
   },
 
   onShow() {
+    this.refreshPage();
+  },
+
+  refreshPage() {
     this.updateUserInfo();
     this.updateButtons();
+    this.updateInviteCapability();
   },
 
   updateUserInfo() {
@@ -40,30 +42,71 @@ Page({
     const role = (app.globalData.role || 'tourist').trim();
 
     this.setData({
-      showInvite: ['admin', 'factory_sales', 'merchant_admin', 'merchant_sales', 'merchant_electrician'].includes(role),
-      showManageRole: ['admin', 'factory_sales', 'merchant_admin'].includes(role),
+      showManageRole: [
+        'factory_admin',
+        'merchant_owner',
+        'supplier_owner',
+        'service_owner'
+      ].includes(role),
 
-      // 新增核心功能
-      showCreateSalesPlan: role === 'factory_sales',      // 厂家销售经理
-      showMatching: role === 'factory_matching',          // 厂家配套经理
+      showCreateSalesPlan: role === 'factory_sales',
+      showMatching: role === 'factory_matching',
 
-      showStock: ['factory_stock', 'merchant_admin', 'merchant_sales', 'merchant_stock'].includes(role),
-      showStats: ['admin', 'factory_sales', 'factory_matching', 'merchant_admin', 'merchant_sales'].includes(role),
-      showAftersale: !['tourist', 'admin'].includes(role),
-      showMyDevice: role === 'user'
+      showStock: [
+        'factory_stock',
+        'merchant_owner',
+        'merchant_senior_manager',
+        'merchant_sales',
+        'merchant_stock'
+      ].includes(role),
+
+      showStats: [
+        'factory_admin',
+        'factory_sales',
+        'factory_matching',
+        'merchant_owner',
+        'merchant_senior_manager',
+        'merchant_sales'
+      ].includes(role),
+
+      showAftersale: !['tourist', 'factory_admin'].includes(role),
+      showMyDevice: ['customer_owner', 'driver'].includes(role)
     });
   },
 
-  // ==================== 按钮跳转方法 ====================
+  updateInviteCapability() {
+    app.ensureLogin(ok => {
+      if (!ok || app.globalData.role === 'tourist') {
+        this.setData({ showInvite: false });
+        return;
+      }
 
-  // 邀请下级
+      wx.request({
+        url: `${app.globalData.apiBase}/account/invitation_roles/`,
+        method: 'GET',
+        header: app.authHeader(),
+        success: res => {
+          const items = (
+            res.data &&
+            res.data.code === 0 &&
+            res.data.data &&
+            res.data.data.items
+          ) || [];
+          this.setData({ showInvite: items.length > 0 });
+        },
+        fail: () => {
+          this.setData({ showInvite: false });
+        }
+      });
+    });
+  },
+
   goInvite() {
     wx.navigateTo({
       url: '/pages/home/invite/invite/invite'
     });
   },
 
-  // 管理下级
   goManageRole() {
     wx.navigateTo({
       url: '/pages/home/manage_role/index/index'

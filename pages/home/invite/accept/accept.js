@@ -1,224 +1,235 @@
-// pages/home/invite/accept/accept.js
 const app = getApp();
-
-function safeDecode(s) {
-  if (!s) return '';
-  try {
-    return decodeURIComponent(s);
-  } catch (e) {
-    return s;
-  }
-}
 
 Page({
   data: {
-    fromOpenid: '',
-    targetRole: '',
-    targetRoleName: '',
+    token: '',
+    loading: true,
+    accepting: false,
+    invitationReady: false,
 
     inviterNickname: '加载中...',
-    inviterAvatar: '/static/wx_icon/default-avatar.png',
+    inviterAvatar: '/images/default_avatar.png',
     inviterRoleName: '',
+    sourceOrganizationName: '',
 
-    nickname: '',           // 用户选择的昵称
-    avatarUrl: '',          // 用户选择的真实头像临时URL
-    agreed: false,          // 是否同意协议
+    targetRole: '',
+    targetRoleName: '',
+    targetOrganizationTypeName: '',
+    requiresOrganizationProfile: false,
 
-    // ===== 新增：继承参数 =====
+    nickname: '',
+    avatarUrl: '',
+    phone: '',
+    organizationName: '',
     region: '',
-    brand: '',
-    category: ''
+    address: '',
+    agreed: false
   },
 
   onLoad(options) {
-    const { from, role, region, brand, category } = options || {};
-
-    if (!from || !role) {
-      wx.showToast({ title: '邀请链接无效', icon: 'none' });
-      setTimeout(() => {
-        wx.switchTab({ url: '/pages/index/index' });
-      }, 1500);
+    const token = ((options && options.token) || '').trim();
+    if (!token) {
+      this.showInvalidInvitation('邀请链接无效');
       return;
     }
 
     this.setData({
-      fromOpenid: from,
-      targetRole: role,
-
-      // ===== 新增：接收继承参数 =====
-      region: safeDecode(region || ''),
-      brand: (brand || '').trim(),
-      category: (category || '').trim()
+      token,
+      nickname: app.globalData.nickname || '',
+      avatarUrl: app.globalData.avatar_url || '',
+      phone: app.globalData.phone || ''
     });
 
-    const roleMap = {
-      'factory_sales': '厂家销售经理',
-      'factory_stock': '厂家库管',
-      'factory_aftersale': '厂家售后服务经理',
-      'dealer': '商家管理员',
-      'dealer_sales': '商家销售经理',
-      'dealer_aftersale': '商家售后服务经理',
-      'dealer_electrician': '商家电工',
-      'factory_manager': '厂家管理员'
-    };
-
-    this.setData({
-      targetRoleName: roleMap[role] || '成员'
+    app.ensureLogin(ok => {
+      if (!ok) {
+        this.showInvalidInvitation('登录失败，请重新打开邀请');
+        return;
+      }
+      this.loadInvitation();
     });
-
-    if (!app.globalData.openid) {
-      console.log('openid 未获取，强制登录');
-      app.login(() => {
-        this.loadInviterInfo(from);
-      });
-    } else {
-      this.loadInviterInfo(from);
-    }
   },
 
-  loadInviterInfo(from) {
+  loadInvitation() {
+    this.setData({ loading: true });
+
     wx.request({
-      url: `${app.globalData.apiBase}/get_inviter_info/`,
-      data: { inviter_openid: from },
+      url: `${app.globalData.apiBase}/account/invitations/detail/`,
+      method: 'GET',
+      header: app.authHeader(),
+      data: { token: this.data.token },
       success: res => {
-        if (res.data.code === 0) {
-          this.setData({
-            inviterNickname: res.data.nickname || '邀请人',
-            inviterAvatar: res.data.avatar || '/static/wx_icon/default-avatar.png',
-            inviterRoleName: res.data.role_name || ''
-          });
+        if (!res.data || res.data.code !== 0) {
+          this.showInvalidInvitation(res.data.msg || '邀请链接无效');
+          return;
         }
+
+        const data = res.data.data || {};
+        const inviter = data.inviter || {};
+        const targetRole = data.target_role || {};
+        const targetType = data.target_organization_type || {};
+        const sourceOrganization = data.source_organization || {};
+
+        if (!data.can_accept) {
+          this.showInvalidInvitation('当前微信账号已经拥有组织身份');
+          return;
+        }
+
+        this.setData({
+          invitationReady: true,
+          inviterNickname: inviter.nickname || '邀请人',
+          inviterAvatar: inviter.avatar || '/images/default_avatar.png',
+          inviterRoleName: inviter.role_name || '',
+          sourceOrganizationName: sourceOrganization.name || '',
+          targetRole: targetRole.code || '',
+          targetRoleName: targetRole.name || '成员',
+          targetOrganizationTypeName: targetType.name || '',
+          requiresOrganizationProfile: !!data.requires_organization_profile,
+          region: sourceOrganization.region || ''
+        });
       },
       fail: () => {
-        this.setData({ inviterNickname: '邀请人' });
+        this.showInvalidInvitation('网络错误，请稍后重试');
+      },
+      complete: () => {
+        this.setData({ loading: false });
       }
     });
   },
 
-  // 用户输入昵称
+  showInvalidInvitation(message) {
+    this.setData({ loading: false, invitationReady: false });
+    wx.showModal({
+      title: '无法接受邀请',
+      content: message,
+      showCancel: false,
+      success: () => {
+        wx.reLaunch({ url: '/pages/index/index' });
+      }
+    });
+  },
+
   onNicknameInput(e) {
-    this.setData({
-      nickname: e.detail.value
-    });
+    this.setData({ nickname: e.detail.value });
   },
 
-  // 用户选择头像
   onChooseAvatar(e) {
-    const avatarUrl = e.detail.avatarUrl;
-    this.setData({
-      avatarUrl: avatarUrl
-    });
-    console.log('用户选择头像临时URL:', avatarUrl);
+    this.setData({ avatarUrl: e.detail.avatarUrl || '' });
   },
 
-  // 同意协议 checkbox 变化
+  onPhoneInput(e) {
+    this.setData({ phone: e.detail.value });
+  },
+
+  onOrganizationNameInput(e) {
+    this.setData({ organizationName: e.detail.value });
+  },
+
+  onRegionInput(e) {
+    this.setData({ region: e.detail.value });
+  },
+
+  onAddressInput(e) {
+    this.setData({ address: e.detail.value });
+  },
+
   onAgreeChange(e) {
-    this.setData({
-      agreed: e.detail.value.length > 0
-    });
+    this.setData({ agreed: e.detail.value.length > 0 });
   },
 
-  // 跳转协议页面
   openAgreement() {
-    wx.navigateTo({
-      url: '/pages/common/agreement/agreement'
-    });
+    wx.navigateTo({ url: '/pages/common/agreement/agreement' });
   },
 
   openPrivacy() {
-    wx.navigateTo({
-      url: '/pages/common/privacy/privacy'
-    });
+    wx.navigateTo({ url: '/pages/common/privacy/privacy' });
   },
 
   handleReject() {
     wx.showModal({
       title: '提示',
-      content: '您拒绝了邀请，可稍后通过其他方式加入',
+      content: '您暂未接受邀请，可在链接有效期内再次打开',
       showCancel: false,
       success: () => {
-        wx.switchTab({ url: '/pages/index/index' });
+        wx.reLaunch({ url: '/pages/index/index' });
       }
     });
   },
 
   handleAccept() {
-    const that = this;
+    if (this.data.accepting || !this.data.invitationReady) return;
 
-    if (!that.data.agreed) {
-      wx.showToast({
-        title: '请先阅读并同意协议',
-        icon: 'none'
-      });
+    if (!this.data.agreed) {
+      wx.showToast({ title: '请先阅读并同意协议', icon: 'none' });
       return;
     }
 
-    if (!that.data.fromOpenid || !that.data.targetRole) {
-      wx.showToast({ title: '邀请参数未准备好', icon: 'none' });
+    if (
+      this.data.requiresOrganizationProfile &&
+      !this.data.organizationName.trim()
+    ) {
+      wx.showToast({ title: '请填写组织名称', icon: 'none' });
       return;
     }
 
-    if (!app.globalData.openid) {
-      wx.showToast({ title: '登录状态异常', icon: 'none' });
+    if (
+      this.data.requiresOrganizationProfile &&
+      !this.data.region.trim()
+    ) {
+      wx.showToast({ title: '请填写所在或负责区域', icon: 'none' });
       return;
     }
 
-    const nickname = that.data.nickname || '微信用户';
-    const avatarUrl = that.data.avatarUrl || '';
-
-    const postData = {
-      openid: app.globalData.openid,
-      inviter_openid: that.data.fromOpenid,
-      target_role: that.data.targetRole,
-      nickname: nickname,
-      avatar: avatarUrl,
-
-      // ===== 新增：继承参数 =====
-      region: that.data.region || '',
-      brand: that.data.brand || '',
-      category: that.data.category || ''
-    };
-
-    console.log('提交 accept_staff_invite 参数:', postData);
+    this.setData({ accepting: true });
+    wx.showLoading({ title: '正在加入...' });
 
     wx.request({
-      url: app.globalData.apiBase + '/account/accept_staff_invite/',
+      url: `${app.globalData.apiBase}/account/invitations/accept/`,
       method: 'POST',
-      header: {
-        'content-type': 'application/x-www-form-urlencoded'
+      header: app.authHeader(),
+      data: {
+        token: this.data.token,
+        nickname: this.data.nickname || '',
+        avatar: this.data.avatarUrl || '',
+        phone: this.data.phone || '',
+        organization_name: this.data.organizationName || '',
+        region: this.data.region || '',
+        address: this.data.address || ''
       },
-      data: postData,
-      success: (res) => {
-        console.log('后端返回:', res.data);
-
-        if (res.data.code === 0) {
-          // ===== 更新全局数据 =====
-          app.globalData.nickname = nickname;
-          app.globalData.avatarUrl = avatarUrl;
-          app.globalData.role = that.data.targetRole;
-          app.globalData.role_name = that.data.targetRoleName;
-
-          // ===== 新增：把继承结果同步到全局 =====
-          // 优先用后端返回，后端没回则回退用页面已有值
-          app.globalData.region = (res.data.data && res.data.data.region) || that.data.region || '';
-          app.globalData.brand_id = (res.data.data && res.data.data.brand) || that.data.brand || '';
-          app.globalData.category_id = (res.data.data && res.data.data.category) || that.data.category || '';
-
-          wx.showToast({ title: '加入成功！', icon: 'success' });
-
-          setTimeout(() => {
-            wx.switchTab({ url: '/pages/home/index/index' });
-          }, 1000);
-        } else {
-          wx.showToast({ title: res.data.msg || '加入失败', icon: 'none' });
+      success: res => {
+        if (!res.data || res.data.code !== 0) {
+          wx.showToast({
+            title: res.data.msg || '加入失败',
+            icon: 'none'
+          });
+          return;
         }
+
+        const profile = res.data.data || {};
+        Object.assign(app.globalData, {
+          role: profile.role || this.data.targetRole,
+          role_name: profile.role_name || this.data.targetRoleName,
+          nickname: profile.nickname || this.data.nickname,
+          avatar_url: profile.avatar_url || app.globalData.avatar_url || '',
+          phone: profile.phone || this.data.phone || '',
+          company_name: profile.company_name || '',
+          organization_id: profile.organization_id || null,
+          organization_type: profile.organization_type || '',
+          region: profile.region || this.data.region || ''
+        });
+        app.saveUserToCache();
+
+        wx.showToast({ title: '加入成功', icon: 'success' });
+        setTimeout(() => {
+          wx.switchTab({ url: '/pages/home/index/index' });
+        }, 1000);
       },
-      fail: (err) => {
-        console.error('请求失败:', err);
+      fail: () => {
         wx.showToast({ title: '网络错误', icon: 'none' });
+      },
+      complete: () => {
+        wx.hideLoading();
+        this.setData({ accepting: false });
       }
     });
   }
 });
-
-

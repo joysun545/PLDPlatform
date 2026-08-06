@@ -1,7 +1,7 @@
-// app.js
 App({
   globalData: {
     openid: '',
+    access_token: '',
     role: '',
     role_name: '',
     nickname: '',
@@ -9,13 +9,14 @@ App({
     real_name: '',
     phone: '',
     company_name: '',
+    organization_id: null,
+    organization_type: '',
 
-    // ✅ 品牌：兼容旧字段 brand（用来放 brand_name），新增 brand_id
     brand: '',
     brand_id: '',
-
+    category_id: '',
     region: '',
-    apiBase: 'https://joytest.site/pldp/api',   // ← 已改为新项目地址
+    apiBase: 'https://joytest.site/pldp/api',
 
     taskList: [],
     taskCount: 0,
@@ -24,13 +25,13 @@ App({
     _taskTimer: null,
     _loginInFlight: false,
     _loginWaiters: [],
-    _cacheKeyUser: 'PLDP_USER_PROFILE_CACHE_V1',
+    _cacheKeyUser: 'PLDP_USER_PROFILE_CACHE_V2',
   },
 
   onLaunch() {
     this.restoreUserFromCache();
-    this.autoRedirectIfLogged();
     this.login(() => {
+      this.autoRedirectIfLogged();
       this.startTaskPolling();
     });
   },
@@ -45,24 +46,25 @@ App({
     this.stopTaskPolling();
   },
 
-  // =========================
-  // 本地缓存
-  // =========================
   restoreUserFromCache() {
     try {
       const data = wx.getStorageSync(this.globalData._cacheKeyUser);
       if (data && typeof data === 'object') {
         Object.assign(this.globalData, {
           openid: data.openid || '',
+          access_token: data.access_token || '',
           role: data.role || '',
           role_name: data.role_name || '',
           nickname: data.nickname || '',
           avatar_url: data.avatar_url || '',
           real_name: data.real_name || '',
           phone: data.phone || '',
+          company_name: data.company_name || '',
+          organization_id: data.organization_id || null,
+          organization_type: data.organization_type || '',
           brand: data.brand || '',
           brand_id: data.brand_id || '',
-          company_name: data.company_name || '',
+          category_id: data.category_id || '',
           region: data.region || ''
         });
       }
@@ -74,15 +76,19 @@ App({
       const g = this.globalData;
       wx.setStorageSync(this.globalData._cacheKeyUser, {
         openid: g.openid || '',
+        access_token: g.access_token || '',
         role: g.role || '',
         role_name: g.role_name || '',
         nickname: g.nickname || '',
         avatar_url: g.avatar_url || '',
         real_name: g.real_name || '',
         phone: g.phone || '',
+        company_name: g.company_name || '',
+        organization_id: g.organization_id || null,
+        organization_type: g.organization_type || '',
         brand: g.brand || '',
         brand_id: g.brand_id || '',
-        company_name: g.company_name || '',
+        category_id: g.category_id || '',
         region: g.region || ''
       });
     } catch (e) {}
@@ -94,18 +100,25 @@ App({
     } catch (e) {}
   },
 
-  // =========================
-  // 登录保障
-  // =========================
+  authHeader(contentType = 'application/x-www-form-urlencoded') {
+    const header = { 'content-type': contentType };
+    if (this.globalData.access_token) {
+      header.Authorization = `Bearer ${this.globalData.access_token}`;
+    }
+    return header;
+  },
+
   ensureLogin(cb) {
-    if (this.globalData.openid) {
+    if (this.globalData.openid && this.globalData.access_token) {
       cb && cb(true);
       return;
     }
+
     if (this.globalData._loginInFlight) {
       this.globalData._loginWaiters.push(cb);
       return;
     }
+
     this.globalData._loginInFlight = true;
     this.globalData._loginWaiters.push(cb);
 
@@ -113,7 +126,10 @@ App({
       const waiters = this.globalData._loginWaiters.slice();
       this.globalData._loginWaiters = [];
       this.globalData._loginInFlight = false;
-      waiters.forEach(fn => fn && fn(!!this.globalData.openid));
+      const ok = !!(
+        this.globalData.openid && this.globalData.access_token
+      );
+      waiters.forEach(fn => fn && fn(ok));
     });
   },
 
@@ -133,11 +149,22 @@ App({
       'pages/scan/scan_result/user/user',
       'pages/scan/scan_result/other/other',
       'pages/aftersale/list/list',
-      'pages/aftersale/detail/detail'
+      'pages/aftersale/detail/detail',
+      'pages/home/invite/invite/invite',
+      'pages/home/invite/accept/accept'
     ];
     if (protectedRoutes.includes(currentRoute)) return;
 
-    const manageRoles = ['admin', 'factory_sales', 'dealer', 'dealer_sales'];
+    const manageRoles = [
+      'factory_admin',
+      'factory_sales',
+      'factory_matching',
+      'merchant_owner',
+      'merchant_senior_manager',
+      'merchant_sales',
+      'supplier_owner',
+      'service_owner'
+    ];
     if (manageRoles.includes(role)) {
       if (currentRoute !== 'pages/home/index/index') {
         wx.switchTab({ url: '/pages/home/index/index' });
@@ -158,9 +185,6 @@ App({
     }
   },
 
-  // =========================
-  // 任务轮询
-  // =========================
   startTaskPolling() {
     if (this.globalData._taskTimer) return;
     this.refreshTasks();
@@ -183,6 +207,7 @@ App({
     wx.request({
       url: `${this.globalData.apiBase}/workflow/task/summary/`,
       method: 'GET',
+      header: this.authHeader(),
       data: { openid },
       success: (res) => {
         if (!res.data || res.data.code !== 0) return;
@@ -196,6 +221,7 @@ App({
     wx.request({
       url: `${this.globalData.apiBase}/workflow/task/list/`,
       method: 'GET',
+      header: this.authHeader(),
       data: { openid, limit: 50 },
       success: (res) => {
         if (!res.data || res.data.code !== 0) return;
@@ -221,7 +247,7 @@ App({
     wx.request({
       url: `${this.globalData.apiBase}/workflow/task/open/`,
       method: 'POST',
-      header: { 'content-type': 'application/x-www-form-urlencoded' },
+      header: this.authHeader(),
       data: { openid, usertask_id: usertaskId },
       success: (res) => {
         cb && cb(res.data);
@@ -233,6 +259,7 @@ App({
   onTaskUpdated(cb) {
     this._taskUpdatedCb = cb;
   },
+
   _emitTaskUpdated() {
     if (typeof this._taskUpdatedCb === 'function') {
       this._taskUpdatedCb();
@@ -252,8 +279,10 @@ App({
   login(callback) {
     wx.login({
       success: res => {
-        if (!res.code) return;
-        console.log("LOGIN_URL =", `${this.globalData.apiBase}/account/login/`);
+        if (!res.code) {
+          callback && callback(false);
+          return;
+        }
 
         wx.request({
           url: `${this.globalData.apiBase}/account/login/`,
@@ -261,18 +290,26 @@ App({
           data: { code: res.code },
           header: { 'content-type': 'application/x-www-form-urlencoded' },
           success: resp => {
-            if (resp.data.code === 0 && resp.data.openid) {
+            if (
+              resp.data.code === 0 &&
+              resp.data.openid &&
+              resp.data.access_token
+            ) {
               Object.assign(this.globalData, {
                 openid: resp.data.openid,
+                access_token: resp.data.access_token,
                 role: resp.data.role || 'tourist',
-                role_name: resp.data.role_name || '',
+                role_name: resp.data.role_name || '游客',
                 nickname: resp.data.nickname || '',
                 avatar_url: resp.data.avatar_url || '',
                 real_name: resp.data.real_name || '',
                 phone: resp.data.phone || '',
+                company_name: resp.data.company_name || '',
+                organization_id: resp.data.organization_id || null,
+                organization_type: resp.data.organization_type || '',
                 brand: resp.data.brand_name || resp.data.brand || '',
                 brand_id: resp.data.brand_id || '',
-                company_name: resp.data.company_name || '',
+                category_id: resp.data.category_id || '',
                 region: resp.data.region || ''
               });
 
@@ -283,16 +320,23 @@ App({
               }
 
               this.refreshTasks();
-
-              if (callback) callback();
+              callback && callback(true);
             } else {
-              wx.showToast({ title: resp.data.msg || '登录失败', icon: 'none' });
+              wx.showToast({
+                title: resp.data.msg || '登录失败',
+                icon: 'none'
+              });
+              callback && callback(false);
             }
           },
           fail: (e) => {
             wx.showToast({ title: e.errMsg || '网络错误', icon: 'none' });
+            callback && callback(false);
           }
         });
+      },
+      fail: () => {
+        callback && callback(false);
       }
     });
   }
