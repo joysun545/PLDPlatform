@@ -23,6 +23,7 @@ App({
 
     _isScanning: false,
     _taskTimer: null,
+    _taskUpdatedListeners: [],
     _loginInFlight: false,
     _loginWaiters: [],
     _cacheKeyUser: 'PLDP_USER_PROFILE_CACHE_V2',
@@ -30,7 +31,10 @@ App({
 
   onLaunch() {
     this.restoreUserFromCache();
-    this.login(() => {
+    // 冷启动时必须用 wx.login 换取新令牌，不盲信本地缓存的旧令牌。
+    this.globalData.access_token = '';
+    this.ensureLogin((ok) => {
+      if (!ok) return;
       this.autoRedirectIfLogged();
       this.startTaskPolling();
     });
@@ -100,12 +104,68 @@ App({
     } catch (e) {}
   },
 
+  reauthenticate() {
+    this.globalData.access_token = '';
+    this.saveUserToCache();
+    this.ensureLogin();
+  },
+
+  applyUserPayload(data = {}) {
+    Object.assign(this.globalData, {
+      openid: data.openid || this.globalData.openid || '',
+      role: data.role || 'tourist',
+      role_name: data.role_name || '游客',
+      nickname: data.nickname || '',
+      avatar_url: data.avatar_url || '',
+      real_name: '',
+      phone: data.phone || '',
+      company_name: data.company_name || '',
+      organization_id: data.organization_id || null,
+      organization_type: data.organization_type || '',
+      brand: data.brand_name || data.brand || '',
+      brand_id: data.brand_id || '',
+      category_id: data.category_id || '',
+      region: data.region || ''
+    });
+    this.saveUserToCache();
+  },
+
   authHeader(contentType = 'application/x-www-form-urlencoded') {
-    const header = { 'content-type': contentType };
+    const header = {};
+    if (contentType) {
+      header['content-type'] = contentType;
+    }
     if (this.globalData.access_token) {
       header.Authorization = `Bearer ${this.globalData.access_token}`;
     }
     return header;
+  },
+
+  refreshUserProfile(callback) {
+    if (!this.globalData.access_token) {
+      callback && callback(false);
+      return;
+    }
+
+    wx.request({
+      url: `${this.globalData.apiBase}/account/profile/`,
+      method: 'GET',
+      header: this.authHeader(),
+      success: (res) => {
+        if (res.statusCode === 401) {
+          this.reauthenticate();
+          callback && callback(false);
+          return;
+        }
+        if (res.data && res.data.code === 0 && res.data.data) {
+          this.applyUserPayload(res.data.data);
+          callback && callback(true);
+          return;
+        }
+        callback && callback(false);
+      },
+      fail: () => callback && callback(false)
+    });
   },
 
   ensureLogin(cb) {
@@ -151,7 +211,10 @@ App({
       'pages/aftersale/list/list',
       'pages/aftersale/detail/detail',
       'pages/home/invite/invite/invite',
-      'pages/home/invite/accept/accept'
+      'pages/home/invite/accept/accept',
+      'pages/personal/center/center',
+      'pages/personal/edit/edit',
+      'pages/personal/task_list/task_list'
     ];
     if (protectedRoutes.includes(currentRoute)) return;
 
@@ -202,14 +265,17 @@ App({
 
   refreshTasks() {
     const openid = this.globalData.openid;
-    if (!openid) return;
+    if (!openid || !this.globalData.access_token) return;
 
     wx.request({
       url: `${this.globalData.apiBase}/workflow/task/summary/`,
       method: 'GET',
       header: this.authHeader(),
-      data: { openid },
       success: (res) => {
+        if (res.statusCode === 401) {
+          this.reauthenticate();
+          return;
+        }
         if (!res.data || res.data.code !== 0) return;
         const unread = (res.data.data && res.data.data.unread_count) || 0;
         this.globalData.taskCount = unread;
@@ -222,18 +288,25 @@ App({
       url: `${this.globalData.apiBase}/workflow/task/list/`,
       method: 'GET',
       header: this.authHeader(),
-      data: { openid, limit: 50 },
+      data: { limit: 50 },
       success: (res) => {
+        if (res.statusCode === 401) {
+          this.reauthenticate();
+          return;
+        }
         if (!res.data || res.data.code !== 0) return;
         const items = (res.data.data && res.data.data.items) || [];
         this.globalData.taskList = items.map(it => ({
           id: it.id,
           title: it.title,
+          summary: it.summary || '',
           url: it.link || '',
           isNew: it.state === 'NEW',
           state: it.state,
           need_action: it.need_action,
-          cursor_time: it.cursor_time
+          cursor_time: it.cursor_time,
+          domain: it.domain || '',
+          action_mode: it.action_mode || ''
         }));
         this._emitTaskUpdated();
       }
@@ -242,28 +315,48 @@ App({
 
   openUserTask(usertaskId, cb) {
     const openid = this.globalData.openid;
-    if (!openid || !usertaskId) return;
+    const accessToken = this.globalData.access_token;
+    if (!openid || !accessToken || !usertaskId) {
+      cb && cb({ code: 401, msg: '登录状态已失效，请重新进入小程序' });
+      return;
+    }
 
     wx.request({
       url: `${this.globalData.apiBase}/workflow/task/open/`,
       method: 'POST',
       header: this.authHeader(),
-      data: { openid, usertask_id: usertaskId },
+      data: { usertask_id: usertaskId },
       success: (res) => {
+        if (res.statusCode === 401) {
+          this.reauthenticate();
+        }
         cb && cb(res.data);
         this.refreshTasks();
+      },
+      fail: () => {
+        cb && cb({ code: 1, msg: '网络请求失败' });
       }
     });
   },
 
   onTaskUpdated(cb) {
-    this._taskUpdatedCb = cb;
+    if (
+      typeof cb === 'function' &&
+      !this.globalData._taskUpdatedListeners.includes(cb)
+    ) {
+      this.globalData._taskUpdatedListeners.push(cb);
+    }
+  },
+
+  offTaskUpdated(cb) {
+    this.globalData._taskUpdatedListeners =
+      this.globalData._taskUpdatedListeners.filter(fn => fn !== cb);
   },
 
   _emitTaskUpdated() {
-    if (typeof this._taskUpdatedCb === 'function') {
-      this._taskUpdatedCb();
-    }
+    this.globalData._taskUpdatedListeners
+      .slice()
+      .forEach(fn => fn());
   },
 
   markTaskRead(taskId) {
@@ -290,30 +383,14 @@ App({
           data: { code: res.code },
           header: { 'content-type': 'application/x-www-form-urlencoded' },
           success: resp => {
+            const responseData = resp.data || {};
             if (
-              resp.data.code === 0 &&
-              resp.data.openid &&
-              resp.data.access_token
+              responseData.code === 0 &&
+              responseData.openid &&
+              responseData.access_token
             ) {
-              Object.assign(this.globalData, {
-                openid: resp.data.openid,
-                access_token: resp.data.access_token,
-                role: resp.data.role || 'tourist',
-                role_name: resp.data.role_name || '游客',
-                nickname: resp.data.nickname || '',
-                avatar_url: resp.data.avatar_url || '',
-                real_name: resp.data.real_name || '',
-                phone: resp.data.phone || '',
-                company_name: resp.data.company_name || '',
-                organization_id: resp.data.organization_id || null,
-                organization_type: resp.data.organization_type || '',
-                brand: resp.data.brand_name || resp.data.brand || '',
-                brand_id: resp.data.brand_id || '',
-                category_id: resp.data.category_id || '',
-                region: resp.data.region || ''
-              });
-
-              this.saveUserToCache();
+              this.globalData.access_token = responseData.access_token;
+              this.applyUserPayload(responseData);
 
               if (!this.globalData._isScanning) {
                 this.autoRedirectIfLogged();
@@ -323,7 +400,7 @@ App({
               callback && callback(true);
             } else {
               wx.showToast({
-                title: resp.data.msg || '登录失败',
+                title: responseData.msg || '登录失败',
                 icon: 'none'
               });
               callback && callback(false);

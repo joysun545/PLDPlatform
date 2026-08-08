@@ -5,6 +5,8 @@
     "pages/home/invite/invite/invite",
     "pages/home/invite/accept/accept",
     "pages/personal/center/center",
+    "pages/personal/edit/edit",
+    "pages/personal/task_list/task_list",
     "pages/scan/scan/scan",
     "pages/logs/logs"
   ],

@@ -1,78 +1,55 @@
 <!-- pages/personal/center/center.wxml -->
 <view class="container">
+  <view class="header">
+    <image
+      wx:if="{{avatar_url}}"
+      class="avatar"
+      src="{{avatar_url}}"
+      mode="aspectFill"
+    />
+    <view wx:else class="avatar avatar-placeholder">{{avatar_initial}}</view>
+    <text class="title">渠道管理及\n售后服务系统</text>
+    <text class="role">{{role_name || '游客'}}</text>
+    <text class="welcome">欢迎，{{nickname || '用户'}}</text>
+  </view>
 
-<view class="header">
-  <text class="title">渠道管理及\n售后服务系统</text>
-  <text class="role">{{role_name || nickname}}</text>
-  <text class="welcome">欢迎，{{nickname || '用户'}}</text>
-</view>
+  <view class="info-section">
+    <view class="info-item">
+      <text class="label">微信昵称</text>
+      <text class="value">{{nickname || '未设置'}}</text>
+    </view>
+    <view class="info-item">
+      <text class="label">角色</text>
+      <text class="value">{{role_name || '游客'}}</text>
+    </view>
+    <view class="info-item">
+      <text class="label">区域</text>
+      <text class="value">{{region || '未设置'}}</text>
+    </view>
+    <view class="info-item">
+      <text class="label">电话</text>
+      <text class="value">{{phone || '未填写'}}</text>
+    </view>
+    <view class="info-item">
+      <text class="label">公司名称</text>
+      <text class="value">{{company_name || '未绑定组织'}}</text>
+    </view>
+  </view>
 
-<view class="info-section">
-  <view class="info-item">
-    <text class="label">姓名</text>
-    <text class="value">{{real_name || '未填写'}}</text>
-  </view>
-  <view class="info-item">
-    <text class="label">角色</text>
-    <text class="value">{{role_name || '未设置'}}</text>
-  </view>
-  <view class="info-item">
-    <text class="label">区域</text>
-    <text class="value">{{region || '未设置'}}</text>
-  </view>
-  <view class="info-item">
-    <text class="label">电话</text>
-    <text class="value">{{phone || '未填写'}}</text>
-  </view>
-  <view class="info-item">
-    <text class="label">公司名称</text>
-    <text class="value">{{company_name || '未填写'}}</text>
-  </view>
-</view>
-
-<view class="function-list">
-  <navigator url="/pages/personal/edit/edit" class="function-item">
-    <text class="text">编辑我的资料</text>
-  </navigator>
-
-  <!-- ✅ 我的任务入口：右侧红色数值 -->
-  <view class="function-item task-row" bindtap="gotoTaskList">
-    <text class="text-left">我的任务</text>
-    <view class="right">
-      <view wx:if="{{taskCount > 0}}" class="task-badge">{{taskCount > 99 ? '99+' : taskCount}}</view>
+  <view class="function-list">
+    <navigator url="/pages/personal/edit/edit" class="function-item">
+      <text class="text-left">编辑账号资料</text>
       <text class="arrow">›</text>
-    </view>
-  </view>
+    </navigator>
 
-  <!-- ✅ 可选：弹窗预览最近任务（保留你原思路） -->
-  <!-- <view class="function-item task-preview" bindtap="openTaskModal">
-    <text class="text-left">最近任务预览</text>
-    <text class="arrow">›</text>
-  </view> -->
-
-  <view wx:if="{{showTaskModal}}" class="task-modal">
-    <view class="task-modal-content">
-      <view class="task-header">
-        <text>任务（最近 10 条）</text>
-        <text class="close-btn" bindtap="closeTaskModal">×</text>
-      </view>
-
-      <scroll-view class="task-list" scroll-y="true">
-        <block wx:for="{{taskList.slice(0,10)}}" wx:key="id">
-          <view class="task-item" data-task="{{item}}" bindtap="openTaskDetail">
-            <view class="task-line">
-              <text class="{{item.isNew || item.state==='NEW' ? 'task-new' : (item.state==='DONE' ? 'task-done' : 'task-pending')}}">{{item.title}}</text>
-              <view wx:if="{{item.state==='NEW'}}" class="dot"></view>
-            </view>
-          </view>
-        </block>
-      </scroll-view>
-
-      <view class="task-footer" bindtap="gotoTaskList">
-        <text>查看全部任务</text>
+    <view class="function-item task-row" bindtap="gotoTaskList">
+      <text class="text-left">我的任务</text>
+      <view class="right">
+        <view wx:if="{{taskCount > 0}}" class="task-badge">
+          {{taskCount > 99 ? '99+' : taskCount}}
+        </view>
+        <text class="arrow">›</text>
       </view>
     </view>
   </view>
-
-</view>
 </view>
