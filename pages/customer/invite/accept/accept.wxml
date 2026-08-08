@@ -1,0 +1,95 @@
+<view class="page">
+  <view class="state" wx:if="{{loading}}">正在读取邀请信息...</view>
+  <view class="state error" wx:elif="{{error}}">
+    <text class="state-title">无法接受邀请</text>
+    <text>{{error}}</text>
+  </view>
+
+  <block wx:elif="{{detail}}">
+    <view class="hero">
+      <text class="hero-label">设备用户邀请</text>
+      <text class="hero-title">{{detail.device.product_model}}</text>
+      <text class="hero-sn">{{detail.device.sn}}</text>
+      <text class="hero-role">指定身份：{{detail.target_role.name}}</text>
+    </view>
+
+    <view class="card">
+      <view class="card-title">邀请与安装信息</view>
+      <view class="row"><text class="label">邀请组织</text><text class="value">{{detail.inviter.organization}}</text></view>
+      <view class="row"><text class="label">邀请账号</text><text class="value">{{detail.inviter.nickname}}</text></view>
+      <view class="row"><text class="label">生产厂家</text><text class="value">{{detail.device.manufacturer}}</text></view>
+      <view class="row"><text class="label">产品品类</text><text class="value">{{detail.device.category}}</text></view>
+      <view class="time-line" wx:if="{{!expired}}">二维码剩余有效时间 {{countdown}}</view>
+      <view class="time-line expired" wx:else>邀请二维码已过期</view>
+    </view>
+
+    <view class="blocked" wx:if="{{!detail.acceptance_allowed}}">
+      {{detail.blocked_reason}}
+    </view>
+
+    <view class="card form-card" wx:if="{{detail.acceptance_allowed}}">
+      <view class="card-title">确认用户资料</view>
+      <text class="form-tip">目标岗位由邀请方指定，不能自行更改。</text>
+
+      <view class="field">
+        <text class="field-label">使用主体</text>
+        <picker
+          mode="selector"
+          range="{{customerTypes}}"
+          value="{{customerTypeIndex}}"
+          disabled="{{existingCustomerIdentity}}"
+          bindchange="onCustomerTypeChange"
+        >
+          <view class="picker-value">{{existingCustomerIdentity ? '已有用户组织' : customerTypes[customerTypeIndex]}} ›</view>
+        </picker>
+      </view>
+
+      <view class="field" wx:if="{{customerTypeIndex === 1}}">
+        <text class="field-label">企业或车队名称 *</text>
+        <input class="input" value="{{form.customer_name}}" disabled="{{existingCustomerIdentity}}" data-field="customer_name" bindinput="onFieldInput" placeholder="请输入企业或车队名称" />
+      </view>
+
+      <view class="field">
+        <text class="field-label">联系人 *</text>
+        <input class="input" value="{{form.contact_name}}" data-field="contact_name" bindinput="onFieldInput" placeholder="请输入联系人" />
+      </view>
+
+      <view class="field">
+        <text class="field-label">联系电话 *</text>
+        <input class="input" type="number" maxlength="32" value="{{form.phone}}" data-field="phone" bindinput="onFieldInput" placeholder="请输入联系电话" />
+      </view>
+
+      <view class="field">
+        <text class="field-label">所在地区 *</text>
+        <picker mode="region" bindchange="onRegionChange">
+          <view class="picker-value {{form.region ? '' : 'placeholder'}}">{{form.region || '请选择省、市、区'}} ›</view>
+        </picker>
+      </view>
+
+      <view class="field">
+        <text class="field-label">详细地址</text>
+        <input class="input" value="{{form.address}}" data-field="address" bindinput="onFieldInput" placeholder="可选" />
+      </view>
+
+      <view class="field">
+        <text class="field-label">装车车辆牌号 *</text>
+        <input class="input" value="{{form.vehicle_no}}" data-field="vehicle_no" bindinput="onFieldInput" placeholder="例如：渝A12345" />
+      </view>
+
+      <checkbox-group bindchange="onAgreeChange">
+        <label class="agreement">
+          <checkbox value="agree" checked="{{agreed}}" color="#07c160" />
+          <text>我已核对设备和车辆资料，并同意建立用户负责人身份</text>
+        </label>
+      </checkbox-group>
+    </view>
+
+    <button
+      class="accept-btn"
+      wx:if="{{detail.acceptance_allowed}}"
+      disabled="{{expired || submitting}}"
+      loading="{{submitting}}"
+      bindtap="acceptInvitation"
+    >{{expired ? '邀请已过期' : '接受邀请并进入设备页面'}}</button>
+  </block>
+</view>

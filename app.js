@@ -203,11 +203,7 @@ App({
     const protectedRoutes = [
       'pages/stock/batch_scan/batch_scan',
       'pages/scan/scan/scan',
-      'pages/scan/scan_router/scan_router',
-      'pages/scan/scan_result/public/public',
-      'pages/scan/scan_result/installer/installer',
-      'pages/scan/scan_result/user/user',
-      'pages/scan/scan_result/other/other',
+      'pages/scan/result/result',
       'pages/aftersale/list/list',
       'pages/aftersale/detail/detail',
       'pages/home/invite/invite/invite',

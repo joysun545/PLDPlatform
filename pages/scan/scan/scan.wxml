@@ -6,17 +6,18 @@
     <text class="welcome">欢迎，{{nickname || '用户'}}</text>
   </view>
 
-  <view class="tourist-mode" wx:if="{{role === 'tourist'}}">
-    <button class="big-scan-btn" bindtap="directScan">
+  <view class="scan-area">
+    <button
+      class="big-scan-btn"
+      bindtap="directScan"
+      loading="{{scanning}}"
+      disabled="{{scanning}}"
+    >
       <image src="/images/create_qrcode.png" class="big-icon" />
-      <text class="btn-text">扫描二维码</text>
+      <text class="btn-text">{{scanning ? '正在识别' : '扫描二维码'}}</text>
     </button>
-  </view>
-
-  <view class="user-mode" wx:else>
-    <button class="big-scan-btn" bindtap="directScan">
-      <image src="/images/create_qrcode.png" class="big-icon" />
-      <text class="btn-text">扫描二维码</text>
-    </button>
+    <text class="scan-tip">
+      {{role === 'tourist' ? '游客可查看设备公开信息' : '扫描设备二维码查看当前状态'}}
+    </text>
   </view>
 </view>

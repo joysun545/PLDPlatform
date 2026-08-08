@@ -37,13 +37,12 @@
   margin-bottom: 80rpx;
 }
 
-/* 新增：控制扫码按钮整体位置 */
- .tourist-mode,
-.user-mode {
+.scan-area {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 120rpx; 
+  padding-top: 150rpx;
+  padding-bottom: 120rpx;
 }
 
 .big-scan-btn {
@@ -58,6 +57,10 @@
   justify-content: center;
 } 
 
+.big-scan-btn[disabled] {
+  opacity: 0.72;
+}
+
 .big-icon {
   width: 180rpx;
   height: 180rpx;
@@ -69,6 +72,12 @@
   font-weight: bold;
   color: #07c160;
 } 
+
+.scan-tip {
+  margin-top: 44rpx;
+  color: #7a7f86;
+  font-size: 28rpx;
+}
 
 
 
