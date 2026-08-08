@@ -1,0 +1,50 @@
+page { background: #f3f6f8; color: #17202a; }
+.page { min-height: 100vh; padding: 28rpx; box-sizing: border-box; }
+.state { margin-top: 180rpx; text-align: center; color: #718096; }
+.state.error { display: flex; flex-direction: column; gap: 20rpx; }
+.state-title { color: #d64545; font-size: 34rpx; font-weight: 700; }
+.hero { padding: 34rpx; border-radius: 24rpx; color: #fff; background: linear-gradient(145deg, #08b77a, #078f79); box-shadow: 0 14rpx 30rpx rgba(7,143,121,.2); display: flex; flex-direction: column; gap: 8rpx; }
+.hero.activated { background: linear-gradient(145deg, #10a858, #087d4b); }
+.hero-top { display: flex; justify-content: space-between; margin-bottom: 14rpx; }
+.badge, .state-badge { padding: 8rpx 14rpx; border-radius: 999rpx; background: rgba(255,255,255,.18); font-size: 23rpx; }
+.model-name { font-size: 38rpx; font-weight: 700; }
+.model-code { font-size: 25rpx; opacity: .88; }
+.device-sn { margin-top: 15rpx; padding-top: 15rpx; border-top: 1rpx solid rgba(255,255,255,.25); font-family: monospace; }
+.card, .activate-card, .activated-card { margin-top: 24rpx; padding: 28rpx; background: #fff; border-radius: 20rpx; box-shadow: 0 8rpx 22rpx rgba(31,45,61,.06); }
+.card-title { margin-bottom: 18rpx; font-size: 30rpx; font-weight: 700; }
+.card-title-row { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; }
+.card-title-row .card-title { margin-bottom: 0; }
+.row { display: flex; padding: 18rpx 0; border-bottom: 1rpx solid #edf1f3; }
+.row:last-child { border-bottom: 0; }
+.label { width: 190rpx; color: #7a8792; }
+.value { flex: 1; text-align: right; }
+.accent { color: #078d5f; font-weight: 600; }
+.activate-card { border: 2rpx solid #ccefe0; }
+.activate-tip { display: block; color: #65727d; font-size: 25rpx; line-height: 1.65; }
+.field-label { display: block; margin: 26rpx 0 12rpx; font-weight: 600; }
+.vehicle-input { height: 84rpx; padding: 0 22rpx; border: 1rpx solid #d7e1e6; border-radius: 12rpx; background: #fafcfd; }
+.activate-btn { margin-top: 24rpx; height: 88rpx; line-height: 88rpx; color: #fff; background: #07c160; border-radius: 14rpx; font-weight: 700; }
+.activate-btn[disabled] { color: #789187; background: #dbe8e2; }
+.activated-card { color: #176d47; background: #ebf9f1; line-height: 1.7; }
+.activated-title { display: block; margin-bottom: 10rpx; font-size: 31rpx; font-weight: 700; }
+.vehicle-line { display: block; margin-top: 10rpx; font-weight: 600; }
+.document-card { padding-bottom: 12rpx; }
+.read-progress, .telemetry-status { padding: 7rpx 13rpx; border-radius: 999rpx; color: #087d4b; background: #e6f8ef; font-size: 22rpx; }
+.document-message { display: block; margin: 14rpx 0 8rpx; color: #6a7781; font-size: 24rpx; line-height: 1.55; }
+.document-list { margin-top: 8rpx; }
+.document-row { display: flex; align-items: center; gap: 18rpx; padding: 21rpx 0; border-bottom: 1rpx solid #edf1f3; }
+.document-row:last-child { border-bottom: 0; }
+.document-icon { display: flex; width: 48rpx; height: 48rpx; align-items: center; justify-content: center; border-radius: 14rpx; color: #078d5f; background: #e7f8f0; font-weight: 700; }
+.document-main { display: flex; flex: 1; flex-direction: column; gap: 5rpx; }
+.document-title { font-weight: 650; }
+.document-version { color: #8a959d; font-size: 21rpx; }
+.read-state { color: #75828c; font-size: 24rpx; }
+.read-state.done { color: #08a963; }
+.document-empty, .telemetry-message { display: block; padding: 22rpx 0 10rpx; color: #8a6464; line-height: 1.6; }
+.metric-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16rpx; margin-top: 20rpx; }
+.metric { display: flex; flex-direction: column; gap: 8rpx; padding: 20rpx; border-radius: 14rpx; background: #f5faf8; }
+.metric-label { color: #728079; font-size: 22rpx; }
+.metric-value { color: #126544; font-size: 31rpx; font-weight: 700; }
+.module-line { display: block; margin-top: 13rpx; color: #8a959d; font-size: 21rpx; }
+.aftersale-btn { margin-top: 24rpx; color: #fff; background: #07a85c; border-radius: 14rpx; }
+.home-btn, .secondary-btn { margin: 28rpx 0 48rpx; color: #44515c; background: #fff; border-radius: 14rpx; }

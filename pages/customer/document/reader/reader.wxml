@@ -1,0 +1,24 @@
+<view class="page">
+  <view class="state" wx:if="{{loading}}">正在加载资料...</view>
+  <view class="state error" wx:elif="{{error}}">
+    <text>{{error}}</text>
+    <button bindtap="goBack">返回</button>
+  </view>
+
+  <block wx:elif="{{document}}">
+    <view class="heading">
+      <text class="document-type">{{document.product_model.code}} · v{{document.version}}</text>
+      <text class="title">{{document.title}}</text>
+      <text class="model-name">{{document.product_model.name}}</text>
+    </view>
+    <view class="content-card">
+      <text class="content" user-select="true">{{document.content}}</text>
+    </view>
+    <view class="footer-space"></view>
+    <view class="footer">
+      <button class="confirm-btn" loading="{{confirming}}" disabled="{{!canConfirm || confirming}}" bindtap="confirmRead">
+        {{document.is_read ? '已阅读，返回设备' : (canConfirm ? '我已完整阅读' : '请先阅读正文')}}
+      </button>
+    </view>
+  </block>
+</view>

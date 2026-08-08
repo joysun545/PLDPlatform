@@ -8,6 +8,11 @@
     "pages/personal/edit/edit",
     "pages/personal/task_list/task_list",
     "pages/scan/scan/scan",
+    "pages/scan/result/result",
+    "pages/customer/invite/accept/accept",
+    "pages/customer/device/result/result",
+    "pages/customer/document/reader/reader",
+    "pages/customer/aftersale/request/request",
     "pages/logs/logs"
   ],
   "window": {

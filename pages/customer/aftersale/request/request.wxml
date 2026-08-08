@@ -1,0 +1,8 @@
+<view class="page">
+  <view class="card">
+    <text class="title">申请售后</text>
+    <text class="desc">设备档案已经带入。售后故障描述、图片、服务角色推送及进度交互将在下一阶段接入此页面。</text>
+    <text class="device">设备ID：{{deviceId}}</text>
+    <button bindtap="goBack">返回设备详情</button>
+  </view>
+</view>
