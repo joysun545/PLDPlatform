@@ -7,8 +7,10 @@ Page({
     real_name: '',
 
     showInvite: false,
-    showManageRole: false,
-    showCreateSalesPlan: false,
+    showManageSubordinates: false,
+    showCreateOrderPlan: false,
+    showOrderPlanList: false,
+    showSupplierResponsibility: false,
     showMatching: false,
     showStock: false,
     showStats: false,
@@ -42,14 +44,15 @@ Page({
     const role = (app.globalData.role || 'tourist').trim();
 
     this.setData({
-      showManageRole: [
-        'factory_admin',
-        'merchant_owner',
+      showCreateOrderPlan: role === 'factory_sales',
+      showOrderPlanList: [
+        'factory_sales',
+        'factory_matching',
+        'factory_production',
         'supplier_owner',
-        'service_owner'
+        'supplier_sales'
       ].includes(role),
-
-      showCreateSalesPlan: role === 'factory_sales',
+      showSupplierResponsibility: role === 'supplier_owner',
       showMatching: role === 'factory_matching',
 
       showStock: [
@@ -77,7 +80,10 @@ Page({
   updateInviteCapability() {
     app.ensureLogin(ok => {
       if (!ok || app.globalData.role === 'tourist') {
-        this.setData({ showInvite: false });
+        this.setData({
+          showInvite: false,
+          showManageSubordinates: false
+        });
         return;
       }
 
@@ -92,10 +98,17 @@ Page({
             res.data.data &&
             res.data.data.items
           ) || [];
-          this.setData({ showInvite: items.length > 0 });
+          const canInvite = items.length > 0;
+          this.setData({
+            showInvite: canInvite,
+            showManageSubordinates: canInvite
+          });
         },
         fail: () => {
-          this.setData({ showInvite: false });
+          this.setData({
+            showInvite: false,
+            showManageSubordinates: false
+          });
         }
       });
     });
@@ -107,14 +120,29 @@ Page({
     });
   },
 
-  goManageRole() {
+  goManageSubordinates() {
     wx.navigateTo({
-      url: '/pages/home/manage_role/index/index'
+      url: '/pages/home/edit/edit',
+      fail: error => {
+        console.error('[manage subordinates navigate failed]', error);
+        wx.showToast({ title: '管理页面打开失败', icon: 'none' });
+      }
     });
   },
 
-  goCreateSalesPlan() {
+  goCreateOrderPlan() {
     wx.navigateTo({ url: '/pages/sales/create_plan/create_plan' });
+  },
+
+  goOrderPlanList() {
+    wx.navigateTo({ url: '/pages/sales/order_plan_list/order_plan_list' });
+  },
+
+  goSupplierResponsibility() {
+    wx.navigateTo({
+      url: '/pages/supply_chain/responsibility/responsibility',
+      fail: () => wx.showToast({ title: '责任分配页面打开失败', icon: 'none' })
+    });
   },
 
   goMatching() {

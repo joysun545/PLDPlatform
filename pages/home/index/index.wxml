@@ -14,16 +14,28 @@
       <text>邀请下级</text>
     </view>
 
-    <!-- 管理下级 -->
-    <view class="menu-item" bindtap="goManageRole" wx:if="{{showManageRole}}">
+    <!-- 所有具备邀请能力的角色同时具备直接下级查看入口 -->
+    <view class="menu-item" bindtap="goManageSubordinates" wx:if="{{showManageSubordinates}}">
       <image src="/images/role_manage.png" class="icon" />
-      <text>管理下级</text>
+      <text>管理下级用户</text>
     </view>
 
-    <!-- 创建销售计划（厂家销售经理） -->
-    <view class="menu-item" bindtap="goCreateSalesPlan" wx:if="{{showCreateSalesPlan}}">
+    <!-- 创建订单计划（厂家销售经理） -->
+    <view class="menu-item" bindtap="goCreateOrderPlan" wx:if="{{showCreateOrderPlan}}">
       <image src="/images/create_plan.png" class="icon" />
-      <text>创建销售计划</text>
+      <text>创建订单计划</text>
+    </view>
+
+    <!-- 订单计划参与角色的隔离列表 -->
+    <view class="menu-item" bindtap="goOrderPlanList" wx:if="{{showOrderPlanList}}">
+      <image src="/images/data_statistics.png" class="icon" />
+      <text>订单计划列表</text>
+    </view>
+
+    <!-- 供应商负责人配置本组织销售经理责任范围 -->
+    <view class="menu-item" bindtap="goSupplierResponsibility" wx:if="{{showSupplierResponsibility}}">
+      <image src="/images/role_manage.png" class="icon" />
+      <text>销售责任分配</text>
     </view>
 
     <!-- 组织物料配套（厂家配套经理） -->

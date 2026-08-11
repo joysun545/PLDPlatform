@@ -1,0 +1,87 @@
+<view class="page">
+  <view class="hero">
+    <text class="eyebrow">供应协作</text>
+    <text class="title">销售责任分配</text>
+    <text class="subtitle" wx:if="{{supplier}}">{{supplier.name}}</text>
+  </view>
+
+  <view class="tip-card">
+    <text>负责人始终可查看本组织全部供应物料。</text>
+    <text>销售经理只接收并查看分配范围内的订单物料。</text>
+    <text class="priority">{{precedenceRule}}</text>
+  </view>
+
+  <view class="state-card" wx:if="{{loading}}">正在加载责任范围…</view>
+  <view class="state-card error" wx:elif="{{errorMessage}}">
+    <text>{{errorMessage}}</text>
+    <button bindtap="retryLoad">重新加载</button>
+  </view>
+  <view class="state-card" wx:elif="{{!hasManagers}}">
+    当前供应商组织还没有有效的销售经理账号，请先由负责人邀请销售经理加入。
+  </view>
+
+  <block wx:else>
+    <view class="form-card">
+      <text class="section-title">01 选择销售经理</text>
+      <picker
+        mode="selector"
+        range="{{managers}}"
+        range-key="name"
+        value="{{managerIndex}}"
+        bindchange="onManagerChange"
+      >
+        <view class="picker-field">
+          <view>
+            <text class="manager-name">{{selectedManager.name}}</text>
+            <text class="manager-phone">{{selectedManager.phone || '未填写联系电话'}}</text>
+          </view>
+          <text>›</text>
+        </view>
+      </picker>
+    </view>
+
+    <view class="form-card">
+      <text class="section-title">02 选择分配方式</text>
+      <radio-group class="scope-group" bindchange="onScopeChange">
+        <label class="scope-option {{scopeType === 'CATEGORY' ? 'active' : ''}}">
+          <radio value="CATEGORY" checked="{{scopeType === 'CATEGORY'}}" color="#07c160" />
+          <view><text>按产品品类</text><text class="scope-desc">适合按发电机、空调等业务分工</text></view>
+        </label>
+        <label class="scope-option {{scopeType === 'MATERIAL' ? 'active' : ''}}">
+          <radio value="MATERIAL" checked="{{scopeType === 'MATERIAL'}}" color="#07c160" />
+          <view><text>按物料名称</text><text class="scope-desc">适合按控制器、化油器等物料分工</text></view>
+        </label>
+      </radio-group>
+    </view>
+
+    <view class="form-card">
+      <view class="section-head">
+        <text class="section-title">03 选择{{scopeLabel}}</text>
+        <text>{{selectedTargetIds.length}} 项</text>
+      </view>
+      <checkbox-group bindchange="onTargetsChange">
+        <label class="target-row" wx:for="{{targetOptions}}" wx:key="id">
+          <checkbox value="{{item.id}}" checked="{{item.checked}}" color="#07c160" />
+          <view class="target-info">
+            <text class="target-name">{{item.name}}</text>
+            <text class="target-code">{{item.code}}</text>
+            <text class="target-category" wx:if="{{scopeType === 'MATERIAL'}}">{{item.category_name}}</text>
+            <text class="occupied" wx:if="{{item.occupiedByOther}}">
+              当前由 {{item.assignedName}} 负责；保存后将改派
+            </text>
+          </view>
+        </label>
+      </checkbox-group>
+      <view class="empty-target" wx:if="{{targetOptions.length === 0}}">
+        当前供应商尚未绑定可分配的{{scopeLabel}}
+      </view>
+    </view>
+
+    <button
+      class="save-button"
+      loading="{{saving}}"
+      disabled="{{saving}}"
+      bindtap="saveResponsibilities"
+    >保存责任范围</button>
+  </block>
+</view>

@@ -4,6 +4,7 @@
     "pages/home/index/index",
     "pages/home/invite/invite/invite",
     "pages/home/invite/accept/accept",
+    "pages/home/edit/edit",
     "pages/personal/center/center",
     "pages/personal/edit/edit",
     "pages/personal/task_list/task_list",
@@ -13,7 +14,11 @@
     "pages/customer/device/result/result",
     "pages/customer/document/reader/reader",
     "pages/customer/aftersale/request/request",
-    "pages/logs/logs"
+    "pages/logs/logs",
+    "pages/sales/create_plan/create_plan",
+    "pages/sales/order_plan_list/order_plan_list",
+    "pages/sales/matching_confirm/matching_confirm",
+    "pages/supply_chain/responsibility/responsibility"
   ],
   "window": {
     "backgroundTextStyle": "light",

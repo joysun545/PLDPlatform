@@ -208,9 +208,14 @@ App({
       'pages/aftersale/detail/detail',
       'pages/home/invite/invite/invite',
       'pages/home/invite/accept/accept',
+      'pages/home/edit/edit',
       'pages/personal/center/center',
       'pages/personal/edit/edit',
-      'pages/personal/task_list/task_list'
+      'pages/personal/task_list/task_list',
+      'pages/sales/create_plan/create_plan',
+      'pages/sales/order_plan_list/order_plan_list',
+      'pages/sales/matching_confirm/matching_confirm',
+      'pages/supply_chain/responsibility/responsibility'
     ];
     if (protectedRoutes.includes(currentRoute)) return;
 
@@ -218,10 +223,12 @@ App({
       'factory_admin',
       'factory_sales',
       'factory_matching',
+      'factory_production',
       'merchant_owner',
       'merchant_senior_manager',
       'merchant_sales',
       'supplier_owner',
+      'supplier_sales',
       'service_owner'
     ];
     if (manageRoles.includes(role)) {
