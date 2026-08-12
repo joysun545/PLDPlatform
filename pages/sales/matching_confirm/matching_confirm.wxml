@@ -1,0 +1,169 @@
+<view class="page">
+  <view wx:if="{{loading}}" class="state-card">正在加载订单配套数据...</view>
+  <view wx:elif="{{errorMessage}}" class="state-card error">
+    <text>{{errorMessage}}</text>
+    <button class="secondary-btn" bindtap="retryLoad">重新加载</button>
+  </view>
+
+  <block wx:elif="{{plan}}">
+    <view class="hero-card">
+      <view class="hero-top">
+        <text class="eyebrow">订单计划</text>
+        <text class="status">{{plan.status_name}}</text>
+      </view>
+      <text class="plan-code">{{plan.plan_code}}</text>
+      <text class="merchant-name">{{plan.merchant.name}}</text>
+    </view>
+
+    <view class="summary-card">
+      <view class="summary-row">
+        <text class="label">厂家销售经理</text>
+        <text class="value">{{plan.sales_manager.name}}</text>
+      </view>
+      <view class="summary-row">
+        <text class="label">商家名称</text>
+        <text class="value">{{plan.merchant.name}}</text>
+      </view>
+      <view class="summary-row">
+        <text class="label">授权品牌</text>
+        <text class="value">{{plan.brand.name}}</text>
+      </view>
+      <view class="summary-row">
+        <text class="label">负责区域</text>
+        <text class="value">{{plan.region}}</text>
+      </view>
+      <view class="summary-row">
+        <text class="label">计划总数</text>
+        <text class="value">{{plan.total_quantity}} 台</text>
+      </view>
+      <view wx:if="{{plan.remark}}" class="summary-row remark-row">
+        <text class="label">订单备注</text>
+        <text class="value">{{plan.remark}}</text>
+      </view>
+    </view>
+
+    <view wx:if="{{!plan.read_only}}" class="tip-card">
+      点击产品当前BOM版本可以选择全部历史版本。页面会按所选版本重新排列该品类全部物料；默认勾选“删除”的物料不属于所选版本，不作修改直接确认不会创建新BOM版本。
+    </view>
+
+    <block wx:for="{{items}}" wx:key="id" wx:for-item="planItem" wx:for-index="itemIndex">
+      <view class="model-card">
+        <view class="model-head">
+          <view class="model-title-wrap">
+            <text class="model-index">产品 {{itemIndex + 1}}</text>
+            <text class="model-name">{{planItem.product_model.name}}</text>
+            <text class="model-code">{{planItem.product_model.code}}</text>
+          </view>
+          <view class="quantity-pill">{{planItem.quantity}} 台</view>
+        </view>
+
+        <view class="model-meta">
+          <text>{{planItem.category.name}}</text>
+          <picker
+            mode="selector"
+            range="{{planItem.bomOptions}}"
+            range-key="display_name"
+            value="{{planItem.bomIndex}}"
+            disabled="{{plan.read_only || switchingBom}}"
+            data-item-index="{{itemIndex}}"
+            bindchange="onBomVersionChange"
+          >
+            <view class="bom-version-picker">
+              <text>{{planItem.selectedBomLabel}}</text>
+              <text class="picker-arrow">⌄</text>
+            </view>
+          </picker>
+          <text>{{planItem.selectedBomSourceName}}</text>
+        </view>
+        <view wx:if="{{planItem.confirmation}}" class="confirmed-strip">
+          已确认 {{planItem.confirmation.confirmed_version}}
+          <text wx:if="{{planItem.confirmation.has_changes}}"> · 已生成新版本</text>
+          <text wx:else> · 沿用默认版本</text>
+        </view>
+
+        <block wx:for="{{planItem.materials}}" wx:key="id" wx:for-item="material" wx:for-index="materialIndex">
+          <view class="material-card {{material.deleted ? 'deleted' : ''}}">
+            <view class="material-head">
+              <view class="material-title-wrap">
+                <text class="material-name">{{material.name}}</text>
+                <text class="material-code">{{material.code}}</text>
+              </view>
+              <label class="delete-toggle">
+                <text>删除</text>
+                <switch
+                  color="#df5d5d"
+                  checked="{{material.deleted}}"
+                  disabled="{{plan.read_only}}"
+                  data-item-index="{{itemIndex}}"
+                  data-material-index="{{materialIndex}}"
+                  bindchange="onDeleteChange"
+                />
+              </label>
+            </view>
+
+            <view wx:if="{{!material.deleted}}" class="material-fields">
+              <view class="field">
+                <text class="field-label">物料规格</text>
+                <picker
+                  mode="selector"
+                  range="{{material.specOptions}}"
+                  range-key="name"
+                  value="{{material.specIndex}}"
+                  disabled="{{plan.read_only}}"
+                  data-item-index="{{itemIndex}}"
+                  data-material-index="{{materialIndex}}"
+                  bindchange="onSpecChange"
+                >
+                  <view class="picker-value">
+                    {{material.specOptions[material.specIndex].name}}
+                    <text>⌄</text>
+                  </view>
+                </picker>
+              </view>
+              <view class="field">
+                <text class="field-label">供应商</text>
+                <picker
+                  mode="selector"
+                  range="{{material.supplierOptions}}"
+                  range-key="name"
+                  value="{{material.supplierIndex}}"
+                  disabled="{{plan.read_only}}"
+                  data-item-index="{{itemIndex}}"
+                  data-material-index="{{materialIndex}}"
+                  bindchange="onSupplierChange"
+                >
+                  <view class="picker-value">
+                    {{material.supplierOptions[material.supplierIndex].name}}
+                    <text>⌄</text>
+                  </view>
+                </picker>
+              </view>
+              <view class="field">
+                <text class="field-label">备注</text>
+                <input
+                  class="remark-input"
+                  value="{{material.remark}}"
+                  placeholder="可填写该物料备注"
+                  disabled="{{plan.read_only}}"
+                  data-item-index="{{itemIndex}}"
+                  data-material-index="{{materialIndex}}"
+                  bindinput="onRemarkInput"
+                />
+              </view>
+            </view>
+          </view>
+        </block>
+      </view>
+    </block>
+
+    <view wx:if="{{!plan.read_only}}" class="submit-area">
+      <button
+        class="primary-btn"
+        loading="{{submitting}}"
+        disabled="{{submitting || switchingBom}}"
+        bindtap="submitConfirmation"
+      >确认全部产品BOM清单</button>
+      <text class="submit-tip">确认后将完成当前配套任务，并向供应、生产和销售岗位推送后续任务。</text>
+    </view>
+  </block>
+</view>

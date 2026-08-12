@@ -1,7 +1,7 @@
 <!--pages/home/index/index.wxml-->
 <view class="container">
   <view class="header">
-    <text class="title">产品全生命周期\n数字化运营平台</text>
+    <text class="title">产品生命周期\n数字平台</text>
     <text class="role">{{role_name || nickname}}</text>
     <text class="welcome">{{real_name || nickname || '用户'}}</text>
   </view>

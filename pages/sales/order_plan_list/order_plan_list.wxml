@@ -1,0 +1,107 @@
+<view class="page">
+  <view class="page-header">
+    <text class="eyebrow">订单协同</text>
+    <text class="title">订单计划列表</text>
+    <text class="subtitle" wx:if="{{viewer}}">{{viewer.organization_name}} · {{viewer.role_name}}</text>
+  </view>
+
+  <view class="scope-tip" wx:if="{{visibilityText}}">{{visibilityText}}</view>
+
+  <scroll-view class="filter-scroll" scroll-x="true" enhanced="true">
+    <view class="filter-row">
+      <view
+        wx:for="{{filters}}"
+        wx:key="key"
+        class="filter-item {{activeStatus === item.key ? 'active' : ''}}"
+        data-status="{{item.key}}"
+        bindtap="selectStatus"
+      >{{item.label}}</view>
+    </view>
+  </scroll-view>
+
+  <view class="state-card" wx:if="{{loading}}">正在加载订单计划…</view>
+  <view class="state-card error" wx:elif="{{errorMessage}}">
+    <text>{{errorMessage}}</text>
+    <button class="retry-button" bindtap="retryLoad">重新加载</button>
+  </view>
+  <view class="state-card" wx:elif="{{plans.length === 0}}">当前筛选下暂无订单计划</view>
+
+  <block wx:else>
+    <view
+      class="plan-card {{plan.canOpen ? 'clickable' : ''}}"
+      wx:for="{{plans}}"
+      wx:for-item="plan"
+      wx:key="id"
+      data-id="{{plan.id}}"
+      bindtap="openPlan"
+    >
+    <view class="plan-head">
+      <view>
+        <text class="plan-code">{{plan.plan_code}}</text>
+        <text class="plan-time">{{plan.submittedText}}</text>
+      </view>
+      <text class="status-pill {{plan.statusClass}}">{{plan.status_name}}</text>
+    </view>
+
+    <view class="summary-grid">
+      <view class="summary-cell" wx:if="{{plan.scope === 'supplier'}}">
+        <text class="label">厂家</text>
+        <text class="value">{{plan.factory.name}}</text>
+      </view>
+      <view class="summary-cell">
+        <text class="label">商家</text>
+        <text class="value">{{plan.merchant.name}}</text>
+      </view>
+      <view class="summary-cell">
+        <text class="label">厂家销售经理</text>
+        <text class="value">{{plan.sales_manager.name}}</text>
+      </view>
+      <view class="summary-cell">
+        <text class="label">品牌</text>
+        <text class="value">{{plan.brand.name}}</text>
+      </view>
+      <view class="summary-cell">
+        <text class="label">负责区域</text>
+        <text class="value">{{plan.region}}</text>
+      </view>
+      <view class="summary-cell">
+        <text class="label">可见计划数量</text>
+        <text class="value">{{plan.total_quantity}} 台</text>
+      </view>
+    </view>
+
+    <view class="item-block" wx:for="{{plan.items}}" wx:for-item="planItem" wx:key="id">
+      <view class="item-head">
+        <view class="item-title-wrap">
+          <text class="item-category">{{planItem.category.name}}</text>
+          <text class="item-name">{{planItem.product_model.name}}</text>
+          <text class="item-code">{{planItem.product_model.code}}</text>
+        </view>
+        <text class="quantity">{{planItem.quantity}} 台</text>
+      </view>
+      <view class="meta-row"><text>订单批次</text><text>{{planItem.order_batch_code}}</text></view>
+      <view class="meta-row"><text>BOM版本</text><text>{{planItem.bomVersion}}</text></view>
+
+      <view class="supplier-materials" wx:if="{{plan.scope === 'supplier'}}">
+        <view
+          class="material-row"
+          wx:for="{{planItem.materials}}"
+          wx:for-item="material"
+          wx:key="material_id"
+        >
+          <view>
+            <text class="material-name">{{material.material_name}}</text>
+            <text class="material-spec">{{material.material_spec_name}}</text>
+          </view>
+          <view class="material-quantity">
+            <text>单台 {{material.quantity_per_device}}</text>
+            <text>合计 {{material.required_quantity}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="open-tip" wx:if="{{plan.canOpen}}">点击查看并确认BOM配套 ›</view>
+    </view>
+  </block>
+</view>

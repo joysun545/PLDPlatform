@@ -1,0 +1,217 @@
+<view class="page">
+  <view class="page-header">
+    <text class="eyebrow">厂家销售</text>
+    <text class="title">创建订单计划</text>
+    <text class="subtitle">一个计划可包含多个品类、多个产品型号</text>
+  </view>
+
+  <view class="state-card" wx:if="{{loading}}">
+    <text>正在加载直属商家和产品资料…</text>
+  </view>
+
+  <view class="state-card error" wx:elif="{{loadError}}">
+    <text>{{loadError}}</text>
+    <button class="secondary-button small" bindtap="retryLoad">重新加载</button>
+  </view>
+
+  <block wx:elif="{{createdPlan}}">
+    <view class="success-card">
+      <view class="success-icon">✓</view>
+      <text class="success-title">订单计划创建成功</text>
+      <text class="success-code">{{createdPlan.plan_code}}</text>
+      <text class="success-tip">配套任务已推送给厂家配套经理</text>
+    </view>
+
+    <view class="card">
+      <view class="card-title-row">
+        <text class="card-title">计划摘要</text>
+        <text class="status-pill">{{createdPlan.status_name}}</text>
+      </view>
+      <view class="summary-row"><text>直接商家</text><text>{{createdPlan.merchant.name}}</text></view>
+      <view class="summary-row"><text>负责区域</text><text>{{createdPlan.region}}</text></view>
+      <view class="summary-row"><text>授权品牌</text><text>{{createdPlan.brand.name}}</text></view>
+      <view class="summary-row"><text>计划总数</text><text>{{createdPlan.total_quantity}} 台</text></view>
+    </view>
+
+    <view class="card">
+      <text class="card-title">型号批次与生命周期编码</text>
+      <view class="created-item" wx:for="{{createdPlan.items}}" wx:key="id">
+        <view class="created-item-head">
+          <text>{{item.product_model_name}}</text>
+          <text>× {{item.quantity}}</text>
+        </view>
+        <text class="code-line">订单批次：{{item.order_batch_code}}</text>
+        <text class="code-line">生命周期：{{item.lifecycle_code}}</text>
+      </view>
+    </view>
+
+    <button class="primary-button" bindtap="createAnother">继续创建订单计划</button>
+  </block>
+
+  <block wx:elif="{{!loading && !loadError}}">
+    <view class="card factory-card" wx:if="{{factory}}">
+      <text class="label">创建厂家</text>
+      <text class="factory-name">{{factory.name}}</text>
+    </view>
+
+    <view class="card">
+      <text class="section-number">01</text>
+      <text class="card-title">选择本人直属商家</text>
+      <text class="helper">只显示由您本人邀请的商家负责人账号所在组织</text>
+
+      <picker
+        range="{{merchants}}"
+        range-key="name"
+        value="{{merchantIndex}}"
+        bindchange="onMerchantChange"
+        disabled="{{merchants.length === 0}}"
+      >
+        <view class="picker-field {{merchantIndex < 0 ? 'placeholder' : ''}}">
+          {{merchantIndex >= 0 ? merchants[merchantIndex].name : (merchants.length ? '请选择直接商家' : '暂无本人直属商家')}}
+          <text class="picker-arrow">⌄</text>
+        </view>
+      </picker>
+    </view>
+
+    <view class="card" wx:if="{{selectedMerchant}}">
+      <view class="card-title-row">
+        <view>
+          <text class="section-number">02</text>
+          <text class="card-title">区域与品牌</text>
+        </view>
+        <button
+          class="text-button"
+          wx:if="{{selectedMerchant.configured && !channelEditing}}"
+          bindtap="editChannel"
+        >修改</button>
+      </view>
+
+      <view class="channel-summary" wx:if="{{selectedMerchant.configured && !channelEditing}}">
+        <view class="channel-value">
+          <text class="label">负责区域</text>
+          <text>{{selectedMerchant.region}}</text>
+        </view>
+        <view class="channel-value">
+          <text class="label">授权品牌</text>
+          <text>{{selectedMerchant.brand.name}}</text>
+        </view>
+      </view>
+
+      <view wx:if="{{channelEditing}}">
+        <text class="warning" wx:if="{{!selectedMerchant.configured}}">首次下单前，请先指定该商家的负责区域和品牌</text>
+        <text class="field-label">负责区域</text>
+        <input
+          class="input-field"
+          value="{{regionDraft}}"
+          maxlength="255"
+          placeholder="例如：四川省或成渝区域"
+          bindinput="onRegionInput"
+        />
+
+        <text class="field-label">授权品牌</text>
+        <picker range="{{brands}}" range-key="name" value="{{brandIndex}}" bindchange="onBrandChange">
+          <view class="picker-field {{brandIndex < 0 ? 'placeholder' : ''}}">
+            {{brandIndex >= 0 ? brands[brandIndex].name : '请选择授权品牌'}}
+            <text class="picker-arrow">⌄</text>
+          </view>
+        </picker>
+
+        <view class="button-row">
+          <button
+            class="secondary-button"
+            wx:if="{{selectedMerchant.configured}}"
+            bindtap="cancelChannelEdit"
+          >取消</button>
+          <button
+            class="primary-button compact"
+            loading="{{savingChannel}}"
+            disabled="{{savingChannel}}"
+            bindtap="saveChannel"
+          >保存区域与品牌</button>
+        </view>
+      </view>
+    </view>
+
+    <view class="card" wx:if="{{selectedMerchant.configured && selectedBrand && !channelEditing}}">
+      <view class="card-title-row">
+        <view>
+          <text class="section-number">03</text>
+          <text class="card-title">添加产品型号</text>
+        </view>
+        <button class="add-button" bindtap="addProductRow">＋ 添加</button>
+      </view>
+      <text class="helper">显示全部已建立有效 v1 BOM 的产品型号；每个型号将生成独立订单批次码和生命周期链路码</text>
+
+      <view class="product-row" wx:for="{{productRows}}" wx:key="key">
+        <view class="product-row-head">
+          <text>产品 {{index + 1}}</text>
+          <text
+            class="remove-link"
+            data-key="{{item.key}}"
+            bindtap="removeProductRow"
+          >删除</text>
+        </view>
+
+        <text class="field-label">产品品类</text>
+        <picker
+          range="{{categories}}"
+          range-key="name"
+          value="{{item.categoryIndex}}"
+          data-key="{{item.key}}"
+          bindchange="onCategoryChange"
+        >
+          <view class="picker-field {{item.categoryIndex < 0 ? 'placeholder' : ''}}">
+            {{item.categoryIndex >= 0 ? categories[item.categoryIndex].name : '请选择产品品类'}}
+            <text class="picker-arrow">⌄</text>
+          </view>
+        </picker>
+
+        <text class="field-label">产品型号</text>
+        <picker
+          range="{{item.models}}"
+          range-key="name"
+          value="{{item.modelIndex}}"
+          data-key="{{item.key}}"
+          bindchange="onModelChange"
+          disabled="{{item.categoryIndex < 0}}"
+        >
+          <view class="picker-field {{item.modelIndex < 0 ? 'placeholder' : ''}}">
+            {{item.modelIndex >= 0 ? item.models[item.modelIndex].name : (item.categoryIndex >= 0 ? '请选择产品型号' : '请先选择品类')}}
+            <text class="picker-arrow">⌄</text>
+          </view>
+        </picker>
+
+        <text class="field-label">计划数量</text>
+        <input
+          class="input-field quantity"
+          type="number"
+          value="{{item.quantity}}"
+          data-key="{{item.key}}"
+          bindinput="onQuantityInput"
+        />
+      </view>
+
+      <button class="outline-button" bindtap="addProductRow">＋ 再添加一个产品型号</button>
+    </view>
+
+    <view class="card" wx:if="{{selectedMerchant.configured && selectedBrand && !channelEditing}}">
+      <text class="section-number">04</text>
+      <text class="card-title">订单备注</text>
+      <textarea
+        class="textarea-field"
+        maxlength="2000"
+        value="{{remark}}"
+        placeholder="可填写交付要求或其他说明（选填）"
+        bindinput="onRemarkInput"
+      />
+    </view>
+
+    <button
+      class="primary-button submit-button"
+      wx:if="{{selectedMerchant.configured && selectedBrand && !channelEditing}}"
+      loading="{{submitting}}"
+      disabled="{{submitting}}"
+      bindtap="submitPlan"
+    >确认创建订单计划</button>
+  </block>
+</view>

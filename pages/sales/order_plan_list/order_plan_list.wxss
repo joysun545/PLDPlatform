@@ -1,0 +1,291 @@
+page {
+  background: #f4f7f5;
+  color: #1f2d26;
+}
+
+.page {
+  min-height: 100vh;
+  padding: 0 28rpx 56rpx;
+  box-sizing: border-box;
+}
+
+.page-header {
+  margin: 0 -28rpx 24rpx;
+  padding: 44rpx 40rpx 56rpx;
+  color: #fff;
+  background: linear-gradient(140deg, #047a49 0%, #07c160 62%, #41d989 100%);
+  border-radius: 0 0 44rpx 44rpx;
+}
+
+.eyebrow,
+.title,
+.subtitle,
+.plan-code,
+.plan-time,
+.label,
+.value,
+.item-category,
+.item-name,
+.item-code,
+.material-name,
+.material-spec,
+.material-quantity text {
+  display: block;
+}
+
+.eyebrow {
+  font-size: 23rpx;
+  letter-spacing: 4rpx;
+  opacity: 0.76;
+}
+
+.title {
+  margin-top: 10rpx;
+  font-size: 46rpx;
+  font-weight: 700;
+}
+
+.subtitle {
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  opacity: 0.86;
+}
+
+.scope-tip,
+.state-card {
+  margin-bottom: 22rpx;
+  padding: 22rpx 26rpx;
+  border: 1rpx solid #dceae3;
+  border-radius: 18rpx;
+  background: #ecf8f1;
+  color: #50705f;
+  font-size: 24rpx;
+  line-height: 1.5;
+}
+
+.filter-scroll {
+  width: 100%;
+  margin-bottom: 22rpx;
+  white-space: nowrap;
+}
+
+.filter-row {
+  display: inline-flex;
+  gap: 14rpx;
+}
+
+.filter-item {
+  padding: 16rpx 28rpx;
+  border-radius: 999rpx;
+  background: #e8eeeb;
+  color: #647269;
+  font-size: 24rpx;
+}
+
+.filter-item.active {
+  background: #08b760;
+  color: #fff;
+}
+
+.state-card {
+  background: #fff;
+  text-align: center;
+}
+
+.state-card.error {
+  color: #9a3e38;
+}
+
+button::after {
+  border: none;
+}
+
+.retry-button {
+  width: 220rpx;
+  margin: 18rpx auto 0;
+  border-radius: 14rpx;
+  background: #eaf7f0;
+  color: #078c4c;
+  font-size: 24rpx;
+  line-height: 70rpx;
+}
+
+.plan-card {
+  margin-bottom: 24rpx;
+  padding: 28rpx;
+  border: 1rpx solid #e1ebe6;
+  border-radius: 24rpx;
+  background: #fff;
+  box-shadow: 0 8rpx 28rpx rgba(29, 78, 55, 0.06);
+}
+
+.plan-card.clickable:active {
+  background: #f7fbf9;
+}
+
+.plan-head,
+.item-head,
+.meta-row,
+.material-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.plan-head {
+  padding-bottom: 22rpx;
+  border-bottom: 1rpx solid #edf2ef;
+}
+
+.plan-code {
+  font-size: 29rpx;
+  font-weight: 700;
+}
+
+.plan-time {
+  margin-top: 7rpx;
+  color: #849087;
+  font-size: 21rpx;
+}
+
+.status-pill {
+  padding: 9rpx 17rpx;
+  border-radius: 999rpx;
+  font-size: 21rpx;
+}
+
+.status-pill.pending {
+  background: #fff3d8;
+  color: #966415;
+}
+
+.status-pill.completed {
+  background: #e6f8ee;
+  color: #07874a;
+}
+
+.status-pill.cancelled {
+  background: #f2f2f2;
+  color: #777;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14rpx;
+  margin-top: 22rpx;
+}
+
+.summary-cell {
+  min-width: 0;
+  padding: 20rpx;
+  border-radius: 14rpx;
+  background: #f3f8f5;
+}
+
+.label {
+  color: #849087;
+  font-size: 21rpx;
+}
+
+.value {
+  margin-top: 8rpx;
+  overflow: hidden;
+  font-size: 24rpx;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.item-block {
+  margin-top: 22rpx;
+  padding: 22rpx;
+  border: 1rpx solid #e1ebe6;
+  border-radius: 17rpx;
+  background: #fbfdfc;
+}
+
+.item-title-wrap {
+  min-width: 0;
+  padding-right: 20rpx;
+}
+
+.item-category {
+  color: #079251;
+  font-size: 21rpx;
+}
+
+.item-name {
+  margin-top: 5rpx;
+  font-size: 26rpx;
+  font-weight: 650;
+}
+
+.item-code {
+  margin-top: 5rpx;
+  color: #8a958e;
+  font-size: 20rpx;
+}
+
+.quantity {
+  flex-shrink: 0;
+  padding: 10rpx 16rpx;
+  border-radius: 999rpx;
+  background: #e8f8ef;
+  color: #078b4b;
+  font-size: 22rpx;
+}
+
+.meta-row {
+  gap: 20rpx;
+  margin-top: 15rpx;
+  color: #68766d;
+  font-size: 21rpx;
+}
+
+.meta-row text:last-child {
+  color: #2d3c33;
+  text-align: right;
+}
+
+.supplier-materials {
+  margin-top: 18rpx;
+  padding-top: 4rpx;
+  border-top: 1rpx dashed #d9e6df;
+}
+
+.material-row {
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #edf2ef;
+}
+
+.material-row:last-child {
+  border-bottom: none;
+}
+
+.material-name {
+  font-size: 23rpx;
+  font-weight: 600;
+}
+
+.material-spec {
+  margin-top: 5rpx;
+  color: #849087;
+  font-size: 20rpx;
+}
+
+.material-quantity {
+  flex-shrink: 0;
+  color: #506158;
+  font-size: 20rpx;
+  line-height: 1.5;
+  text-align: right;
+}
+
+.open-tip {
+  margin-top: 22rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid #edf2ef;
+  color: #078d4c;
+  font-size: 23rpx;
+  text-align: right;
+}

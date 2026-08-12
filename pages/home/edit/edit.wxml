@@ -1,0 +1,150 @@
+<view class="page">
+  <view class="page-header">
+    <text class="eyebrow">邀请链路</text>
+    <text class="title">管理下级用户</text>
+    <text class="subtitle">仅显示由当前微信账号亲自邀请、且当前身份仍有效的直接下级账号</text>
+  </view>
+
+  <view class="manager-bar" wx:if="{{manager}}">
+    <view>
+      <text class="manager-label">当前组织</text>
+      <text class="manager-name">{{manager.organization_name}}</text>
+    </view>
+    <text class="manager-role">{{manager.role_name}}</text>
+  </view>
+
+  <view class="state-card" wx:if="{{loading}}">
+    <text>正在加载直接下级账号…</text>
+  </view>
+
+  <view class="state-card error" wx:elif="{{loadError}}">
+    <text>{{loadError}}</text>
+    <button class="secondary-button small" bindtap="retryLoad">重新加载</button>
+  </view>
+
+  <view class="state-card" wx:elif="{{subordinates.length === 0}}">
+    <text class="empty-title">暂无已加入的直接下级账号</text>
+    <text class="empty-tip">通过“邀请下级”发出邀请，对方接受并建立有效身份后会显示在这里。</text>
+    <button class="primary-button invite-button" bindtap="goInvite">邀请下级</button>
+  </view>
+
+  <block wx:else>
+    <view class="summary-row">
+      <text>有效直接下级</text>
+      <text>{{subordinates.length}} 个</text>
+    </view>
+
+    <view class="channel-warning" wx:if="{{channelError}}">
+      <text>{{channelError}}</text>
+      <text>下级身份仍可查看，下拉刷新后可重试渠道资料。</text>
+    </view>
+
+    <view class="subordinate-card" wx:for="{{subordinates}}" wx:key="invitation_id">
+      <view class="account-row">
+        <view class="avatar-wrap">
+          <image
+            class="avatar"
+            wx:if="{{item.user.avatar_url}}"
+            src="{{item.user.avatar_url}}"
+            mode="aspectFill"
+          />
+          <text class="avatar-fallback" wx:else>人</text>
+        </view>
+        <view class="account-main">
+          <text class="account-name">{{item.user.nickname}}</text>
+          <text class="account-role">{{item.role.name}}</text>
+        </view>
+        <text
+          class="status configured"
+          wx:if="{{item.management_mode !== 'merchant_channel'}}"
+        >关系有效</text>
+        <text
+          class="status {{item.channel && item.channel.configured ? 'configured' : 'pending'}}"
+          wx:else
+        >{{item.channel && item.channel.configured ? '已配置' : '待配置'}}</text>
+      </view>
+
+      <view class="info-list">
+        <view class="info-row">
+          <text class="info-label">所属组织</text>
+          <text class="info-value">{{item.organization.name}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">组织类型</text>
+          <text class="info-value">{{item.organization.type_name}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">邀请关系</text>
+          <text class="info-value">{{item.scope_name}} · {{item.relation_type_name}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">联系电话</text>
+          <text class="info-value">{{item.user.phone || '未填写'}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">所在区域</text>
+          <text class="info-value">{{item.channel ? (item.channel.region || '未配置') : (item.organization.region || '未填写')}}</text>
+        </view>
+        <view class="info-row" wx:if="{{item.management_mode === 'merchant_channel'}}">
+          <text class="info-label">授权品牌</text>
+          <text class="info-value">{{item.channel && item.channel.brand ? item.channel.brand.name : '未配置'}}</text>
+        </view>
+      </view>
+
+      <button
+        class="edit-button"
+        wx:if="{{item.management_mode === 'merchant_channel' && editingInvitationId != item.invitation_id}}"
+        data-invitation-id="{{item.invitation_id}}"
+        bindtap="startEdit"
+      >{{item.channel && item.channel.configured ? '编辑区域和品牌' : '配置区域和品牌'}}</button>
+
+      <view
+        class="edit-panel"
+        wx:if="{{item.management_mode === 'merchant_channel' && editingInvitationId == item.invitation_id}}"
+      >
+        <text class="edit-title">编辑直属商家渠道资料</text>
+
+        <text class="field-label">负责区域</text>
+        <input
+          class="input-field"
+          value="{{regionDraft}}"
+          maxlength="255"
+          placeholder="例如：四川省或成渝区域"
+          bindinput="onRegionInput"
+        />
+
+        <text class="field-label">授权品牌</text>
+        <picker
+          range="{{brands}}"
+          range-key="name"
+          value="{{brandIndex}}"
+          bindchange="onBrandChange"
+          disabled="{{brands.length === 0}}"
+        >
+          <view class="picker-field {{brandIndex == -1 ? 'placeholder' : ''}}">
+            {{brandIndex >= 0 ? brands[brandIndex].name : (brands.length ? '请选择授权品牌' : '暂无可授权品牌')}}
+            <text class="picker-arrow">⌄</text>
+          </view>
+        </picker>
+
+        <view class="button-row">
+          <button class="secondary-button" disabled="{{saving}}" bindtap="cancelEdit">取消</button>
+          <button
+            class="primary-button"
+            loading="{{saving}}"
+            disabled="{{saving}}"
+            bindtap="saveMerchantChannel"
+          >保存</button>
+        </view>
+      </view>
+
+      <view class="protected-tip" wx:if="{{item.management_mode === 'view_only'}}">
+        <text>账号岗位、组织归属与邀请关系由身份链路维护。</text>
+      </view>
+    </view>
+  </block>
+
+  <view class="safe-tip" wx:if="{{!loading && !loadError}}">
+    <text>本页面不会修改账号角色、所属组织或上下级邀请链路。厂家销售经理仅可维护本人直属商家的负责区域和授权品牌。</text>
+  </view>
+</view>

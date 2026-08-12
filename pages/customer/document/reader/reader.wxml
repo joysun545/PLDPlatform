@@ -11,13 +11,24 @@
       <text class="title">{{document.title}}</text>
       <text class="model-name">{{document.product_model.name}}</text>
     </view>
-    <view class="content-card">
+    <view class="file-card" wx:if="{{requiresFileOpen}}">
+      <view class="file-icon">{{document.file_type}}</view>
+      <view class="file-main">
+        <text class="file-name">{{document.original_filename}}</text>
+        <text class="file-tip">请打开原文件并完整阅读，返回本页后确认阅读完成</text>
+      </view>
+      <button class="open-file-btn" loading="{{openingFile}}" disabled="{{openingFile}}" bindtap="openSourceFile">
+        {{fileOpened ? '再次打开' : '打开资料'}}
+      </button>
+    </view>
+    <view class="opened-tip" wx:if="{{requiresFileOpen && fileOpened}}">原文件已成功打开，请阅读完成后在下方确认。</view>
+    <view class="content-card" wx:if="{{!requiresFileOpen || document.content}}">
       <text class="content" user-select="true">{{document.content}}</text>
     </view>
     <view class="footer-space"></view>
     <view class="footer">
       <button class="confirm-btn" loading="{{confirming}}" disabled="{{!canConfirm || confirming}}" bindtap="confirmRead">
-        {{document.is_read ? '已阅读，返回设备' : (canConfirm ? '我已完整阅读' : '请先阅读正文')}}
+        {{document.is_read ? '已阅读，返回设备' : (canConfirm ? '我已完整阅读' : (requiresFileOpen ? '请先打开并阅读资料' : '请先阅读正文'))}}
       </button>
     </view>
   </block>

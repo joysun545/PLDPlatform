@@ -7,6 +7,7 @@ const DOMAIN_NAMES = {
   INSTALL: '装车',
   ACTIVATE: '激活',
   PROFILE: '资料',
+  SALES: '销售订单',
   SYSTEM: '系统'
 };
 
