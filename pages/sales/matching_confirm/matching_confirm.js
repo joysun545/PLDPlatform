@@ -14,6 +14,10 @@ Page({
     loading: true,
     switchingBom: false,
     submitting: false,
+    delivery: null,
+    deliveryLoading: false,
+    deliverySubmitting: false,
+    deliveryError: '',
     errorMessage: ''
   },
 
@@ -68,7 +72,60 @@ Page({
 
   applyPlan(plan) {
     const items = (plan.items || []).map(item => this.preparePlanItem(item));
-    this.setData({ plan, items, loading: false, errorMessage: '' });
+    this.setData({
+      plan,
+      items,
+      loading: false,
+      errorMessage: '',
+      delivery: null,
+      deliveryError: ''
+    });
+    if (plan.read_only) this.loadDelivery();
+  },
+
+  loadDelivery() {
+    this.setData({ deliveryLoading: true, deliveryError: '' });
+    wx.request({
+      url: `${app.globalData.apiBase}/sales/order-plans/${this.data.orderPlanId}/delivery-confirm/`,
+      method: 'GET',
+      header: app.authHeader(),
+      success: (res) => {
+        const payload = res.data || {};
+        if (res.statusCode === 401) {
+          app.reauthenticate();
+          this.setData({ deliveryError: '登录已失效，请重新进入' });
+          return;
+        }
+        if (payload.code !== 0 || !payload.data) {
+          this.setData({ deliveryError: payload.msg || '配送状态加载失败' });
+          return;
+        }
+        this.applyDelivery(payload.data);
+      },
+      fail: () => this.setData({ deliveryError: '配送状态网络请求失败' }),
+      complete: () => this.setData({ deliveryLoading: false })
+    });
+  },
+
+  applyDelivery(delivery) {
+    const statusMap = {};
+    (delivery.material_statuses || []).forEach(row => {
+      statusMap[`${row.order_plan_item_id}:${row.material_id}`] = row;
+    });
+    const items = this.data.items.map(item => ({
+      ...item,
+      materials: (item.materials || []).map(material => {
+        const status = statusMap[`${item.id}:${material.id}`];
+        return {
+          ...material,
+          deliverySupplierName: status ? status.supplier_name : '',
+          deliveryCompleted: !!(status && status.completed),
+          deliveryStatusName: status ? status.status_name : '未生成配送任务',
+          hasDeliveryStatus: !!status
+        };
+      })
+    }));
+    this.setData({ delivery, items, deliveryError: '' });
   },
 
   preparePlanItem(item) {
@@ -338,7 +395,59 @@ Page({
     });
   },
 
+  confirmAllDelivery() {
+    const delivery = this.data.delivery;
+    if (
+      this.data.deliverySubmitting ||
+      !delivery ||
+      !delivery.can_confirm
+    ) return;
+    wx.showModal({
+      title: '确认物料配送全部完成',
+      content: '确认后将向厂家生产经理推送“确认生产完成”操作任务，并通知厂家销售经理。',
+      confirmText: '确认完成',
+      success: (result) => {
+        if (result.confirm) this.doConfirmAllDelivery();
+      }
+    });
+  },
+
+  doConfirmAllDelivery() {
+    this.setData({ deliverySubmitting: true });
+    wx.showLoading({ title: '正在确认...', mask: true });
+    wx.request({
+      url: `${app.globalData.apiBase}/sales/order-plans/${this.data.orderPlanId}/delivery-confirm/`,
+      method: 'POST',
+      header: app.authHeader('application/json'),
+      data: {},
+      success: (res) => {
+        const payload = res.data || {};
+        if (res.statusCode === 401) {
+          app.reauthenticate();
+          wx.showToast({ title: '登录已失效', icon: 'none' });
+          return;
+        }
+        if (payload.code !== 0 || !payload.data) {
+          wx.showToast({ title: payload.msg || '确认失败', icon: 'none' });
+          return;
+        }
+        this.applyDelivery(payload.data);
+        app.refreshTasks();
+        wx.showToast({ title: '已确认配送完成', icon: 'success' });
+      },
+      fail: () => wx.showToast({ title: '网络连接失败', icon: 'none' }),
+      complete: () => {
+        wx.hideLoading();
+        this.setData({ deliverySubmitting: false });
+      }
+    });
+  },
+
   retryLoad() {
     this.loadPlan();
+  },
+
+  retryDelivery() {
+    this.loadDelivery();
   }
 });

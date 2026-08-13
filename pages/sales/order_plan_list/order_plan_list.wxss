@@ -164,6 +164,11 @@ button::after {
   color: #07874a;
 }
 
+.status-pill.processing {
+  background: #e8f3ff;
+  color: #2874a6;
+}
+
 .status-pill.cancelled {
   background: #f2f2f2;
   color: #777;
@@ -288,4 +293,179 @@ button::after {
   color: #078d4c;
   font-size: 23rpx;
   text-align: right;
+}
+
+.delivery-panel {
+  margin-top: 22rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid #edf2ef;
+}
+
+.delivery-state-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.delivery-label {
+  color: #617168;
+  font-size: 23rpx;
+}
+
+.delivery-state {
+  color: #078d4c;
+  font-size: 23rpx;
+  font-weight: 600;
+}
+
+.delivery-progress {
+  display: block;
+  margin-top: 12rpx;
+  color: #718078;
+  font-size: 21rpx;
+  line-height: 1.55;
+}
+
+.delivery-progress.warning {
+  color: #a66a16;
+}
+
+.delivery-confirm-button {
+  margin-top: 20rpx;
+  border-radius: 14rpx;
+  background: #08b760;
+  color: #fff;
+  font-size: 25rpx;
+  line-height: 82rpx;
+}
+
+.delivery-confirm-button[disabled] {
+  background: #a8d8bf;
+  color: #fff;
+}
+
+.production-panel,
+.outbound-panel,
+.receipt-panel,
+.accounting-panel {
+  margin-top: 22rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid #edf2ef;
+}
+
+.production-confirm-button,
+.outbound-confirm-button,
+.receipt-confirm-button,
+.accounting-confirm-button {
+  margin-top: 20rpx;
+  border-radius: 14rpx;
+  background: #08b760;
+  color: #fff;
+  font-size: 25rpx;
+  line-height: 82rpx;
+}
+
+.production-confirm-button[disabled],
+.outbound-confirm-button[disabled],
+.receipt-confirm-button[disabled],
+.accounting-confirm-button[disabled] {
+  background: #a8d8bf;
+  color: #fff;
+}
+
+.outbound-tip {
+  display: block;
+  margin-top: 12rpx;
+  color: #718078;
+  font-size: 21rpx;
+  line-height: 1.55;
+}
+
+.fulfillment-flow {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 22rpx;
+  padding: 22rpx 8rpx 8rpx;
+  border-top: 1rpx solid #edf2ef;
+}
+
+.flow-stage {
+  position: relative;
+  flex: 1;
+  color: #a0aaa4;
+  font-size: 19rpx;
+  text-align: center;
+}
+
+.flow-stage::before {
+  position: absolute;
+  top: 13rpx;
+  right: 50%;
+  left: -50%;
+  height: 3rpx;
+  background: #e0e7e3;
+  content: '';
+}
+
+.flow-stage:first-child::before {
+  display: none;
+}
+
+.flow-dot {
+  position: relative;
+  z-index: 1;
+  width: 28rpx;
+  height: 28rpx;
+  margin: 0 auto 9rpx;
+  border-radius: 50%;
+  background: #dce5e0;
+  color: #fff;
+  font-size: 18rpx;
+  line-height: 28rpx;
+}
+
+.flow-stage.done,
+.flow-stage.current {
+  color: #078d4c;
+}
+
+.flow-stage.done::before {
+  background: #44c77f;
+}
+
+.flow-stage.done .flow-dot {
+  background: #08b760;
+}
+
+.flow-stage.current .flow-dot {
+  box-sizing: border-box;
+  border: 6rpx solid #bdebd1;
+  background: #08b760;
+}
+
+.outbound-panel {
+  margin-top: 22rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid #edf2ef;
+}
+
+.outbound-tip {
+  display: block;
+  margin-top: 12rpx;
+  color: #718078;
+  font-size: 21rpx;
+}
+
+.outbound-confirm-button {
+  margin-top: 20rpx;
+  border-radius: 14rpx;
+  background: #08b760;
+  color: #fff;
+  font-size: 25rpx;
+  line-height: 82rpx;
+}
+
+.production-confirm-button[disabled] {
+  background: #a8d8bf;
+  color: #fff;
 }

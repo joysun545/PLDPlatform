@@ -70,6 +70,18 @@
       </view>
     </view>
 
+    <view class="fulfillment-flow" wx:if="{{plan.scope === 'factory' || plan.scope === 'merchant'}}">
+      <view
+        class="flow-stage {{stage.state === 'DONE' ? 'done' : (stage.state === 'CURRENT' ? 'current' : '')}}"
+        wx:for="{{plan.fulfillmentStages}}"
+        wx:for-item="stage"
+        wx:key="code"
+      >
+        <view class="flow-dot">{{stage.state === 'DONE' ? '✓' : ''}}</view>
+        <text>{{stage.name}}</text>
+      </view>
+    </view>
+
     <view class="item-block" wx:for="{{plan.items}}" wx:for-item="planItem" wx:key="id">
       <view class="item-head">
         <view class="item-title-wrap">
@@ -102,6 +114,110 @@
     </view>
 
     <view class="open-tip" wx:if="{{plan.canOpen}}">点击查看并确认BOM配套 ›</view>
+    <view class="delivery-panel" wx:if="{{plan.scope === 'supplier' && plan.confirmation}}">
+      <view class="delivery-state-row">
+        <text class="delivery-label">配送协同</text>
+        <text class="delivery-state">{{plan.confirmation.state_name}}</text>
+      </view>
+      <text class="delivery-progress" wx:if="{{plan.confirmation.processed_by_text}}">
+        {{plan.confirmation.processed_by_text}}
+      </text>
+      <text class="delivery-progress warning" wx:if="{{plan.confirmation.waiting_for_owner}}">
+        尚有未分配给销售经理的物料，需供应商负责人确认。
+      </text>
+      <button
+        wx:if="{{plan.canConfirmDelivery}}"
+        class="delivery-confirm-button"
+        loading="{{confirmingPlanId === plan.id}}"
+        disabled="{{confirmingPlanId !== 0}}"
+        data-id="{{plan.id}}"
+        catchtap="confirmDelivery"
+      >
+        {{viewer.role === 'supplier_owner' ? '确认全部物料已完成配送' : '确认责任物料已完成配送'}}
+      </button>
+    </view>
+    <view
+      class="production-panel"
+      wx:if="{{viewer.role === 'factory_production' && plan.productionConfirmation}}"
+    >
+      <view class="delivery-state-row">
+        <text class="delivery-label">生产交接</text>
+        <text class="delivery-state">
+          {{plan.productionConfirmation.state_name}}
+        </text>
+      </view>
+      <button
+        wx:if="{{plan.canConfirmProduction}}"
+        class="production-confirm-button"
+        loading="{{confirmingProductionPlanId === plan.id}}"
+        disabled="{{confirmingProductionPlanId !== 0}}"
+        data-id="{{plan.id}}"
+        catchtap="confirmProduction"
+      >确认生产完成</button>
+    </view>
+    <view
+      class="outbound-panel"
+      wx:if="{{viewer.role === 'factory_stock' && plan.stockConfirmation}}"
+    >
+      <view class="delivery-state-row">
+        <text class="delivery-label">订单发货</text>
+        <text class="delivery-state">{{plan.stockConfirmation.state_name}}</text>
+      </view>
+      <text class="outbound-tip" wx:if="{{plan.canConfirmOutbound}}">
+        核对订单后可直接一键发货，无需逐台扫描。
+      </text>
+      <button
+        wx:if="{{plan.canConfirmOutbound}}"
+        class="outbound-confirm-button"
+        loading="{{confirmingOutboundPlanId === plan.id}}"
+        disabled="{{confirmingOutboundPlanId !== 0}}"
+        data-id="{{plan.id}}"
+        catchtap="confirmOutbound"
+      >确认一键发货</button>
+    </view>
+    <view
+      class="receipt-panel"
+      wx:if="{{plan.scope === 'merchant' && plan.receiptConfirmation}}"
+    >
+      <view class="delivery-state-row">
+        <text class="delivery-label">商家入库</text>
+        <text class="delivery-state">{{plan.receiptConfirmation.state_name}}</text>
+      </view>
+      <text class="outbound-tip" wx:if="{{plan.canConfirmReceipt}}">
+        线下验收完成后，负责人、销售经理或库管任意一人可一键入库，以首位操作人为准。
+      </text>
+      <text class="outbound-tip" wx:elif="{{plan.receiptConfirmation.completed_by_name}}">
+        已被 {{plan.receiptConfirmation.completed_by_name}} 入库。
+      </text>
+      <button
+        wx:if="{{plan.canConfirmReceipt}}"
+        class="receipt-confirm-button"
+        loading="{{confirmingReceiptPlanId === plan.id}}"
+        disabled="{{confirmingReceiptPlanId !== 0}}"
+        data-id="{{plan.id}}"
+        catchtap="confirmReceipt"
+      >确认一键入库</button>
+    </view>
+    <view
+      class="accounting-panel"
+      wx:if="{{viewer.role === 'factory_sales_assistant' && plan.accountingConfirmation}}"
+    >
+      <view class="delivery-state-row">
+        <text class="delivery-label">订单入账</text>
+        <text class="delivery-state">{{plan.accountingConfirmation.state_name}}</text>
+      </view>
+      <text class="outbound-tip" wx:if="{{plan.canConfirmAccounting}}">
+        商家已完成入库，请完成线下账务处理后确认入账。
+      </text>
+      <button
+        wx:if="{{plan.canConfirmAccounting}}"
+        class="accounting-confirm-button"
+        loading="{{confirmingAccountingPlanId === plan.id}}"
+        disabled="{{confirmingAccountingPlanId !== 0}}"
+        data-id="{{plan.id}}"
+        catchtap="confirmAccounting"
+      >确认已入账</button>
+    </view>
     </view>
   </block>
 </view>

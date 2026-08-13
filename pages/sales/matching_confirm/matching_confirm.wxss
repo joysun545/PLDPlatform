@@ -302,3 +302,113 @@ page {
   line-height: 1.6;
   text-align: center;
 }
+
+.delivery-material-row,
+.delivery-summary-head,
+.supplier-delivery-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.delivery-material-row {
+  margin-top: 20rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx dashed #d7e4de;
+}
+
+.delivery-material-label,
+.delivery-supplier-name,
+.supplier-delivery-name,
+.supplier-material-count,
+.delivery-title,
+.delivery-count {
+  display: block;
+}
+
+.delivery-material-label,
+.supplier-material-count,
+.delivery-count {
+  color: #7b8982;
+  font-size: 23rpx;
+}
+
+.delivery-supplier-name {
+  margin-top: 6rpx;
+  font-size: 25rpx;
+}
+
+.delivery-badge,
+.delivery-overall {
+  flex-shrink: 0;
+  padding: 8rpx 16rpx;
+  border-radius: 999rpx;
+  color: #a36d1e;
+  background: #fff2d8;
+  font-size: 23rpx;
+}
+
+.delivery-badge.completed,
+.delivery-overall.completed {
+  color: #08734f;
+  background: #dcf5e9;
+}
+
+.delivery-panel {
+  margin-top: 26rpx;
+  padding: 30rpx 26rpx;
+  border-radius: 28rpx;
+  background: #fff;
+  box-shadow: 0 12rpx 32rpx rgba(26, 91, 66, 0.08);
+}
+
+.delivery-state {
+  padding: 24rpx 0;
+  color: #718078;
+  text-align: center;
+}
+
+.delivery-state.error {
+  color: #b14f4f;
+}
+
+.delivery-title {
+  font-size: 30rpx;
+  font-weight: 650;
+}
+
+.delivery-count,
+.supplier-material-count {
+  margin-top: 6rpx;
+}
+
+.supplier-delivery-row {
+  min-height: 92rpx;
+  border-bottom: 1rpx solid #edf2ef;
+}
+
+.supplier-delivery-name {
+  font-size: 27rpx;
+}
+
+.delivery-confirm-btn {
+  margin-top: 28rpx;
+}
+
+.delivery-confirmed-strip {
+  margin-top: 26rpx;
+  padding: 22rpx;
+  border-radius: 16rpx;
+  color: #08734f;
+  background: #dcf5e9;
+  font-size: 25rpx;
+  text-align: center;
+}
+
+.delivery-wait-tip {
+  display: block;
+  margin-top: 24rpx;
+  color: #7a8981;
+  font-size: 23rpx;
+  text-align: center;
+}

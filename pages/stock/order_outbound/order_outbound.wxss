@@ -1,0 +1,34 @@
+.page { min-height: 100vh; padding: 28rpx; box-sizing: border-box; background: #f3f7f5; color: #20362c; }
+.page-header { margin: -28rpx -28rpx 26rpx; padding: 46rpx 38rpx 42rpx; border-radius: 0 0 44rpx 44rpx; background: linear-gradient(135deg, #009c55, #11cf72); color: #fff; }
+.eyebrow, .title, .subtitle, .item-name, .item-code { display: block; }
+.eyebrow { font-size: 23rpx; opacity: .82; }
+.title { margin-top: 12rpx; font-size: 42rpx; font-weight: 700; }
+.subtitle { margin-top: 12rpx; font-size: 24rpx; opacity: .9; }
+.state-card, .summary-card, .tip-card, .item-card { margin-bottom: 22rpx; padding: 28rpx; border-radius: 24rpx; background: #fff; box-shadow: 0 10rpx 28rpx rgba(18, 65, 42, .06); }
+.state-card { text-align: center; color: #728078; }
+.state-card.error { color: #a34a4a; }
+.retry-button { width: 260rpx; margin-top: 18rpx; font-size: 24rpx; }
+.summary-card view, .meta-row, .code-row { display: flex; justify-content: space-between; gap: 24rpx; padding: 14rpx 0; border-bottom: 1rpx solid #edf2ef; font-size: 23rpx; }
+.summary-card view:last-child { border-bottom: 0; }
+.summary-card text:first-child, .meta-row text:first-child, .code-row text:first-child { color: #7a8780; flex-shrink: 0; }
+.summary-card text:last-child, .meta-row text:last-child, .code-row text:last-child { text-align: right; word-break: break-all; }
+.tip-card { background: #eaf8f0; color: #397257; font-size: 22rpx; line-height: 1.65; }
+.item-name { font-size: 29rpx; font-weight: 700; }
+.item-code { margin: 8rpx 0 16rpx; color: #7c8982; font-size: 22rpx; }
+.code-row { color: #087f49; }
+.qrcode-button { margin-top: 24rpx; border-radius: 14rpx; background: #08b760; color: #fff; font-size: 25rpx; line-height: 82rpx; }
+.outbound-button {
+  margin: 28rpx 32rpx 48rpx;
+  background: #07c160;
+  color: #fff;
+  border-radius: 18rpx;
+}
+
+.completed-card {
+  margin: 28rpx 32rpx 48rpx;
+  padding: 28rpx;
+  color: #16865b;
+  text-align: center;
+  background: #eaf8f2;
+  border-radius: 18rpx;
+}

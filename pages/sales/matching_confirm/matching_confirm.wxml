@@ -150,6 +150,15 @@
                   bindinput="onRemarkInput"
                 />
               </view>
+              <view wx:if="{{plan.read_only}}" class="delivery-material-row">
+                <view>
+                  <text class="delivery-material-label">供应商配送</text>
+                  <text wx:if="{{material.deliverySupplierName}}" class="delivery-supplier-name">{{material.deliverySupplierName}}</text>
+                </view>
+                <text class="delivery-badge {{material.deliveryCompleted ? 'completed' : 'pending'}}">
+                  {{material.deliveryStatusName}}
+                </text>
+              </view>
             </view>
           </view>
         </block>
@@ -164,6 +173,43 @@
         bindtap="submitConfirmation"
       >确认全部产品BOM清单</button>
       <text class="submit-tip">确认后将完成当前配套任务，并向供应、生产和销售岗位推送后续任务。</text>
+    </view>
+
+    <view wx:elif="{{plan.read_only}}" class="delivery-panel">
+      <view wx:if="{{deliveryLoading}}" class="delivery-state">正在加载供应商配送状态...</view>
+      <view wx:elif="{{deliveryError}}" class="delivery-state error">
+        <text>{{deliveryError}}</text>
+        <button class="secondary-btn" bindtap="retryDelivery">重新加载</button>
+      </view>
+      <block wx:elif="{{delivery}}">
+        <view class="delivery-summary-head">
+          <view>
+            <text class="delivery-title">供应商配送进度</text>
+            <text class="delivery-count">{{delivery.suppliers.length}} 家供应商</text>
+          </view>
+          <text class="delivery-overall {{delivery.all_suppliers_completed ? 'completed' : ''}}">
+            {{delivery.all_suppliers_completed ? '全部完成' : '配送进行中'}}
+          </text>
+        </view>
+        <block wx:for="{{delivery.suppliers}}" wx:key="supplier_id" wx:for-item="supplier">
+          <view class="supplier-delivery-row">
+            <view>
+              <text class="supplier-delivery-name">{{supplier.supplier_name}}</text>
+              <text class="supplier-material-count">{{supplier.materials_count}} 项物料</text>
+            </view>
+            <text class="delivery-badge {{supplier.completed ? 'completed' : 'pending'}}">{{supplier.status_name}}</text>
+          </view>
+        </block>
+        <view wx:if="{{delivery.confirmed}}" class="delivery-confirmed-strip">厂家配套经理已确认物料配送全部完成</view>
+        <button
+          wx:elif="{{delivery.can_confirm}}"
+          class="primary-btn delivery-confirm-btn"
+          loading="{{deliverySubmitting}}"
+          disabled="{{deliverySubmitting}}"
+          bindtap="confirmAllDelivery"
+        >确认物料配送全部完成</button>
+        <text wx:else class="delivery-wait-tip">全部供应商完成配送后，才可执行最终确认。</text>
+      </block>
     </view>
   </block>
 </view>

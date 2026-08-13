@@ -18,6 +18,7 @@
     "pages/sales/create_plan/create_plan",
     "pages/sales/order_plan_list/order_plan_list",
     "pages/sales/matching_confirm/matching_confirm",
+    "pages/stock/order_outbound/order_outbound",
     "pages/supply_chain/responsibility/responsibility"
   ],
   "window": {

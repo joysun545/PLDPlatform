@@ -2,8 +2,13 @@ const app = getApp();
 
 const ALLOWED_ROLES = [
   'factory_sales',
+  'factory_sales_assistant',
   'factory_matching',
   'factory_production',
+  'factory_stock',
+  'merchant_owner',
+  'merchant_sales',
+  'merchant_stock',
   'supplier_owner',
   'supplier_sales'
 ];
@@ -23,13 +28,40 @@ function preparePlan(plan) {
   const statusClassMap = {
     MATCHING_PENDING: 'pending',
     MATCHING_COMPLETED: 'completed',
+    PRODUCTION_PENDING: 'processing',
+    PRODUCTION_COMPLETED: 'completed',
+    SHIPPED: 'completed',
+    RECEIVED: 'completed',
+    SUPPLIER_PENDING: 'pending',
+    SUPPLIER_PROCESSING: 'processing',
+    SUPPLIER_CONFIRMED: 'completed',
     CANCELLED: 'cancelled'
   };
+  const confirmation = plan.supplier_confirmation || null;
+  const productionConfirmation = plan.production_confirmation || null;
+  const stockConfirmation = plan.stock_confirmation || null;
+  const receiptConfirmation = plan.receipt_confirmation || null;
+  const accountingConfirmation = plan.accounting_confirmation || null;
   return {
     ...plan,
     submittedText: formatDate(plan.submitted_at),
     statusClass: statusClassMap[plan.status] || 'pending',
     canOpen: !!plan.detail_link,
+    canConfirmDelivery: !!(confirmation && confirmation.can_confirm),
+    canConfirmProduction: !!(
+      productionConfirmation && productionConfirmation.can_confirm
+    ),
+    canConfirmOutbound: !!(stockConfirmation && stockConfirmation.can_confirm),
+    canConfirmReceipt: !!(receiptConfirmation && receiptConfirmation.can_confirm),
+    canConfirmAccounting: !!(
+      accountingConfirmation && accountingConfirmation.can_confirm
+    ),
+    confirmation,
+    productionConfirmation,
+    stockConfirmation,
+    receiptConfirmation,
+    accountingConfirmation,
+    fulfillmentStages: plan.fulfillment_stages || [],
     items: (plan.items || []).map(item => ({
       ...item,
       bomVersion: item.bom_confirmation
@@ -48,11 +80,20 @@ Page({
     visibility: '',
     visibilityText: '',
     plans: [],
+    confirmingPlanId: 0,
+    confirmingProductionPlanId: 0,
+    confirmingOutboundPlanId: 0,
+    confirmingReceiptPlanId: 0,
+    confirmingAccountingPlanId: 0,
     activeStatus: '',
     filters: [
       { key: '', label: '全部' },
       { key: 'MATCHING_PENDING', label: '待配套' },
       { key: 'MATCHING_COMPLETED', label: '配套完成' },
+      { key: 'PRODUCTION_PENDING', label: '生产中' },
+      { key: 'PRODUCTION_COMPLETED', label: '待发货' },
+      { key: 'SHIPPED', label: '已发货' },
+      { key: 'RECEIVED', label: '商家已入库' },
       { key: 'CANCELLED', label: '已取消' }
     ]
   },
@@ -116,6 +157,7 @@ Page({
         const visibilityTextMap = {
           created_by_me: '仅显示由您本人创建的订单计划',
           factory_all: '显示当前厂家组织的全部订单计划',
+          merchant_receiving: '显示当前商家待接收及已入库的订单计划',
           supplier_participating: '仅显示本供应商实际参与的型号和物料',
           supplier_responsibility: '仅显示负责人分配给您的品类或物料'
         };
@@ -124,7 +166,16 @@ Page({
           viewer: payload.viewer || null,
           visibility: payload.visibility || '',
           visibilityText: visibilityTextMap[payload.visibility] || '',
-          plans: (payload.items || []).map(preparePlan)
+          plans: (payload.items || []).map(preparePlan),
+          filters: payload.viewer && ['supplier_owner', 'supplier_sales'].includes(payload.viewer.role)
+            ? [
+                { key: '', label: '全部' },
+                { key: 'SUPPLIER_PENDING', label: '待配送' },
+                { key: 'SUPPLIER_PROCESSING', label: '配送确认中' },
+                { key: 'SUPPLIER_CONFIRMED', label: '配送完成' },
+                { key: 'CANCELLED', label: '已取消' }
+              ]
+            : this.data.filters
         });
       },
       fail: () => {
@@ -146,6 +197,236 @@ Page({
     wx.navigateTo({
       url: plan.detail_link,
       fail: () => wx.showToast({ title: '订单详情打开失败', icon: 'none' })
+    });
+  },
+
+  confirmDelivery(e) {
+    const planId = Number(e.currentTarget.dataset.id);
+    const plan = this.data.plans.find(item => item.id === planId);
+    if (!plan || !plan.canConfirmDelivery || this.data.confirmingPlanId) return;
+
+    const role = (this.data.viewer && this.data.viewer.role) || '';
+    const content = role === 'supplier_owner'
+      ? '确认后，本供应商在该订单中的全部物料将标记为已完成配送。'
+      : '确认后，您责任范围内的物料将标记为已完成配送；系统会等待其他责任人。';
+
+    wx.showModal({
+      title: '确认物料配送',
+      content,
+      confirmText: '确认配送',
+      success: modal => {
+        if (!modal.confirm) return;
+        this.submitDeliveryConfirmation(plan);
+      }
+    });
+  },
+
+  submitDeliveryConfirmation(plan) {
+    const confirmation = plan.confirmation || {};
+    this.setData({ confirmingPlanId: plan.id });
+    wx.showLoading({ title: '正在确认...', mask: true });
+    wx.request({
+      url: `${app.globalData.apiBase}/sales/order-plans/${plan.id}/supplier-confirm/`,
+      method: 'POST',
+      header: {
+        ...app.authHeader(),
+        'content-type': 'application/json'
+      },
+      data: {
+        supplier_id: confirmation.supplier && confirmation.supplier.id,
+        usertask_id: confirmation.task_id
+      },
+      success: res => {
+        const body = res.data || {};
+        if (res.statusCode === 401) {
+          app.reauthenticate();
+          wx.showToast({ title: '登录状态已失效', icon: 'none' });
+          return;
+        }
+        if (body.code !== 0) {
+          wx.showToast({ title: body.msg || '配送确认失败', icon: 'none' });
+          return;
+        }
+        wx.showToast({ title: body.msg || '配送状态已更新', icon: 'success' });
+        app.refreshTasks && app.refreshTasks();
+        this.loadPlans();
+      },
+      fail: () => wx.showToast({ title: '网络连接失败', icon: 'none' }),
+      complete: () => {
+        wx.hideLoading();
+        this.setData({ confirmingPlanId: 0 });
+      }
+    });
+  },
+
+  confirmProduction(e) {
+    const planId = Number(e.currentTarget.dataset.id);
+    const plan = this.data.plans.find(item => item.id === planId);
+    if (!plan || !plan.canConfirmProduction || this.data.confirmingProductionPlanId) return;
+
+    wx.showModal({
+      title: '确认生产完成',
+      content: '确认后订单进入二维码打印阶段。全部产品型号的二维码打印完成后，系统才会向厂家库管推送“一键出库”任务。',
+      confirmText: '确认完成',
+      success: modal => {
+        if (!modal.confirm) return;
+        this.submitProductionConfirmation(plan);
+      }
+    });
+  },
+
+  submitProductionConfirmation(plan) {
+    this.setData({ confirmingProductionPlanId: plan.id });
+    wx.showLoading({ title: '正在确认...', mask: true });
+    wx.request({
+      url: `${app.globalData.apiBase}/sales/order-plans/${plan.id}/production-confirm/`,
+      method: 'POST',
+      header: app.authHeader('application/json'),
+      data: {},
+      success: res => {
+        const body = res.data || {};
+        if (res.statusCode === 401) {
+          app.reauthenticate();
+          wx.showToast({ title: '登录状态已失效', icon: 'none' });
+          return;
+        }
+        if (body.code !== 0) {
+          wx.showToast({ title: body.msg || '生产确认失败', icon: 'none' });
+          return;
+        }
+        wx.showToast({ title: body.msg || '生产完成已确认', icon: 'success' });
+        app.refreshTasks && app.refreshTasks();
+        this.loadPlans();
+      },
+      fail: () => wx.showToast({ title: '网络连接失败', icon: 'none' }),
+      complete: () => {
+        wx.hideLoading();
+        this.setData({ confirmingProductionPlanId: 0 });
+      }
+    });
+  },
+
+  confirmOutbound(e) {
+    const planId = Number(e.currentTarget.dataset.id);
+    const plan = this.data.plans.find(item => item.id === planId);
+    if (!plan || !plan.canConfirmOutbound || this.data.confirmingOutboundPlanId) return;
+    wx.showModal({
+      title: '确认一键发货',
+      content: `确认将订单 ${plan.plan_code} 标记为已发货？本操作不需要逐台扫描。`,
+      confirmText: '确认发货',
+      success: modal => {
+        if (!modal.confirm) return;
+        this.submitOutbound(plan);
+      }
+    });
+  },
+
+  submitOutbound(plan) {
+    this.setData({ confirmingOutboundPlanId: plan.id });
+    wx.showLoading({ title: '正在发货...', mask: true });
+    wx.request({
+      url: `${app.globalData.apiBase}/sales/order-plans/${plan.id}/stock-outbound/`,
+      method: 'POST',
+      header: app.authHeader('application/json'),
+      data: {},
+      success: res => {
+        const body = res.data || {};
+        if (res.statusCode === 401) {
+          app.reauthenticate();
+          wx.showToast({ title: '登录状态已失效', icon: 'none' });
+          return;
+        }
+        if (body.code !== 0) {
+          wx.showToast({ title: body.msg || '发货失败', icon: 'none' });
+          return;
+        }
+        wx.showToast({ title: body.msg || '订单已发货', icon: 'success' });
+        app.refreshTasks && app.refreshTasks();
+        this.loadPlans();
+      },
+      fail: () => wx.showToast({ title: '网络连接失败', icon: 'none' }),
+      complete: () => {
+        wx.hideLoading();
+        this.setData({ confirmingOutboundPlanId: 0 });
+      }
+    });
+  },
+
+  confirmReceipt(e) {
+    const planId = Number(e.currentTarget.dataset.id);
+    const plan = this.data.plans.find(item => item.id === planId);
+    if (!plan || !plan.canConfirmReceipt || this.data.confirmingReceiptPlanId) return;
+    wx.showModal({
+      title: '确认一键入库',
+      content: `请确认订单 ${plan.plan_code} 的线下货物已全部验收。首位确认后，同组织其他处理人将同步显示处理人。`,
+      confirmText: '确认入库',
+      success: modal => modal.confirm && this.submitReceipt(plan)
+    });
+  },
+
+  submitReceipt(plan) {
+    this.setData({ confirmingReceiptPlanId: plan.id });
+    wx.showLoading({ title: '正在入库...', mask: true });
+    wx.request({
+      url: `${app.globalData.apiBase}/sales/order-plans/${plan.id}/merchant-receipt/`,
+      method: 'POST',
+      header: app.authHeader('application/json'),
+      data: {},
+      success: res => {
+        const body = res.data || {};
+        if (res.statusCode === 401) app.reauthenticate();
+        if (body.code !== 0) {
+          wx.showToast({ title: body.msg || '入库失败', icon: 'none' });
+          return;
+        }
+        wx.showToast({ title: body.msg || '订单已入库', icon: 'success' });
+        app.refreshTasks && app.refreshTasks();
+        this.loadPlans();
+      },
+      fail: () => wx.showToast({ title: '网络连接失败', icon: 'none' }),
+      complete: () => {
+        wx.hideLoading();
+        this.setData({ confirmingReceiptPlanId: 0 });
+      }
+    });
+  },
+
+  confirmAccounting(e) {
+    const planId = Number(e.currentTarget.dataset.id);
+    const plan = this.data.plans.find(item => item.id === planId);
+    if (!plan || !plan.canConfirmAccounting || this.data.confirmingAccountingPlanId) return;
+    wx.showModal({
+      title: '确认订单入账',
+      content: `确认订单 ${plan.plan_code} 已完成线下账务处理？`,
+      confirmText: '确认入账',
+      success: modal => modal.confirm && this.submitAccounting(plan)
+    });
+  },
+
+  submitAccounting(plan) {
+    this.setData({ confirmingAccountingPlanId: plan.id });
+    wx.showLoading({ title: '正在确认...', mask: true });
+    wx.request({
+      url: `${app.globalData.apiBase}/sales/order-plans/${plan.id}/accounting-confirm/`,
+      method: 'POST',
+      header: app.authHeader('application/json'),
+      data: {},
+      success: res => {
+        const body = res.data || {};
+        if (res.statusCode === 401) app.reauthenticate();
+        if (body.code !== 0) {
+          wx.showToast({ title: body.msg || '入账确认失败', icon: 'none' });
+          return;
+        }
+        wx.showToast({ title: body.msg || '已标记入账', icon: 'success' });
+        app.refreshTasks && app.refreshTasks();
+        this.loadPlans();
+      },
+      fail: () => wx.showToast({ title: '网络连接失败', icon: 'none' }),
+      complete: () => {
+        wx.hideLoading();
+        this.setData({ confirmingAccountingPlanId: 0 });
+      }
     });
   }
 });

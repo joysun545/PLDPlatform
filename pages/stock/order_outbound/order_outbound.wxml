@@ -1,0 +1,47 @@
+<view class="page">
+  <view class="page-header">
+    <text class="eyebrow">生产交接</text>
+    <text class="title">订单出库</text>
+    <text class="subtitle" wx:if="{{detail}}">{{detail.plan_code}}</text>
+  </view>
+
+  <view class="state-card" wx:if="{{loading}}">正在加载出库任务…</view>
+  <view class="state-card error" wx:elif="{{errorMessage}}">
+    <text>{{errorMessage}}</text>
+    <button class="retry-button" bindtap="retryLoad">重新加载</button>
+  </view>
+
+  <block wx:elif="{{detail}}">
+    <view class="summary-card">
+      <view><text>商家</text><text>{{detail.merchant_name}}</text></view>
+      <view><text>品牌</text><text>{{detail.brand_name}}</text></view>
+      <view><text>计划数量</text><text>{{detail.total_quantity}} 台</text></view>
+    </view>
+
+    <view class="tip-card">每条产品明细已绑定生命周期编码。点击二维码可预览，长按预览图可保存后打印。</view>
+
+    <view class="item-card" wx:for="{{detail.items}}" wx:key="id">
+      <text class="item-name">{{item.product_model_name}}</text>
+      <text class="item-code">{{item.product_model_code}} · {{item.quantity}} 台</text>
+      <view class="meta-row"><text>订单批次</text><text>{{item.order_batch_code}}</text></view>
+      <view class="code-row" bindtap="copyLifecycleCode" data-code="{{item.lifecycle_code}}">
+        <text>生命周期编码</text><text>{{item.lifecycle_code}}</text>
+      </view>
+      <button
+        class="qrcode-button"
+        data-id="{{item.id}}"
+        loading="{{previewingItemId === item.id}}"
+        bindtap="previewQrcode"
+      >预览/打印二维码</button>
+    </view>
+
+    <button
+      wx:if="{{detail.can_outbound}}"
+      class="outbound-button"
+      loading="{{submitting}}"
+      disabled="{{submitting}}"
+      bindtap="confirmOutbound"
+    >确认完成出库</button>
+    <view wx:else class="completed-card">本订单出库任务已完成</view>
+  </block>
+</view>
