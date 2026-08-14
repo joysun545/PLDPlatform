@@ -54,6 +54,7 @@ Page({
         'supplier_owner',
         'supplier_sales',
         'merchant_owner',
+        'merchant_senior_manager',
         'merchant_sales',
         'merchant_stock'
       ].includes(role),
@@ -70,6 +71,7 @@ Page({
       showStats: [
         'factory_admin',
         'factory_sales',
+        'factory_sales_assistant',
         'factory_matching',
         'merchant_owner',
         'merchant_senior_manager',

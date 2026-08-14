@@ -41,16 +41,34 @@ Page({
   },
 
   syncTasks() {
-    const taskList = (app.globalData.taskList || []).map(task => ({
-      ...task,
-      stateText: task.state === 'DONE'
-        ? '已完成'
-        : (task.state === 'READ' ? '已读' : '未读'),
-      stateClass: task.state === 'DONE'
-        ? 'done'
-        : (task.state === 'READ' ? 'read' : 'new'),
-      domainName: DOMAIN_NAMES[task.domain] || '任务'
-    }));
+    const taskList = (app.globalData.taskList || []).map(task => {
+      let actionText = '查看即知晓';
+      let actionClass = 'ack-task';
+
+      if (task.done_reason === 'OTHER_ACTION') {
+        actionText = '同组织成员已完成';
+        actionClass = 'other-done';
+      } else if (task.done_reason === 'SELF_ACTION') {
+        actionText = '由你完成';
+        actionClass = 'self-done';
+      } else if (task.need_action) {
+        actionText = '需要处理';
+        actionClass = 'need-action';
+      }
+
+      return {
+        ...task,
+        stateText: task.state === 'DONE'
+          ? '已完成'
+          : (task.state === 'READ' ? '已读' : '未读'),
+        stateClass: task.state === 'DONE'
+          ? 'done'
+          : (task.state === 'READ' ? 'read' : 'new'),
+        domainName: DOMAIN_NAMES[task.domain] || '任务',
+        actionText,
+        actionClass
+      };
+    });
 
     this.setData({
       taskList,

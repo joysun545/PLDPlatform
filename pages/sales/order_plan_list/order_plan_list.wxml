@@ -184,7 +184,7 @@
         <text class="delivery-state">{{plan.receiptConfirmation.state_name}}</text>
       </view>
       <text class="outbound-tip" wx:if="{{plan.canConfirmReceipt}}">
-        线下验收完成后，负责人、销售经理或库管任意一人可一键入库，以首位操作人为准。
+        线下验收完成后，负责人、高级经理、销售经理或库管任意一人可一键入库，以首位操作人为准。
       </text>
       <text class="outbound-tip" wx:elif="{{plan.receiptConfirmation.completed_by_name}}">
         已被 {{plan.receiptConfirmation.completed_by_name}} 入库。

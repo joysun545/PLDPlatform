@@ -307,6 +307,7 @@ App({
           isNew: it.state === 'NEW',
           state: it.state,
           need_action: it.need_action,
+          done_reason: it.done_reason || '',
           cursor_time: it.cursor_time,
           domain: it.domain || '',
           action_mode: it.action_mode || ''

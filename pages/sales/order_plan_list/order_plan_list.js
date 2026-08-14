@@ -7,6 +7,7 @@ const ALLOWED_ROLES = [
   'factory_production',
   'factory_stock',
   'merchant_owner',
+  'merchant_senior_manager',
   'merchant_sales',
   'merchant_stock',
   'supplier_owner',
