@@ -25,6 +25,18 @@
   font-size: 27rpx;
 }
 
+.summary-metrics {
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+}
+
+.summary-detail {
+  margin-top: 6rpx;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 22rpx;
+}
+
 .empty {
   padding: 120rpx 20rpx;
   color: #999;
@@ -115,14 +127,6 @@
 
 .ack-task {
   color: #888;
-}
-
-.self-done {
-  color: #07894e;
-}
-
-.other-done {
-  color: #8c6b18;
 }
 
 .opening {

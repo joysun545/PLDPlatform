@@ -40,9 +40,11 @@ function preparePlan(plan) {
   };
   const confirmation = plan.supplier_confirmation || null;
   const productionConfirmation = plan.production_confirmation || null;
+  const shipmentAuthorization = plan.shipment_authorization || null;
   const stockConfirmation = plan.stock_confirmation || null;
   const receiptConfirmation = plan.receipt_confirmation || null;
   const accountingConfirmation = plan.accounting_confirmation || null;
+  const financeSummary = plan.finance_summary || null;
   return {
     ...plan,
     submittedText: formatDate(plan.submitted_at),
@@ -52,6 +54,9 @@ function preparePlan(plan) {
     canConfirmProduction: !!(
       productionConfirmation && productionConfirmation.can_confirm
     ),
+    canConfirmShipmentAuthorization: !!(
+      shipmentAuthorization && shipmentAuthorization.can_confirm
+    ),
     canConfirmOutbound: !!(stockConfirmation && stockConfirmation.can_confirm),
     canConfirmReceipt: !!(receiptConfirmation && receiptConfirmation.can_confirm),
     canConfirmAccounting: !!(
@@ -59,9 +64,11 @@ function preparePlan(plan) {
     ),
     confirmation,
     productionConfirmation,
+    shipmentAuthorization,
     stockConfirmation,
     receiptConfirmation,
     accountingConfirmation,
+    financeSummary,
     fulfillmentStages: plan.fulfillment_stages || [],
     items: (plan.items || []).map(item => ({
       ...item,
@@ -83,6 +90,7 @@ Page({
     plans: [],
     confirmingPlanId: 0,
     confirmingProductionPlanId: 0,
+    confirmingShipmentAuthorizationPlanId: 0,
     confirmingOutboundPlanId: 0,
     confirmingReceiptPlanId: 0,
     confirmingAccountingPlanId: 0,
@@ -201,6 +209,15 @@ Page({
     });
   },
 
+  openFinance(e) {
+    const planId = Number(e.currentTarget.dataset.id);
+    if (!planId) return;
+    wx.navigateTo({
+      url: `/pages/sales/order_finance/order_finance?order_plan_id=${planId}`,
+      fail: () => wx.showToast({ title: '订单资金页面打开失败', icon: 'none' })
+    });
+  },
+
   confirmDelivery(e) {
     const planId = Number(e.currentTarget.dataset.id);
     const plan = this.data.plans.find(item => item.id === planId);
@@ -267,7 +284,7 @@ Page({
 
     wx.showModal({
       title: '确认生产完成',
-      content: '确认后订单进入二维码打印阶段。全部产品型号的二维码打印完成后，系统才会向厂家库管推送“一键出库”任务。',
+      content: '确认后将向创建订单的厂家销售经理推送“下达发货指令”任务。销售经理授权后，厂家库管才能打印二维码并出库。',
       confirmText: '确认完成',
       success: modal => {
         if (!modal.confirm) return;
@@ -303,6 +320,57 @@ Page({
       complete: () => {
         wx.hideLoading();
         this.setData({ confirmingProductionPlanId: 0 });
+      }
+    });
+  },
+
+  confirmShipmentAuthorization(e) {
+    const planId = Number(e.currentTarget.dataset.id);
+    const plan = this.data.plans.find(item => item.id === planId);
+    if (
+      !plan ||
+      !plan.canConfirmShipmentAuthorization ||
+      this.data.confirmingShipmentAuthorizationPlanId
+    ) return;
+
+    wx.showModal({
+      title: '下达发货指令',
+      content: `确认允许订单 ${plan.plan_code} 进入二维码打印和库房出库流程？本操作只授权实物发货，与付款、应收款无关。`,
+      confirmText: '确认授权',
+      success: modal => {
+        if (!modal.confirm) return;
+        this.submitShipmentAuthorization(plan);
+      }
+    });
+  },
+
+  submitShipmentAuthorization(plan) {
+    this.setData({ confirmingShipmentAuthorizationPlanId: plan.id });
+    wx.showLoading({ title: '正在下达...', mask: true });
+    wx.request({
+      url: `${app.globalData.apiBase}/sales/order-plans/${plan.id}/shipment-authorization/`,
+      method: 'POST',
+      header: app.authHeader('application/json'),
+      data: {},
+      success: res => {
+        const body = res.data || {};
+        if (res.statusCode === 401) {
+          app.reauthenticate();
+          wx.showToast({ title: '登录状态已失效', icon: 'none' });
+          return;
+        }
+        if (body.code !== 0) {
+          wx.showToast({ title: body.msg || '发货授权失败', icon: 'none' });
+          return;
+        }
+        wx.showToast({ title: body.msg || '发货指令已下达', icon: 'success' });
+        app.refreshTasks && app.refreshTasks();
+        this.loadPlans();
+      },
+      fail: () => wx.showToast({ title: '网络连接失败', icon: 'none' }),
+      complete: () => {
+        wx.hideLoading();
+        this.setData({ confirmingShipmentAuthorizationPlanId: 0 });
       }
     });
   },

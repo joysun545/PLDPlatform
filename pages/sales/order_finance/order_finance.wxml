@@ -1,0 +1,136 @@
+<view class="page">
+  <view class="state-card" wx:if="{{loading}}">正在加载订单资金信息…</view>
+  <view class="state-card error" wx:elif="{{errorMessage}}">
+    <text>{{errorMessage}}</text>
+    <button class="secondary-button" bindtap="retryLoad">重新加载</button>
+  </view>
+
+  <block wx:elif="{{detail}}">
+    <view class="header-card">
+      <text class="eyebrow">订单资金台账</text>
+      <view class="header-row">
+        <text class="plan-code">{{detail.order_plan.plan_code}}</text>
+        <text class="state-pill">{{detail.state_name}}</text>
+      </view>
+      <text class="merchant">{{detail.order_plan.merchant_name}}</text>
+      <text class="meta">厂家销售经理：{{detail.order_plan.sales_manager_name}} · {{detail.order_plan.total_quantity}} 台</text>
+    </view>
+
+    <view class="money-grid">
+      <view class="money-cell">
+        <text class="money-label">应收总额</text>
+        <text class="money-value">{{detail.receivable_amount ? '¥' + detail.receivable_amount : '--'}}</text>
+      </view>
+      <view class="money-cell">
+        <text class="money-label">累计已收</text>
+        <text class="money-value received">¥{{detail.confirmed_received_amount}}</text>
+      </view>
+      <view class="money-cell">
+        <text class="money-label">未收余额</text>
+        <text class="money-value outstanding">{{detail.outstanding_amount !== null ? '¥' + detail.outstanding_amount : '--'}}</text>
+      </view>
+    </view>
+
+    <view class="section-card">
+      <view class="section-head">
+        <text class="section-title">订单清单</text>
+        <text class="section-state">{{detail.statement.submitted ? '已提交' : '待制作'}}</text>
+      </view>
+
+      <view wx:if="{{detail.statement.submitted}}" class="statement-info">
+        <text>提交人：{{detail.statement.submitted_by_name}}</text>
+        <text>提交时间：{{detail.statement.submittedText}}</text>
+        <button class="secondary-button" bindtap="previewStatement">查看订单清单截图</button>
+      </view>
+
+      <view wx:if="{{detail.actions.can_submit_statement}}" class="action-form">
+        <text class="form-tip">线下制作包含价格和订单总金额的清单，再上传截图并填写应收总额。</text>
+        <input
+          class="amount-input"
+          type="digit"
+          value="{{receivableAmount}}"
+          placeholder="填写应收总额"
+          bindinput="onReceivableInput"
+        />
+        <button class="secondary-button" bindtap="chooseStatement">
+          {{selectedStatementPath ? '已选择清单截图，点击更换' : '选择订单清单截图'}}
+        </button>
+        <image wx:if="{{selectedStatementPath}}" class="preview" src="{{selectedStatementPath}}" mode="aspectFill" />
+        <button
+          class="primary-button"
+          loading="{{submittingStatement}}"
+          disabled="{{submittingStatement}}"
+          bindtap="submitStatement"
+        >提交订单清单</button>
+      </view>
+    </view>
+
+    <view class="section-card" wx:if="{{detail.actions.can_upload_payment}}">
+      <view class="section-head">
+        <text class="section-title">上传本次付款凭证</text>
+        <text class="section-state pending">需要处理</text>
+      </view>
+      <text class="form-tip">付款后上传凭证。实际到账金额由厂家销售助理依据凭证确认。</text>
+      <button class="secondary-button" bindtap="chooseVoucher">
+        {{selectedVoucherPath ? '已选择付款凭证，点击更换' : '选择付款凭证'}}
+      </button>
+      <image wx:if="{{selectedVoucherPath}}" class="preview" src="{{selectedVoucherPath}}" mode="aspectFill" />
+      <button
+        class="primary-button"
+        loading="{{uploadingVoucher}}"
+        disabled="{{uploadingVoucher}}"
+        bindtap="submitVoucher"
+      >上传付款凭证</button>
+    </view>
+
+    <view class="section-card">
+      <view class="section-head">
+        <text class="section-title">付款记录</text>
+        <text class="section-state">共 {{detail.payment_count}} 笔</text>
+      </view>
+      <view wx:if="{{detail.payments.length === 0}}" class="empty-tip">尚未上传付款凭证</view>
+
+      <view class="payment-card" wx:for="{{detail.payments}}" wx:key="id">
+        <view class="payment-head">
+          <text class="payment-title">第 {{item.sequence_no}} 笔付款</text>
+          <text class="payment-state {{item.status === 'PENDING' ? 'pending' : ''}}">{{item.status_name}}</text>
+        </view>
+        <text class="payment-meta">上传人：{{item.uploaded_by_name}}</text>
+        <text class="payment-meta">上传时间：{{item.uploadedText}}</text>
+        <button
+          class="link-button"
+          data-path="{{item.voucher_preview_path}}"
+          bindtap="previewVoucher"
+        >查看付款凭证</button>
+
+        <view wx:if="{{item.status === 'CONFIRMED'}}" class="confirmed-box">
+          <text class="confirmed-amount">确认到账 ¥{{item.confirmed_amount}}</text>
+          <text>确认人：{{item.confirmed_by_name}}</text>
+          <text>确认时间：{{item.confirmedText}}</text>
+        </view>
+
+        <view wx:if="{{item.can_confirm}}" class="confirm-form">
+          <input
+            class="amount-input"
+            type="digit"
+            value="{{item.confirmInput}}"
+            placeholder="依据凭证填写实际到账金额"
+            data-id="{{item.id}}"
+            bindinput="onConfirmAmountInput"
+          />
+          <button
+            class="primary-button"
+            data-id="{{item.id}}"
+            loading="{{confirmingPaymentId === item.id}}"
+            disabled="{{confirmingPaymentId !== 0}}"
+            bindtap="confirmPayment"
+          >确认本次收款</button>
+        </view>
+      </view>
+    </view>
+
+    <view class="independence-tip">
+      本页只记录清单、应收和收款；不影响商家入库后的“确认已入账”和发货量统计。
+    </view>
+  </block>
+</view>

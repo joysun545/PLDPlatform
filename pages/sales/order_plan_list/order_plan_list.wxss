@@ -345,18 +345,22 @@ button::after {
 }
 
 .production-panel,
+.shipment-authorization-panel,
 .outbound-panel,
 .receipt-panel,
-.accounting-panel {
+.accounting-panel,
+.finance-panel {
   margin-top: 22rpx;
   padding-top: 20rpx;
   border-top: 1rpx solid #edf2ef;
 }
 
 .production-confirm-button,
+.shipment-authorization-button,
 .outbound-confirm-button,
 .receipt-confirm-button,
-.accounting-confirm-button {
+.accounting-confirm-button,
+.finance-detail-button {
   margin-top: 20rpx;
   border-radius: 14rpx;
   background: #08b760;
@@ -366,11 +370,47 @@ button::after {
 }
 
 .production-confirm-button[disabled],
+.shipment-authorization-button[disabled],
 .outbound-confirm-button[disabled],
 .receipt-confirm-button[disabled],
 .accounting-confirm-button[disabled] {
   background: #a8d8bf;
   color: #fff;
+}
+
+.finance-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12rpx;
+  margin-top: 18rpx;
+}
+
+.finance-summary-grid > view {
+  padding: 14rpx 8rpx;
+  border-radius: 10rpx;
+  background: #f8fafc;
+  text-align: center;
+}
+
+.finance-label,
+.finance-value {
+  display: block;
+}
+
+.finance-label {
+  color: #64748b;
+  font-size: 21rpx;
+}
+
+.finance-value {
+  margin-top: 7rpx;
+  color: #0f172a;
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
+.finance-detail-button {
+  background: #0f766e;
 }
 
 .outbound-tip {

@@ -114,6 +114,31 @@
     </view>
 
     <view class="open-tip" wx:if="{{plan.canOpen}}">点击查看并确认BOM配套 ›</view>
+    <view class="finance-panel" wx:if="{{plan.financeSummary}}">
+      <view class="delivery-state-row">
+        <text class="delivery-label">订单资金</text>
+        <text class="delivery-state">{{plan.financeSummary.state_name}}</text>
+      </view>
+      <view class="finance-summary-grid">
+        <view>
+          <text class="finance-label">应收</text>
+          <text class="finance-value">{{plan.financeSummary.receivable_amount ? '¥' + plan.financeSummary.receivable_amount : '--'}}</text>
+        </view>
+        <view>
+          <text class="finance-label">累计已收</text>
+          <text class="finance-value">¥{{plan.financeSummary.confirmed_received_amount}}</text>
+        </view>
+        <view>
+          <text class="finance-label">未收余额</text>
+          <text class="finance-value">{{plan.financeSummary.outstanding_amount !== null ? '¥' + plan.financeSummary.outstanding_amount : '--'}}</text>
+        </view>
+      </view>
+      <button
+        class="finance-detail-button"
+        data-id="{{plan.id}}"
+        catchtap="openFinance"
+      >查看或处理资金明细</button>
+    </view>
     <view class="delivery-panel" wx:if="{{plan.scope === 'supplier' && plan.confirmation}}">
       <view class="delivery-state-row">
         <text class="delivery-label">配送协同</text>
@@ -154,6 +179,41 @@
         data-id="{{plan.id}}"
         catchtap="confirmProduction"
       >确认生产完成</button>
+    </view>
+    <view
+      class="shipment-authorization-panel"
+      wx:if="{{(viewer.role === 'factory_sales' || viewer.role === 'factory_stock') && plan.shipmentAuthorization}}"
+    >
+      <view class="delivery-state-row">
+        <text class="delivery-label">发货授权</text>
+        <text class="delivery-state">{{plan.shipmentAuthorization.state_name}}</text>
+      </view>
+      <text
+        class="outbound-tip"
+        wx:if="{{plan.shipmentAuthorization.authorized_by_name}}"
+      >
+        已由 {{plan.shipmentAuthorization.authorized_by_name}} 下达发货指令。
+      </text>
+      <text
+        class="outbound-tip"
+        wx:if="{{viewer.role === 'factory_sales' && plan.canConfirmShipmentAuthorization}}"
+      >
+        生产已经完成。请根据实际履约安排确认是否通知库房打印二维码并发货。
+      </text>
+      <text
+        class="outbound-tip"
+        wx:if="{{viewer.role === 'factory_stock' && plan.shipmentAuthorization.state === 'AUTHORIZED'}}"
+      >
+        销售经理已经授权发货，请在网页打印中心完成二维码；全部打印后可一键出库。
+      </text>
+      <button
+        wx:if="{{viewer.role === 'factory_sales' && plan.canConfirmShipmentAuthorization}}"
+        class="shipment-authorization-button"
+        loading="{{confirmingShipmentAuthorizationPlanId === plan.id}}"
+        disabled="{{confirmingShipmentAuthorizationPlanId !== 0}}"
+        data-id="{{plan.id}}"
+        catchtap="confirmShipmentAuthorization"
+      >确认通知库房发货</button>
     </view>
     <view
       class="outbound-panel"

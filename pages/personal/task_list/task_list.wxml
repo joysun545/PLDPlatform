@@ -1,7 +1,12 @@
 <view class="page">
   <view class="summary">
     <text class="summary-title">我的任务</text>
-    <text class="summary-count">{{unreadCount}} 条未读</text>
+    <view class="summary-metrics">
+      <text class="summary-count">{{attentionCount}} 项待关注</text>
+      <text class="summary-detail">
+        {{unreadCount}} 未读 · {{actionPendingCount}} 待处理
+      </text>
+    </view>
   </view>
 
   <view wx:if="{{loading}}" class="empty">正在加载任务...</view>
@@ -23,7 +28,8 @@
       <text wx:if="{{item.summary}}" class="task-summary">{{item.summary}}</text>
       <view class="task-bottom">
         <text>{{item.cursor_time}}</text>
-        <text class="{{item.actionClass}}">{{item.actionText}}</text>
+        <text wx:if="{{item.need_action}}" class="need-action">需要处理</text>
+        <text wx:else class="ack-task">查看即知晓</text>
       </view>
       <view wx:if="{{openingId === item.id}}" class="opening">正在打开...</view>
     </view>

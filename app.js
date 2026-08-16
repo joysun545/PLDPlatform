@@ -19,6 +19,8 @@ App({
     apiBase: 'https://joytest.site/pldp/api',
 
     taskList: [],
+    taskUnreadCount: 0,
+    taskActionPendingCount: 0,
     taskCount: 0,
 
     _isScanning: false,
@@ -214,6 +216,7 @@ App({
       'pages/personal/task_list/task_list',
       'pages/sales/create_plan/create_plan',
       'pages/sales/order_plan_list/order_plan_list',
+      'pages/sales/order_finance/order_finance',
       'pages/sales/matching_confirm/matching_confirm',
       'pages/supply_chain/responsibility/responsibility'
     ];
@@ -280,8 +283,16 @@ App({
           return;
         }
         if (!res.data || res.data.code !== 0) return;
-        const unread = (res.data.data && res.data.data.unread_count) || 0;
-        this.globalData.taskCount = unread;
+        const summary = (res.data && res.data.data) || {};
+        const unread = Number(summary.unread_count) || 0;
+        const actionPending = Number(summary.action_pending_count) || 0;
+        const attention = summary.attention_count === undefined
+          ? Math.max(unread, actionPending)
+          : (Number(summary.attention_count) || 0);
+
+        this.globalData.taskUnreadCount = unread;
+        this.globalData.taskActionPendingCount = actionPending;
+        this.globalData.taskCount = attention;
         this.updateTabBarBadge();
         this._emitTaskUpdated();
       }
@@ -307,7 +318,6 @@ App({
           isNew: it.state === 'NEW',
           state: it.state,
           need_action: it.need_action,
-          done_reason: it.done_reason || '',
           cursor_time: it.cursor_time,
           domain: it.domain || '',
           action_mode: it.action_mode || ''
@@ -367,7 +377,14 @@ App({
     const task = this.globalData.taskList.find(t => t.id === taskId);
     if (task && task.isNew) {
       task.isNew = false;
-      this.globalData.taskCount = Math.max(0, this.globalData.taskCount - 1);
+      task.state = 'READ';
+      this.globalData.taskUnreadCount = Math.max(
+        0,
+        this.globalData.taskUnreadCount - 1
+      );
+      if (!task.need_action) {
+        this.globalData.taskCount = Math.max(0, this.globalData.taskCount - 1);
+      }
       this.updateTabBarBadge();
       this._emitTaskUpdated();
     }
