@@ -6,6 +6,7 @@ const ALLOWED_ROLES = [
   'factory_matching',
   'factory_production',
   'factory_stock',
+  'factory_logistics',
   'merchant_owner',
   'merchant_senior_manager',
   'merchant_sales',
@@ -45,6 +46,12 @@ function preparePlan(plan) {
   const receiptConfirmation = plan.receipt_confirmation || null;
   const accountingConfirmation = plan.accounting_confirmation || null;
   const financeSummary = plan.finance_summary || null;
+  const logisticsSummary = plan.logistics_summary
+    ? {
+        ...plan.logistics_summary,
+        latestUploadedText: formatDate(plan.logistics_summary.latest_uploaded_at)
+      }
+    : null;
   return {
     ...plan,
     submittedText: formatDate(plan.submitted_at),
@@ -69,6 +76,7 @@ function preparePlan(plan) {
     receiptConfirmation,
     accountingConfirmation,
     financeSummary,
+    logisticsSummary,
     fulfillmentStages: plan.fulfillment_stages || [],
     items: (plan.items || []).map(item => ({
       ...item,
@@ -218,6 +226,15 @@ Page({
     });
   },
 
+  openLogistics(e) {
+    const planId = Number(e.currentTarget.dataset.id);
+    if (!planId) return;
+    wx.navigateTo({
+      url: `/pages/sales/order_logistics/order_logistics?order_plan_id=${planId}`,
+      fail: () => wx.showToast({ title: '物流单据页面打开失败', icon: 'none' })
+    });
+  },
+
   confirmDelivery(e) {
     const planId = Number(e.currentTarget.dataset.id);
     const plan = this.data.plans.find(item => item.id === planId);
@@ -284,7 +301,7 @@ Page({
 
     wx.showModal({
       title: '确认生产完成',
-      content: '确认后将向创建订单的厂家销售经理推送“下达发货指令”任务。销售经理授权后，厂家库管才能打印二维码并出库。',
+      content: '确认后将向创建订单的厂家销售经理推送“确认发货”任务。销售经理确认后，厂家库管才能打印二维码并出库。',
       confirmText: '确认完成',
       success: modal => {
         if (!modal.confirm) return;
@@ -334,9 +351,9 @@ Page({
     ) return;
 
     wx.showModal({
-      title: '下达发货指令',
-      content: `确认允许订单 ${plan.plan_code} 进入二维码打印和库房出库流程？本操作只授权实物发货，与付款、应收款无关。`,
-      confirmText: '确认授权',
+      title: '确认发货',
+      content: `确认订单 ${plan.plan_code} 进入二维码打印和库房出库流程？这是实物流转的必经确认，与付款、应收款无关。`,
+      confirmText: '确认发货',
       success: modal => {
         if (!modal.confirm) return;
         this.submitShipmentAuthorization(plan);
@@ -346,7 +363,7 @@ Page({
 
   submitShipmentAuthorization(plan) {
     this.setData({ confirmingShipmentAuthorizationPlanId: plan.id });
-    wx.showLoading({ title: '正在下达...', mask: true });
+    wx.showLoading({ title: '正在确认...', mask: true });
     wx.request({
       url: `${app.globalData.apiBase}/sales/order-plans/${plan.id}/shipment-authorization/`,
       method: 'POST',
@@ -360,10 +377,10 @@ Page({
           return;
         }
         if (body.code !== 0) {
-          wx.showToast({ title: body.msg || '发货授权失败', icon: 'none' });
+          wx.showToast({ title: body.msg || '发货确认失败', icon: 'none' });
           return;
         }
-        wx.showToast({ title: body.msg || '发货指令已下达', icon: 'success' });
+        wx.showToast({ title: body.msg || '发货已确认', icon: 'success' });
         app.refreshTasks && app.refreshTasks();
         this.loadPlans();
       },

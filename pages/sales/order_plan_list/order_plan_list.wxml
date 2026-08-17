@@ -185,14 +185,14 @@
       wx:if="{{(viewer.role === 'factory_sales' || viewer.role === 'factory_stock') && plan.shipmentAuthorization}}"
     >
       <view class="delivery-state-row">
-        <text class="delivery-label">发货授权</text>
+        <text class="delivery-label">发货确认</text>
         <text class="delivery-state">{{plan.shipmentAuthorization.state_name}}</text>
       </view>
       <text
         class="outbound-tip"
         wx:if="{{plan.shipmentAuthorization.authorized_by_name}}"
       >
-        已由 {{plan.shipmentAuthorization.authorized_by_name}} 下达发货指令。
+        已由 {{plan.shipmentAuthorization.authorized_by_name}} 确认发货。
       </text>
       <text
         class="outbound-tip"
@@ -204,7 +204,7 @@
         class="outbound-tip"
         wx:if="{{viewer.role === 'factory_stock' && plan.shipmentAuthorization.state === 'AUTHORIZED'}}"
       >
-        销售经理已经授权发货，请在网页打印中心完成二维码；全部打印后可一键出库。
+        销售经理已经确认发货，请在网页打印中心完成二维码；全部打印后可一键出库。
       </text>
       <button
         wx:if="{{viewer.role === 'factory_sales' && plan.canConfirmShipmentAuthorization}}"
@@ -234,6 +234,25 @@
         data-id="{{plan.id}}"
         catchtap="confirmOutbound"
       >确认一键发货</button>
+    </view>
+    <view class="logistics-panel" wx:if="{{plan.logisticsSummary}}">
+      <view class="delivery-state-row">
+        <text class="delivery-label">物流单据</text>
+        <text class="delivery-state">{{plan.logisticsSummary.state_name}}</text>
+      </view>
+      <text class="outbound-tip" wx:if="{{plan.logisticsSummary.latestUploadedText}}">
+        最近上传：{{plan.logisticsSummary.latest_uploaded_by_name}} · {{plan.logisticsSummary.latestUploadedText}}
+      </text>
+      <text
+        class="outbound-tip"
+        wx:if="{{plan.scope === 'merchant' && plan.logisticsSummary.state === 'PENDING_UPLOAD'}}"
+      >厂家物流经理尚未上传，商家实物入库无需等待。</text>
+      <button
+        wx:if="{{plan.logisticsSummary.can_upload || plan.logisticsSummary.can_view}}"
+        class="logistics-detail-button"
+        data-id="{{plan.id}}"
+        catchtap="openLogistics"
+      >{{plan.logisticsSummary.can_upload ? '上传或查看物流单据' : '查看物流单据'}}</button>
     </view>
     <view
       class="receipt-panel"

@@ -17,7 +17,7 @@
       wx:for="{{taskList}}"
       wx:key="id"
       class="task-card {{item.stateClass}}"
-      data-task="{{item}}"
+      data-id="{{item.id}}"
       bindtap="openTask"
     >
       <view class="task-top">

@@ -349,7 +349,8 @@ button::after {
 .outbound-panel,
 .receipt-panel,
 .accounting-panel,
-.finance-panel {
+.finance-panel,
+.logistics-panel {
   margin-top: 22rpx;
   padding-top: 20rpx;
   border-top: 1rpx solid #edf2ef;
@@ -360,7 +361,8 @@ button::after {
 .outbound-confirm-button,
 .receipt-confirm-button,
 .accounting-confirm-button,
-.finance-detail-button {
+.finance-detail-button,
+.logistics-detail-button {
   margin-top: 20rpx;
   border-radius: 14rpx;
   background: #08b760;
@@ -411,6 +413,10 @@ button::after {
 
 .finance-detail-button {
   background: #0f766e;
+}
+
+.logistics-detail-button {
+  background: #2563eb;
 }
 
 .outbound-tip {

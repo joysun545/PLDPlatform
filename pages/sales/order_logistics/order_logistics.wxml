@@ -1,0 +1,71 @@
+<view class="page">
+  <view class="state-card" wx:if="{{loading}}">正在加载物流单据…</view>
+  <view class="state-card error" wx:elif="{{errorMessage}}">
+    <text>{{errorMessage}}</text>
+    <button class="secondary-button" bindtap="retryLoad">重新加载</button>
+  </view>
+
+  <block wx:elif="{{detail}}">
+    <view class="header-card">
+      <text class="eyebrow">订单物流协同</text>
+      <text class="plan-code">{{detail.order_plan.plan_code}}</text>
+      <text class="merchant">{{detail.order_plan.factory_name}} → {{detail.order_plan.merchant_name}}</text>
+      <text class="meta">{{detail.order_plan.brand_name}} · {{detail.order_plan.total_quantity}} 台 · {{detail.order_plan.status_name}}</text>
+    </view>
+
+    <view class="parallel-tip">{{detail.non_blocking_notice}}</view>
+
+    <view class="section-card" wx:if="{{detail.actions.can_upload}}">
+      <view class="section-head">
+        <text class="section-title">上传物流单据</text>
+        <text class="section-state">厂家物流经理</text>
+      </view>
+      <text class="form-tip">支持 JPG、PNG、WEBP、PDF，单份不超过 10MB。可按车辆或批次连续上传多份。</text>
+      <view class="choose-row">
+        <button class="secondary-button half" bindtap="chooseImage">拍照或选图片</button>
+        <button class="secondary-button half" bindtap="chooseFile">从会话选文件</button>
+      </view>
+      <view class="selected-file" wx:if="{{selectedFile}}">
+        <text class="selected-name">{{selectedFile.name}}</text>
+        <text class="selected-size">{{selectedFile.sizeText}}</text>
+      </view>
+      <textarea
+        class="remark-input"
+        maxlength="255"
+        value="{{remark}}"
+        placeholder="选填：车辆、批次、物流公司或单号等备注"
+        bindinput="onRemarkInput"
+      />
+      <button
+        class="primary-button"
+        loading="{{uploading}}"
+        disabled="{{uploading}}"
+        bindtap="submitDocument"
+      >上传并通知商家</button>
+    </view>
+
+    <view class="section-card">
+      <view class="section-head">
+        <text class="section-title">已上传单据</text>
+        <text class="section-state">共 {{detail.documents.length}} 份</text>
+      </view>
+      <view class="empty-tip" wx:if="{{detail.documents.length === 0}}">厂家物流经理尚未上传物流单据</view>
+      <view class="document-card" wx:for="{{detail.documents}}" wx:key="id">
+        <view class="document-head">
+          <text class="document-title">第 {{item.sequence_no}} 份</text>
+          <text class="file-pill">{{item.file_type === 'PDF' ? 'PDF' : '图片'}}</text>
+        </view>
+        <text class="file-name">{{item.original_name}}</text>
+        <text class="document-meta">{{item.fileSizeText}} · {{item.uploaded_by_name}}</text>
+        <text class="document-meta">{{item.uploadedText}}</text>
+        <text class="document-remark" wx:if="{{item.remark}}">备注：{{item.remark}}</text>
+        <button
+          class="link-button"
+          data-path="{{item.preview_path}}"
+          data-type="{{item.file_type}}"
+          bindtap="previewDocument"
+        >查看物流单据</button>
+      </view>
+    </view>
+  </block>
+</view>

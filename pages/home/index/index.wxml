@@ -56,10 +56,15 @@
       <text>售后列表</text>
     </view>
 
-    <!-- 出入库管理 -->
-    <view class="menu-item" bindtap="goBatchScan" wx:if="{{showStock}}">
+    <!-- 独立于订单计划的逐台商品流转 -->
+    <view class="menu-item" bindtap="goGoodsTransfer" wx:if="{{showGoodsTransfer}}">
       <image src="/images/stock_manage.png" class="icon" />
-      <text>出入库管理</text>
+      <text>扫码商品流转</text>
+    </view>
+
+    <view class="menu-item" bindtap="goGoodsTransferList" wx:if="{{showGoodsTransferList}}">
+      <image src="/images/data_statistics.png" class="icon" />
+      <text>商品流转列表</text>
     </view>
 
     <!-- 数据统计 -->

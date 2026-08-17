@@ -64,11 +64,12 @@ Page({
   },
 
   openTask(e) {
-    const task = e.currentTarget.dataset.task;
-    if (!task || this.data.openingId) return;
+    const taskId = Number(e.currentTarget.dataset.id);
+    const task = this.data.taskList.find(item => Number(item.id) === taskId);
+    if (!taskId || !task || this.data.openingId) return;
 
-    this.setData({ openingId: task.id });
-    app.openUserTask(task.id, (response) => {
+    this.setData({ openingId: taskId });
+    app.openUserTask(taskId, (response) => {
       this.setData({ openingId: null });
 
       if (!response || response.code !== 0) {
@@ -79,30 +80,54 @@ Page({
         return;
       }
 
-      if (task.url) {
-        this.navigateToTask(task.url);
+      const targetUrl = this.resolveTaskUrl(task);
+      if (targetUrl) {
+        this.navigateToTask(targetUrl);
       } else {
-        wx.showToast({ title: '任务已更新', icon: 'success' });
+        wx.showToast({ title: '任务目标地址缺失', icon: 'none' });
       }
     });
   },
 
+  resolveTaskUrl(task) {
+    if (task.url) return task.url;
+
+    // 兼容部署物流功能前已经进入本地任务缓存、但尚未携带 link 的任务。
+    if (
+      task.type === 'ORDER_PLAN_LOGISTICS_DOCUMENT_UPLOAD' &&
+      Number(task.biz_id)
+    ) {
+      return (
+        '/pages/sales/order_logistics/order_logistics' +
+        `?order_plan_id=${Number(task.biz_id)}`
+      );
+    }
+
+    return '';
+  },
+
   navigateToTask(url) {
+    const normalizedUrl = url.startsWith('/') ? url : `/${url}`;
     const tabPages = [
       '/pages/home/index/index',
       '/pages/scan/scan/scan',
       '/pages/personal/center/center'
     ];
 
-    if (tabPages.includes(url)) {
-      wx.switchTab({ url });
+    if (tabPages.includes(normalizedUrl)) {
+      wx.switchTab({ url: normalizedUrl });
       return;
     }
 
     wx.navigateTo({
-      url,
-      fail: () => {
-        wx.showToast({ title: '任务目标页面尚未开放', icon: 'none' });
+      url: normalizedUrl,
+      fail: error => {
+        console.error('任务页面跳转失败', normalizedUrl, error);
+        wx.showModal({
+          title: '页面打开失败',
+          content: '请确认手机已加载最新预览版小程序后重试。',
+          showCancel: false
+        });
       }
     });
   }

@@ -204,6 +204,10 @@ App({
 
     const protectedRoutes = [
       'pages/stock/batch_scan/batch_scan',
+      'pages/stock/goods_transfer/goods_transfer',
+      'pages/stock/goods_transfer_list/goods_transfer_list',
+      'pages/stock/goods_transfer_detail/goods_transfer_detail',
+      'pages/stock/goods_transfer_settlement/goods_transfer_settlement',
       'pages/scan/scan/scan',
       'pages/scan/result/result',
       'pages/aftersale/list/list',
@@ -216,6 +220,7 @@ App({
       'pages/personal/task_list/task_list',
       'pages/sales/create_plan/create_plan',
       'pages/sales/order_plan_list/order_plan_list',
+      'pages/sales/order_logistics/order_logistics',
       'pages/sales/order_finance/order_finance',
       'pages/sales/matching_confirm/matching_confirm',
       'pages/supply_chain/responsibility/responsibility'
@@ -227,9 +232,12 @@ App({
       'factory_sales',
       'factory_matching',
       'factory_production',
+      'factory_logistics',
+      'factory_stock',
       'merchant_owner',
       'merchant_senior_manager',
       'merchant_sales',
+      'merchant_stock',
       'supplier_owner',
       'supplier_sales',
       'service_owner'
@@ -320,6 +328,8 @@ App({
           need_action: it.need_action,
           cursor_time: it.cursor_time,
           domain: it.domain || '',
+          type: it.type || '',
+          biz_id: it.biz_id || '',
           action_mode: it.action_mode || ''
         }));
         this._emitTaskUpdated();

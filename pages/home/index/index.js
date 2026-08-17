@@ -13,6 +13,8 @@ Page({
     showSupplierResponsibility: false,
     showMatching: false,
     showStock: false,
+    showGoodsTransfer: false,
+    showGoodsTransferList: false,
     showStats: false,
     showAftersale: false,
     showMyDevice: false
@@ -51,6 +53,7 @@ Page({
         'factory_matching',
         'factory_production',
         'factory_stock',
+        'factory_logistics',
         'supplier_owner',
         'supplier_sales',
         'merchant_owner',
@@ -66,6 +69,20 @@ Page({
         'merchant_senior_manager',
         'merchant_sales',
         'merchant_stock'
+      ].includes(role),
+
+      showGoodsTransfer: [
+        'merchant_owner',
+        'merchant_sales',
+        'merchant_stock'
+      ].includes(role),
+
+      showGoodsTransferList: [
+        'merchant_owner',
+        'merchant_sales',
+        'merchant_stock',
+        'factory_stock',
+        'factory_sales'
       ].includes(role),
 
       showStats: [
@@ -157,6 +174,16 @@ Page({
 
   goBatchScan() {
     wx.navigateTo({ url: '/pages/stock/batch_scan/batch_scan' });
+  },
+
+  goGoodsTransfer() {
+    wx.navigateTo({ url: '/pages/stock/goods_transfer/goods_transfer' });
+  },
+
+  goGoodsTransferList() {
+    wx.navigateTo({
+      url: '/pages/stock/goods_transfer_list/goods_transfer_list'
+    });
   },
 
   goStats() {
