@@ -1,0 +1,96 @@
+<view class="page">
+  <view class="state-card" wx:if="{{loading}}">正在加载商品流转详情…</view>
+  <view class="state-card error" wx:elif="{{errorMessage}}">
+    <text>{{errorMessage}}</text>
+    <button class="secondary-button" bindtap="retryLoad">重新加载</button>
+  </view>
+
+  <block wx:elif="{{detail}}">
+    <view class="hero-card">
+      <view class="hero-head">
+        <text class="flow-type">{{detail.flow_type_name}}</text>
+        <text class="status-pill">{{detail.status_name}}</text>
+      </view>
+      <text class="flow-no">{{detail.flow_no}}</text>
+      <text class="route">{{detail.from_organization.name}} → {{detail.to_organization.name}}</text>
+      <text class="hero-meta">共 {{detail.item_count}} 台｜{{detail.initiated_by_name}}</text>
+    </view>
+
+    <view class="rule-card waiting" wx:if="{{detail.status === 'PENDING_RECEIPT'}}">设备正在运输中，收货方确认入库前，物权仍属于 {{detail.from_organization.name}}。</view>
+    <view class="rule-card transfer" wx:if="{{detail.flow_type === 'TRANSFER' && detail.status === 'COMPLETED'}}">调货已由上级商家完成，物权已从 B 转至 C；款项分别按 A–B退货冲抵、A–C新增应收处理，不发生B–C平级结算。</view>
+    <view class="rule-card terminal" wx:if="{{detail.factory_lifecycle_terminated}}">设备已退回厂家并确认入库，当前生命周期终止；再次出厂必须重新创建订单计划。</view>
+
+    <view class="section-card">
+      <text class="section-title">流转关系</text>
+      <view class="info-row">
+        <text class="label">指令组织</text>
+        <text class="value">{{detail.instruction_organization.name}}</text>
+      </view>
+      <view class="info-row">
+        <text class="label">调出组织</text>
+        <text class="value">{{detail.from_organization.name}}</text>
+      </view>
+      <view class="info-row">
+        <text class="label">调入组织</text>
+        <text class="value">{{detail.to_organization.name}}</text>
+      </view>
+      <view class="info-row" wx:if="{{detail.source_account}}">
+        <text class="label">调出负责人</text>
+        <text class="value">{{detail.source_account.name}}</text>
+      </view>
+      <view class="info-row">
+        <text class="label">关联收货账号</text>
+        <text class="value">{{detail.target_account.name}}</text>
+      </view>
+      <view class="info-row">
+        <text class="label">收货确认人</text>
+        <text class="value">{{detail.received_by_name || '尚未确认'}}</text>
+      </view>
+      <view class="info-row" wx:if="{{detail.remark}}">
+        <text class="label">备注</text>
+        <text class="value wrap">{{detail.remark}}</text>
+      </view>
+    </view>
+
+    <view class="section-card">
+      <view class="section-head">
+        <text class="section-title">设备明细</text>
+        <text class="count">{{detail.item_count}} 台</text>
+      </view>
+      <view class="empty-tip" wx:if="{{detail.item_count === 0}}">尚未扫描设备</view>
+      <view class="device-row" wx:for="{{detail.items}}" wx:key="id">
+        <view class="device-main">
+          <text class="device-sn">{{item.device.sn}}</text>
+          <text class="device-model">{{item.device.product_model_name}}</text>
+          <text class="device-time">扫码：{{item.scannedText}}</text>
+        </view>
+        <text class="item-status">{{item.status_name}}</text>
+      </view>
+    </view>
+
+    <view class="section-card">
+      <text class="section-title">流程时间</text>
+      <view class="timeline-row">
+        <text class="dot"></text>
+        <view><text class="time-title">创建流转单</text><text class="time-value">{{detail.createdText}}</text></view>
+      </view>
+      <view class="timeline-row" wx:if="{{detail.submittedText}}">
+        <text class="dot"></text>
+        <view><text class="time-title">完成扫码并提交</text><text class="time-value">{{detail.submittedText}}</text></view>
+      </view>
+      <view class="timeline-row" wx:if="{{detail.receivedText}}">
+        <text class="dot"></text>
+        <view><text class="time-title">收货方确认入库</text><text class="time-value">{{detail.receivedText}}</text></view>
+      </view>
+      <view class="timeline-row" wx:if="{{detail.completedText}}">
+        <text class="dot complete"></text>
+        <view><text class="time-title">物权流转完成</text><text class="time-value">{{detail.completedText}}</text></view>
+      </view>
+    </view>
+
+    <button class="scan-button" wx:if="{{detail.actions.can_scan}}" bindtap="continueScanning">继续逐台扫码</button>
+    <button class="settlement-button" wx:if="{{detail.flow_type === 'SHIPMENT' && detail.status !== 'SCANNING'}}" bindtap="openSettlement">货品清单、物流与应收</button>
+    <button class="account-button" wx:if="{{detail.actions.can_view_accounts}}" bindtap="openAccounts">退货冲抵与调货上下级往来</button>
+    <button class="receipt-button" loading="{{receiving}}" disabled="{{receiving}}" wx:if="{{detail.actions.can_receive}}" bindtap="confirmReceipt">确认收货并入库</button>
+  </block>
+</view>

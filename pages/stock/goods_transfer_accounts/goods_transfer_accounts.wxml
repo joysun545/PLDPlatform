@@ -1,0 +1,116 @@
+<view class="page">
+  <view class="state-card" wx:if="{{loading}}">正在加载流转往来账…</view>
+  <view class="state-card error" wx:elif="{{errorMessage}}">
+    <text>{{errorMessage}}</text>
+    <button class="secondary-button" bindtap="retryLoad">重新加载</button>
+  </view>
+
+  <block wx:elif="{{detail}}">
+    <view class="header-card">
+      <text class="eyebrow">商品流转上下级往来账</text>
+      <view class="header-row">
+        <text class="flow-no">{{detail.goods_transfer.flow_no}}</text>
+        <text class="flow-type">{{detail.goods_transfer.flow_type_name}}</text>
+      </view>
+      <text class="route">{{detail.goods_transfer.from_organization_name}} → {{detail.goods_transfer.to_organization_name}}</text>
+      <text class="meta">指令组织：{{detail.goods_transfer.instruction_organization_name}}｜共{{detail.goods_transfer.device_count}}台</text>
+    </view>
+
+    <view class="rule-tip">实物与物权已经完成流转。本页金额必须人工填写并由对方确认；调货只形成上下级账务，不形成平级商家结算。</view>
+
+    <view class="empty-card" wx:if="{{detail.cases.length === 0}}">当前组织没有可查看的往来账明细</view>
+
+    <view class="case-card" wx:for="{{detail.cases}}" wx:key="id" wx:for-index="caseIndex">
+      <view class="case-head">
+        <view>
+          <text class="case-title">{{item.case_type_name}}</text>
+          <text class="case-route">{{item.upper_organization.name}} ↔ {{item.lower_organization.name}}</text>
+        </view>
+        <text class="status-pill status-{{item.status}}">{{item.status_name}}</text>
+      </view>
+
+      <view class="privacy-tip" wx:if="{{detail.goods_transfer.flow_type === 'TRANSFER'}}">本卡片仅向本组上下级双方显示，对另一家平级商家隐藏金额。</view>
+
+      <view class="money-grid">
+        <view class="money-cell"><text class="money-label">确认金额</text><text class="money-value">{{item.confirmed_amount ? '¥' + item.confirmed_amount : '--'}}</text></view>
+        <view class="money-cell" wx:if="{{item.available_credit_amount !== null}}"><text class="money-label">待冲抵余额</text><text class="money-value credit">¥{{item.available_credit_amount}}</text></view>
+        <view class="money-cell" wx:if="{{item.outstanding_amount !== null}}"><text class="money-label">应收余额</text><text class="money-value outstanding">¥{{item.outstanding_amount}}</text></view>
+      </view>
+
+      <view class="pair-box">
+        <text class="pair-title">当前上下级累计往来</text>
+        <text>累计应收：¥{{item.pair_summary.gross_receivable_amount}}</text>
+        <text>累计已收：¥{{item.pair_summary.confirmed_received_amount}}</text>
+        <text>累计退货冲抵：¥{{item.pair_summary.confirmed_credit_amount}}</text>
+        <text class="strong">净应收：¥{{item.pair_summary.net_receivable_amount}}｜待冲抵余额：¥{{item.pair_summary.pending_credit_amount}}</text>
+      </view>
+
+      <view class="detail-box" wx:if="{{item.submitted_at}}">
+        <text>提交：{{item.submitted_by_name}}｜{{item.submittedText}}</text>
+        <text wx:if="{{item.proposed_amount}}">提交金额：¥{{item.proposed_amount}}</text>
+        <text wx:else>提交内容：本次无款项</text>
+        <text wx:if="{{item.remark}}">说明：{{item.remark}}</text>
+        <button class="link-button" wx:if="{{item.statement.exists}}" data-path="{{item.statement.preview_path}}" bindtap="previewFile">查看款项关联清单</button>
+      </view>
+      <view class="reject-box" wx:if="{{item.status === 'REJECTED'}}">驳回原因：{{item.rejection_reason}}</view>
+      <view class="detail-box confirmed" wx:if="{{item.confirmed_at}}">确认：{{item.confirmed_by_name}}｜{{item.confirmedText}}</view>
+
+      <view class="action-form" wx:if="{{item.actions.can_submit}}">
+        <text class="section-title">提交本次金额</text>
+        <view class="switch-row"><text>本次不涉及款项</text><switch color="#0f766e" checked="{{item.noAmount}}" data-index="{{caseIndex}}" bindchange="onNoAmountChange" /></view>
+        <input wx:if="{{!item.noAmount}}" class="input" type="digit" placeholder="手动填写关联金额" value="{{item.amountInput}}" data-index="{{caseIndex}}" bindinput="onAmountInput" />
+        <input class="input" maxlength="255" placeholder="关联退货/调货批次说明（选填）" value="{{item.remarkInput}}" data-index="{{caseIndex}}" bindinput="onRemarkInput" />
+        <button class="secondary-button" data-index="{{caseIndex}}" bindtap="chooseStatement">{{item.selectedStatementPath ? '已选择清单图片，点击更换' : '上传款项关联清单（选填）'}}</button>
+        <image wx:if="{{item.selectedStatementPath}}" class="preview" src="{{item.selectedStatementPath}}" mode="aspectFill" />
+        <button class="primary-button" loading="{{busyKey === 'submit-' + item.id}}" disabled="{{busyKey}}" data-index="{{caseIndex}}" bindtap="submitCase">提交给对方确认</button>
+      </view>
+
+      <view class="action-form" wx:if="{{item.actions.can_confirm}}">
+        <text class="section-title">确认对方提交的金额</text>
+        <text class="confirm-amount">{{item.proposed_amount ? '¥' + item.proposed_amount : '本次无款项'}}</text>
+        <button class="primary-button" disabled="{{busyKey}}" data-index="{{caseIndex}}" bindtap="confirmCase">确认进入往来账</button>
+        <input class="input" maxlength="255" placeholder="如不同意，请填写驳回原因" value="{{item.rejectionInput}}" data-index="{{caseIndex}}" bindinput="onRejectionInput" />
+        <button class="danger-button" disabled="{{busyKey}}" data-index="{{caseIndex}}" bindtap="rejectCase">驳回并要求重填</button>
+      </view>
+
+      <view class="allocation-section" wx:if="{{item.actions.can_allocate}}">
+        <text class="section-title">手动关联应收批次</text>
+        <text class="section-tip">系统只列出本组直属上下级尚未结清的批次，不会自动扣减。</text>
+        <view class="candidate" wx:for="{{item.allocation_candidates}}" wx:key="target_id" wx:for-index="candidateIndex">
+          <text class="candidate-no">{{item.flow_no}}</text>
+          <text class="candidate-meta">应收 ¥{{item.amount}}｜余额 ¥{{item.outstanding_amount}}</text>
+          <input class="input" type="digit" placeholder="填写本次冲抵金额" value="{{item.allocationInput}}" data-caseindex="{{caseIndex}}" data-candidateindex="{{candidateIndex}}" bindinput="onAllocationInput" />
+          <button class="small-button" data-caseindex="{{caseIndex}}" data-candidateindex="{{candidateIndex}}" bindtap="allocateCredit">确认关联</button>
+        </view>
+        <text class="section-tip" wx:if="{{item.allocation_candidates.length === 0}}">当前没有可冲抵批次，余额将保留到后续发货或调货应收。</text>
+      </view>
+
+      <view class="history-section" wx:if="{{item.allocations.length}}">
+        <text class="section-title">已冲抵记录</text>
+        <view class="history-row" wx:for="{{item.allocations}}" wx:key="id">
+          <text>{{item.flow_no}}｜¥{{item.amount}}</text>
+          <text>{{item.allocated_by_name}}｜{{item.allocatedText}}</text>
+        </view>
+      </view>
+
+      <view class="payment-section" wx:if="{{item.case_type === 'TRANSFER_IN_RECEIVABLE' && item.status === 'CONFIRMED'}}">
+        <text class="section-title">调入方付款与上级收款</text>
+        <view wx:if="{{item.actions.can_upload_payment}}">
+          <button class="secondary-button" data-index="{{caseIndex}}" bindtap="chooseVoucher">{{item.selectedVoucherPath ? '已选择付款凭证，点击更换' : '选择付款凭证'}}</button>
+          <image wx:if="{{item.selectedVoucherPath}}" class="preview" src="{{item.selectedVoucherPath}}" mode="aspectFill" />
+          <button class="primary-button" data-index="{{caseIndex}}" disabled="{{busyKey}}" bindtap="uploadVoucher">上传付款凭证</button>
+        </view>
+        <view class="payment-row" wx:for="{{item.payments}}" wx:key="id" wx:for-index="paymentIndex">
+          <text class="candidate-no">第{{item.sequence_no}}笔｜{{item.status_name}}</text>
+          <text class="candidate-meta">上传：{{item.uploaded_by_name}}｜{{item.uploadedText}}</text>
+          <button class="link-button" data-path="{{item.voucher_preview_path}}" bindtap="previewFile">查看付款凭证</button>
+          <text wx:if="{{item.confirmed_amount}}" class="confirmed-money">确认到账：¥{{item.confirmed_amount}}</text>
+          <view wx:if="{{item.can_confirm}}">
+            <input class="input" type="digit" placeholder="填写实际到账金额" value="{{item.confirmInput}}" data-caseindex="{{caseIndex}}" data-paymentindex="{{paymentIndex}}" bindinput="onConfirmPaymentInput" />
+            <button class="small-button" data-caseindex="{{caseIndex}}" data-paymentindex="{{paymentIndex}}" bindtap="confirmPayment">确认收款</button>
+          </view>
+        </view>
+      </view>
+    </view>
+  </block>
+</view>

@@ -1,0 +1,168 @@
+page {
+  background: #f3f6f5;
+  color: #17211d;
+}
+
+.page {
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: 24rpx 24rpx 60rpx;
+}
+
+.summary-card,
+.state-card,
+.flow-card {
+  border-radius: 22rpx;
+  background: #fff;
+  box-shadow: 0 10rpx 28rpx rgba(15, 77, 54, 0.07);
+}
+
+.summary-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 30rpx;
+  background: linear-gradient(135deg, #067a4e, #08aa6f);
+  color: #fff;
+}
+
+.eyebrow,
+.summary-title,
+.summary-role,
+.flow-no,
+.route,
+.terminal {
+  display: block;
+}
+
+.eyebrow {
+  font-size: 21rpx;
+  letter-spacing: 3rpx;
+  opacity: 0.8;
+}
+
+.summary-title {
+  margin-top: 10rpx;
+  font-size: 32rpx;
+  font-weight: 700;
+}
+
+.summary-role {
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  opacity: 0.84;
+}
+
+.create-button {
+  margin: 0;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-size: 23rpx;
+}
+
+.create-button::after,
+.secondary-button::after {
+  border: 0;
+}
+
+.state-card,
+.flow-card {
+  margin-top: 22rpx;
+  padding: 28rpx;
+}
+
+.state-card {
+  color: #718078;
+  text-align: center;
+}
+
+.state-card.error {
+  color: #b42318;
+}
+
+.secondary-button {
+  margin-top: 18rpx;
+  border-radius: 14rpx;
+  background: #ecfdf5;
+  color: #067a4e;
+  font-size: 24rpx;
+}
+
+.card-head,
+.meta-row,
+.action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flow-type {
+  font-size: 29rpx;
+  font-weight: 700;
+}
+
+.status-pill {
+  padding: 7rpx 15rpx;
+  border-radius: 999rpx;
+  font-size: 21rpx;
+}
+
+.status-pill.completed {
+  background: #eafaf3;
+  color: #067a4e;
+}
+
+.status-pill.pending {
+  background: #fff7e7;
+  color: #9a5b00;
+}
+
+.status-pill.scanning {
+  background: #edf5ff;
+  color: #2463a4;
+}
+
+.status-pill.cancelled {
+  background: #f0f1f1;
+  color: #6b7370;
+}
+
+.flow-no {
+  margin-top: 12rpx;
+  color: #77847e;
+  font-size: 21rpx;
+}
+
+.route {
+  margin-top: 18rpx;
+  font-size: 27rpx;
+  font-weight: 650;
+}
+
+.meta-row {
+  margin-top: 13rpx;
+  color: #718078;
+  font-size: 21rpx;
+}
+
+.action-row {
+  align-items: flex-end;
+  margin-top: 20rpx;
+  padding-top: 18rpx;
+  border-top: 1rpx solid #e7eeea;
+}
+
+.terminal {
+  max-width: 68%;
+  color: #b42318;
+  font-size: 21rpx;
+  line-height: 1.45;
+}
+
+.action-text {
+  margin-left: auto;
+  color: #079b65;
+  font-size: 23rpx;
+  font-weight: 600;
+}

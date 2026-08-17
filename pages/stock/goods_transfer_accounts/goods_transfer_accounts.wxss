@@ -1,0 +1,58 @@
+page { background: #f4f7f6; color: #17211d; }
+.page { min-height: 100vh; box-sizing: border-box; padding: 24rpx 24rpx 70rpx; }
+.state-card, .header-card, .case-card, .empty-card { border-radius: 22rpx; background: #fff; box-shadow: 0 10rpx 28rpx rgba(15, 77, 54, .07); }
+.state-card, .empty-card { padding: 44rpx 28rpx; text-align: center; color: #718078; }
+.state-card.error { color: #b42318; }
+.header-card { padding: 30rpx; color: #fff; background: linear-gradient(135deg, #0f766e, #0d9488); }
+.eyebrow, .route, .meta, .case-title, .case-route, .money-label, .money-value, .pair-box text, .detail-box text, .section-title, .section-tip, .candidate-no, .candidate-meta, .history-row text, .confirmed-money { display: block; }
+.eyebrow { font-size: 22rpx; opacity: .82; }
+.header-row, .case-head, .switch-row { display: flex; align-items: center; justify-content: space-between; }
+.header-row { margin-top: 12rpx; }
+.flow-no { font-size: 28rpx; font-weight: 700; }
+.flow-type { padding: 8rpx 15rpx; border-radius: 999rpx; background: rgba(255,255,255,.18); font-size: 22rpx; }
+.route { margin-top: 20rpx; font-size: 28rpx; font-weight: 650; }
+.meta { margin-top: 8rpx; font-size: 22rpx; opacity: .84; }
+.rule-tip, .privacy-tip { margin-top: 20rpx; padding: 20rpx 22rpx; border-radius: 14rpx; font-size: 23rpx; line-height: 1.65; }
+.rule-tip { background: #fff7ed; color: #9a3412; }
+.privacy-tip { background: #eff6ff; color: #1d4f91; }
+.case-card { margin-top: 22rpx; padding: 28rpx; }
+.case-head { align-items: flex-start; }
+.case-title { font-size: 30rpx; font-weight: 700; }
+.case-route { margin-top: 7rpx; color: #64748b; font-size: 23rpx; }
+.status-pill { padding: 8rpx 14rpx; border-radius: 999rpx; background: #ecfdf5; color: #047857; font-size: 21rpx; }
+.status-PENDING_CONFIRM { background: #fff7ed; color: #b45309; }
+.status-REJECTED { background: #fff1f2; color: #be123c; }
+.status-DRAFT { background: #f1f5f9; color: #475569; }
+.money-grid { display: flex; margin-top: 22rpx; overflow: hidden; border: 1rpx solid #e2e8f0; border-radius: 14rpx; }
+.money-cell { flex: 1; padding: 22rpx 8rpx; text-align: center; border-right: 1rpx solid #e2e8f0; }
+.money-cell:last-child { border-right: 0; }
+.money-label { color: #64748b; font-size: 21rpx; }
+.money-value { margin-top: 9rpx; font-size: 26rpx; font-weight: 700; }
+.money-value.credit { color: #7c3aed; }
+.money-value.outstanding { color: #b45309; }
+.pair-box, .detail-box, .reject-box { margin-top: 20rpx; padding: 20rpx; border-radius: 14rpx; font-size: 23rpx; line-height: 1.75; }
+.pair-box { background: #f8fafc; color: #475569; }
+.pair-title { color: #17211d; font-weight: 700; }
+.strong { color: #0f766e; font-weight: 650; }
+.detail-box { background: #f8fafc; color: #475569; }
+.detail-box.confirmed { background: #ecfdf5; color: #047857; }
+.reject-box { background: #fff1f2; color: #be123c; }
+.action-form, .allocation-section, .history-section, .payment-section { margin-top: 24rpx; padding-top: 24rpx; border-top: 1rpx solid #e2e8f0; }
+.section-title { font-size: 27rpx; font-weight: 700; }
+.section-tip { margin-top: 10rpx; color: #64748b; font-size: 22rpx; line-height: 1.6; }
+.switch-row { margin-top: 18rpx; color: #475569; font-size: 24rpx; }
+.input { height: 82rpx; box-sizing: border-box; margin-top: 16rpx; padding: 0 20rpx; border: 1rpx solid #cbd5e1; border-radius: 13rpx; background: #f8fafc; font-size: 25rpx; }
+.primary-button, .secondary-button, .danger-button, .small-button, .link-button { margin-top: 16rpx; border-radius: 13rpx; font-size: 25rpx; }
+.primary-button { background: #0f766e; color: #fff; }
+.secondary-button { background: #ecfdf5; color: #047857; }
+.danger-button { background: #fff1f2; color: #be123c; }
+.small-button { background: #0f766e; color: #fff; }
+.link-button { margin-left: 0; padding: 0; background: transparent; color: #0f766e; text-align: left; line-height: 54rpx; }
+.primary-button::after, .secondary-button::after, .danger-button::after, .small-button::after, .link-button::after { border: 0; }
+.confirm-amount { display: block; margin-top: 18rpx; color: #0f766e; font-size: 36rpx; font-weight: 700; }
+.preview { width: 210rpx; height: 210rpx; display: block; margin: 16rpx auto 0; border-radius: 14rpx; background: #e2e8f0; }
+.candidate, .history-row, .payment-row { margin-top: 18rpx; padding: 18rpx; border-radius: 13rpx; background: #f8fafc; }
+.candidate-no { font-size: 24rpx; font-weight: 650; }
+.candidate-meta { margin-top: 7rpx; color: #64748b; font-size: 22rpx; }
+.history-row text + text { margin-top: 6rpx; color: #64748b; font-size: 21rpx; }
+.confirmed-money { margin-top: 10rpx; color: #047857; font-weight: 650; }

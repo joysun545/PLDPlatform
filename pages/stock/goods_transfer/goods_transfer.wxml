@@ -1,0 +1,100 @@
+<view class="page">
+  <view class="hero-card">
+    <text class="hero-eyebrow">独立商品流转</text>
+    <text class="hero-title">逐台扫码，按组织转移物权</text>
+    <text class="hero-tip">发货和退货须由收货方确认；调货由上级商家直接完成 B → C。</text>
+  </view>
+
+  <view class="state-card" wx:if="{{loading}}">正在加载业务关系…</view>
+  <view class="state-card error" wx:elif="{{errorMessage}}">
+    <text>{{errorMessage}}</text>
+    <button class="secondary-button" bindtap="retryLoad">重新加载</button>
+  </view>
+
+  <block wx:elif="{{!transferId}}">
+    <view class="section-card">
+      <text class="section-title">选择流转方式</text>
+      <view class="type-grid">
+        <view
+          wx:for="{{flowTypes}}"
+          wx:key="code"
+          class="type-card {{selectedFlowType === item.code ? 'active' : ''}}"
+          data-type="{{item.code}}"
+          bindtap="chooseFlowType"
+        >
+          <text class="type-name">{{item.name}}</text>
+          <text class="type-hint">{{item.hint}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="section-card" wx:if="{{options}}">
+      <text class="section-title">{{flowTypeName}}关系</text>
+
+      <block wx:if="{{selectedFlowType === 'TRANSFER'}}">
+        <text class="field-label">调出商家 B</text>
+        <picker range="{{options.sources}}" range-key="organization_name" value="{{sourceIndex}}" bindchange="onSourceChange">
+          <view class="picker-field {{selectedSource ? 'selected' : ''}}">
+            {{selectedSource ? selectedSource.organization_name + '｜' + selectedSource.nickname : '请选择直属下级商家 B 的负责人账号'}}
+          </view>
+        </picker>
+
+        <text class="field-label">调入商家 C</text>
+        <picker range="{{options.targets}}" range-key="organization_name" value="{{targetIndex}}" bindchange="onTargetChange">
+          <view class="picker-field {{selectedTarget ? 'selected' : ''}}">
+            {{selectedTarget ? selectedTarget.organization_name + '｜' + selectedTarget.nickname : '请选择另一个直属下级商家 C 的负责人账号'}}
+          </view>
+        </picker>
+        <view class="rule-tip amber">调货提交后物权立即从 B 转至 C，B、C 仅收到知晓任务，无需确认入库。</view>
+      </block>
+
+      <block wx:else>
+        <text class="field-label">{{selectedFlowType === 'SHIPMENT' ? '下级商家负责人账号' : '上级商家或厂家关联账号'}}</text>
+        <picker range="{{options.targets}}" range-key="organization_name" value="{{targetIndex}}" bindchange="onTargetChange">
+          <view class="picker-field {{selectedTarget ? 'selected' : ''}}">
+            {{selectedTarget ? selectedTarget.organization_name + '｜' + selectedTarget.nickname : '请选择收货方'}}
+          </view>
+        </picker>
+        <view class="rule-tip">提交后进入运输中；收货方确认入库时才转移物权。</view>
+        <view class="rule-tip danger" wx:if="{{selectedFlowType === 'RETURN'}}">退回厂家并确认入库后，本批设备的当前生命周期终止；再次出厂必须重新创建订单计划。</view>
+      </block>
+
+      <text class="empty-tip" wx:if="{{options.targets && options.targets.length === 0}}">当前没有符合条件的直接业务关系，请先完成邀请并接受。</text>
+
+      <text class="field-label">备注（选填）</text>
+      <textarea class="remark-input" maxlength="255" value="{{remark}}" placeholder="填写车辆、送货人或其他说明" bindinput="onRemarkInput" />
+      <button class="primary-button" loading="{{creating}}" disabled="{{creating}}" bindtap="createTransfer">创建{{flowTypeName}}单并开始扫码</button>
+    </view>
+  </block>
+
+  <block wx:elif="{{detail}}">
+    <view class="section-card flow-card">
+      <view class="flow-head">
+        <text class="flow-type">{{detail.flow_type_name}}</text>
+        <text class="status-pill">{{detail.status_name}}</text>
+      </view>
+      <text class="flow-no">{{detail.flow_no}}</text>
+      <text class="route">{{detail.from_organization.name}} → {{detail.to_organization.name}}</text>
+      <text class="meta">发起人：{{detail.initiated_by_name}}｜{{detail.createdText}}</text>
+    </view>
+
+    <view class="section-card">
+      <view class="section-head">
+        <text class="section-title">已扫码设备</text>
+        <text class="count">{{detail.item_count}} 台</text>
+      </view>
+      <view class="empty-tip" wx:if="{{detail.item_count === 0}}">尚未扫码，请逐台扫描设备二维码。</view>
+      <view class="device-row" wx:for="{{detail.items}}" wx:key="id">
+        <view class="device-main">
+          <text class="device-sn">{{item.device.sn}}</text>
+          <text class="device-model">{{item.device.product_model_name}}</text>
+        </view>
+        <text class="item-status">{{item.status_name}}</text>
+      </view>
+
+      <button class="scan-button" loading="{{scanning}}" disabled="{{scanning}}" wx:if="{{detail.actions.can_scan}}" bindtap="scanDevice">扫一扫，加入下一台设备</button>
+      <button class="primary-button" loading="{{submitting}}" disabled="{{submitting || !detail.actions.can_submit}}" wx:if="{{detail.actions.can_scan}}" bindtap="submitTransfer">完成扫码并提交{{detail.flow_type_name}}</button>
+      <button class="secondary-button" wx:else bindtap="openDetail">查看流转详情</button>
+    </view>
+  </block>
+</view>
