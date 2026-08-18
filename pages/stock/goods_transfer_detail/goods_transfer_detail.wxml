@@ -17,8 +17,10 @@
     </view>
 
     <view class="rule-card waiting" wx:if="{{detail.status === 'PENDING_RECEIPT'}}">设备正在运输中，收货方确认入库前，物权仍属于 {{detail.from_organization.name}}。</view>
+    <view class="rule-card waiting" wx:if="{{detail.status === 'PENDING_FACTORY_PICKUP'}}">商家已提交退厂退货，当前等待厂家物流取回；物权仍属于 {{detail.from_organization.name}}。</view>
+    <view class="rule-card waiting" wx:if="{{detail.status === 'PENDING_FACTORY_POSTING'}}">厂家物流已取回设备，当前等待销售助理下账并分类入库；退货冲抵金额可随后独立确认。</view>
     <view class="rule-card transfer" wx:if="{{detail.flow_type === 'TRANSFER' && detail.status === 'COMPLETED'}}">调货已由上级商家完成，物权已从 B 转至 C；款项分别按 A–B退货冲抵、A–C新增应收处理，不发生B–C平级结算。</view>
-    <view class="rule-card terminal" wx:if="{{detail.factory_lifecycle_terminated}}">设备已退回厂家并确认入库，当前生命周期终止；再次出厂必须重新创建订单计划。</view>
+    <view class="rule-card terminal" wx:if="{{detail.flow_type === 'RETURN' && detail.to_organization.type === 'OWNER' && detail.receivedText}}">设备已由厂家物流取回，原二维码已冻结；旧生命周期保留，待后续拆机报废或重新流转时再正式衔接。</view>
 
     <view class="section-card">
       <text class="section-title">流转关系</text>
@@ -49,6 +51,116 @@
       <view class="info-row" wx:if="{{detail.remark}}">
         <text class="label">备注</text>
         <text class="value wrap">{{detail.remark}}</text>
+      </view>
+    </view>
+
+    <view
+      class="section-card material-card"
+      wx:if="{{detail.actions.can_view_factory_return_logistics_documents}}"
+    >
+      <view class="section-head">
+        <text class="section-title">退货物流单据</text>
+        <text class="document-status">
+          {{detail.factory_return_document_task.logistics_uploaded ? '已上传' : '待上传'}}
+        </text>
+      </view>
+      <text class="material-rule">由本次扫码退货的发起账号上传，供厂家物流经理取货时查看。支持图片或 PDF，可继续补传，不阻断取货和入库。</text>
+
+      <block wx:if="{{detail.actions.can_upload_factory_return_logistics_document}}">
+        <view class="file-choice-row">
+          <button class="file-choice-button" data-kind="LOGISTICS" bindtap="chooseReturnDocumentImage">拍照/相册</button>
+          <button class="file-choice-button pdf" data-kind="LOGISTICS" bindtap="chooseReturnDocumentPdf">微信文件 PDF</button>
+        </view>
+        <text class="selected-file" wx:if="{{logisticsSelectedPath}}">已选择：{{logisticsSelectedName}}</text>
+        <input
+          class="material-remark-input"
+          maxlength="255"
+          placeholder="物流单据备注（选填）"
+          value="{{logisticsRemark}}"
+          data-kind="LOGISTICS"
+          bindinput="onReturnDocumentRemarkInput"
+        />
+        <button
+          class="material-upload-button"
+          loading="{{logisticsUploading}}"
+          disabled="{{logisticsUploading || !logisticsSelectedPath}}"
+          data-kind="LOGISTICS"
+          bindtap="submitReturnDocument"
+        >{{detail.factory_return_logistics_documents.length ? '补传物流单据' : '上传物流单据'}}</button>
+      </block>
+
+      <view class="empty-tip" wx:if="{{!detail.factory_return_logistics_documents.length}}">尚未上传物流单据</view>
+      <view
+        class="document-row"
+        wx:for="{{detail.factory_return_logistics_documents}}"
+        wx:key="id"
+      >
+        <view class="document-main">
+          <text class="document-name">第{{item.sequence_no}}份｜{{item.original_name}}</text>
+          <text class="document-meta">{{item.uploaded_by_name}}｜{{item.uploadedText}}</text>
+          <text class="document-remark" wx:if="{{item.remark}}">{{item.remark}}</text>
+        </view>
+        <button
+          class="preview-button"
+          data-path="{{item.preview_path}}"
+          data-type="{{item.file_type}}"
+          bindtap="previewReturnDocument"
+        >查看</button>
+      </view>
+    </view>
+
+    <view
+      class="section-card material-card"
+      wx:if="{{detail.actions.can_view_factory_return_goods_list_documents}}"
+    >
+      <view class="section-head">
+        <text class="section-title">退货货品清单</text>
+        <text class="document-status">
+          {{detail.factory_return_document_task.goods_list_uploaded ? '已上传' : '待上传'}}
+        </text>
+      </view>
+      <text class="material-rule">首份货品清单已随最终扫码提交强制保存，供厂家销售经理和销售助理查看。本次发起账号可继续补传图片或 PDF 作为更正版。</text>
+
+      <block wx:if="{{detail.actions.can_upload_factory_return_goods_list_document}}">
+        <view class="file-choice-row">
+          <button class="file-choice-button" data-kind="GOODS_LIST" bindtap="chooseReturnDocumentImage">拍照/相册</button>
+          <button class="file-choice-button pdf" data-kind="GOODS_LIST" bindtap="chooseReturnDocumentPdf">微信文件 PDF</button>
+        </view>
+        <text class="selected-file" wx:if="{{goodsListSelectedPath}}">已选择：{{goodsListSelectedName}}</text>
+        <input
+          class="material-remark-input"
+          maxlength="255"
+          placeholder="货品清单备注（选填）"
+          value="{{goodsListRemark}}"
+          data-kind="GOODS_LIST"
+          bindinput="onReturnDocumentRemarkInput"
+        />
+        <button
+          class="material-upload-button"
+          loading="{{goodsListUploading}}"
+          disabled="{{goodsListUploading || !goodsListSelectedPath}}"
+          data-kind="GOODS_LIST"
+          bindtap="submitReturnDocument"
+        >补传货品清单更正版</button>
+      </block>
+
+      <view class="empty-tip" wx:if="{{!detail.factory_return_goods_list_documents.length}}">货品清单数据异常，请联系管理员</view>
+      <view
+        class="document-row"
+        wx:for="{{detail.factory_return_goods_list_documents}}"
+        wx:key="id"
+      >
+        <view class="document-main">
+          <text class="document-name">第{{item.sequence_no}}份｜{{item.original_name}}</text>
+          <text class="document-meta">{{item.uploaded_by_name}}｜{{item.uploadedText}}</text>
+          <text class="document-remark" wx:if="{{item.remark}}">{{item.remark}}</text>
+        </view>
+        <button
+          class="preview-button"
+          data-path="{{item.preview_path}}"
+          data-type="{{item.file_type}}"
+          bindtap="previewReturnDocument"
+        >查看</button>
       </view>
     </view>
 
@@ -91,6 +203,7 @@
     <button class="scan-button" wx:if="{{detail.actions.can_scan}}" bindtap="continueScanning">继续逐台扫码</button>
     <button class="settlement-button" wx:if="{{detail.flow_type === 'SHIPMENT' && detail.status !== 'SCANNING'}}" bindtap="openSettlement">货品清单、物流与应收</button>
     <button class="account-button" wx:if="{{detail.actions.can_view_accounts}}" bindtap="openAccounts">退货冲抵与调货上下级往来</button>
+    <button class="account-button" wx:if="{{detail.actions.can_view_factory_return_process}}" bindtap="openFactoryReturnProcess">厂家退货取回与分类入库</button>
     <button class="receipt-button" loading="{{receiving}}" disabled="{{receiving}}" wx:if="{{detail.actions.can_receive}}" bindtap="confirmReceipt">确认收货并入库</button>
   </block>
 </view>

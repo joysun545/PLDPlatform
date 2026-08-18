@@ -1,0 +1,77 @@
+<view class="page">
+  <view class="state-card" wx:if="{{loading}}">正在加载厂家退货库存…</view>
+  <view class="state-card error" wx:elif="{{errorMessage}}">
+    <text>{{errorMessage}}</text>
+    <button class="retry-button" bindtap="retryLoad">重新加载</button>
+  </view>
+
+  <block wx:elif="{{inventoryData}}">
+    <view class="hero-card">
+      <text class="hero-title">厂家退货库存</text>
+      <text class="hero-org">{{inventoryData.viewer.organization_name}}</text>
+      <text class="hero-meta">当前身份：{{inventoryData.viewer.role_name}}｜共 {{inventoryData.total_count}} 台</text>
+    </view>
+
+    <view class="summary-grid">
+      <view class="summary-card reissue">
+        <text class="summary-count">{{inventoryData.counts.PENDING_REISSUE || 0}}</text>
+        <text class="summary-label">待流转</text>
+      </view>
+      <view class="summary-card repair">
+        <text class="summary-count">{{inventoryData.counts.PENDING_REPAIR || 0}}</text>
+        <text class="summary-label">待修复</text>
+      </view>
+      <view class="summary-card disassembly">
+        <text class="summary-count">{{inventoryData.counts.PENDING_DISASSEMBLY || 0}}</text>
+        <text class="summary-label">待拆机</text>
+      </view>
+      <view class="summary-card repairing">
+        <text class="summary-count">{{inventoryData.counts.REPAIRING || 0}}</text>
+        <text class="summary-label">修复中</text>
+      </view>
+      <view class="summary-card ended">
+        <text class="summary-count">{{inventoryData.counts.LIFECYCLE_ENDED || 0}}</text>
+        <text class="summary-label">生命周期结束</text>
+      </view>
+    </view>
+
+    <view class="rule-card">
+      <text class="rule-title">待流转库存口径</text>
+      <text class="rule-text">销售助理直接分类为“入库待流转”，或生产经理完成修复的设备，均进入待流转库存。后续创建订单计划时可按产品型号抵扣新生产数量。</text>
+    </view>
+
+    <picker
+      class="filter-wrap"
+      mode="selector"
+      range="{{inventoryData.filterOptions}}"
+      range-key="label"
+      value="{{inventoryData.filterIndex}}"
+      bindchange="onFilterChange"
+    >
+      <view class="filter-field">{{inventoryData.filterOptions[inventoryData.filterIndex].label}} <text>›</text></view>
+    </picker>
+
+    <view class="empty-card" wx:if="{{!inventoryData.filteredItems.length}}">当前筛选条件下没有设备</view>
+
+    <view class="device-card" wx:for="{{inventoryData.filteredItems}}" wx:key="id">
+      <view class="device-head">
+        <view class="device-main">
+          <text class="device-sn">{{item.device.sn}}</text>
+          <text class="device-model">{{item.device.product_model_name}}</text>
+        </view>
+        <text class="status-pill">{{item.stock_status_name}}</text>
+      </view>
+      <view class="info-row"><text>退货批次</text><text>{{item.flow_no}}</text></view>
+      <view class="info-row"><text>退货商家</text><text>{{item.from_organization_name}}</text></view>
+      <view class="info-row"><text>原生产批次</text><text>{{item.source_batch.batch_no}}</text></view>
+      <view class="info-row"><text>原BOM版本</text><text>{{item.source_bom.version}}</text></view>
+      <view class="status-row">
+        <text>生产：{{item.production_status_name}}</text>
+        <text>配套：{{item.matching_status_name}}</text>
+      </view>
+      <text class="operation-meta" wx:if="{{item.productionProcessedText}}">生产处置：{{item.production_processed_by_name}}｜{{item.productionProcessedText}}</text>
+      <text class="operation-meta" wx:if="{{item.matchingProcessedText}}">配套处置：{{item.matching_processed_by_name}}｜{{item.matchingProcessedText}}</text>
+      <button class="detail-button" data-url="{{item.process_link}}" bindtap="openProcess">查看并处理本批退货</button>
+    </view>
+  </block>
+</view>

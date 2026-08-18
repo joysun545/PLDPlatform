@@ -208,6 +208,7 @@ App({
       'pages/stock/goods_transfer_list/goods_transfer_list',
       'pages/stock/goods_transfer_detail/goods_transfer_detail',
       'pages/stock/goods_transfer_settlement/goods_transfer_settlement',
+      'pages/stock/factory_return_process/factory_return_process',
       'pages/scan/scan/scan',
       'pages/scan/result/result',
       'pages/aftersale/list/list',

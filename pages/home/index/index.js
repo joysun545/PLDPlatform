@@ -15,6 +15,7 @@ Page({
     showStock: false,
     showGoodsTransfer: false,
     showGoodsTransferList: false,
+    showFactoryReturnInventory: false,
     showStats: false,
     showAftersale: false,
     showMyDevice: false
@@ -83,6 +84,14 @@ Page({
         'merchant_stock',
         'factory_stock',
         'factory_sales'
+      ].includes(role),
+
+      showFactoryReturnInventory: [
+        'factory_sales',
+        'factory_sales_assistant',
+        'factory_stock',
+        'factory_production',
+        'factory_matching'
       ].includes(role),
 
       showStats: [
@@ -183,6 +192,12 @@ Page({
   goGoodsTransferList() {
     wx.navigateTo({
       url: '/pages/stock/goods_transfer_list/goods_transfer_list'
+    });
+  },
+
+  goFactoryReturnInventory() {
+    wx.navigateTo({
+      url: '/pages/stock/factory_return_inventory/factory_return_inventory'
     });
   },
 

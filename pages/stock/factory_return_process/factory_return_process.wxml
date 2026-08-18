@@ -1,0 +1,380 @@
+<view class="page">
+  <view class="state-card" wx:if="{{loading}}">正在加载厂家退货处理流程…</view>
+  <view class="state-card error" wx:elif="{{errorMessage}}">
+    <text>{{errorMessage}}</text>
+    <button class="secondary-button" bindtap="retryLoad">重新加载</button>
+  </view>
+
+  <block wx:elif="{{pageData}}">
+    <view class="hero-card">
+      <view class="hero-head">
+        <text class="hero-title">厂家退货取回与入库</text>
+        <text class="status-pill">{{pageData.process.phase_name}}</text>
+      </view>
+      <text class="flow-no">{{pageData.transfer.flow_no}}</text>
+      <text class="route">{{pageData.transfer.from_organization_name}} → {{pageData.transfer.to_organization_name}}</text>
+      <text class="hero-meta">共 {{pageData.total_count}} 台｜当前身份：{{pageData.viewer.role_name}}</text>
+    </view>
+
+    <view class="rule-card">
+      <text class="rule-title">一个任务，两个独立子步骤</text>
+      <text class="rule-text">销售助理任务在退货提交时即建立，但由厂家物流确认取回统一解锁。解锁后，手动登记冲抵金额与分类入库互不构成前置条件；两项均完成后原任务才完成。</text>
+    </view>
+
+    <view class="rule-card qr" wx:if="{{pageData.rules.old_qr_disabled_after_pickup}}">
+      <text class="rule-title">原二维码已冻结，生命周期尚未结束</text>
+      <text class="rule-text">正式拆机报废或重新流转时，再记录旧生命周期结束及新生命周期衔接。</text>
+    </view>
+
+    <button
+      class="inventory-button"
+      wx:if="{{pageData.process.phase === 'POSTED'}}"
+      bindtap="openFactoryReturnInventory"
+    >查看厂家退货库存总表</button>
+
+    <view class="account-card" wx:if="{{pageData.account_case}}">
+      <view class="account-head">
+        <text class="account-title">关联退货冲抵批次</text>
+        <text class="account-status">{{pageData.account_case.status_name}}</text>
+      </view>
+      <text class="account-amount">销售助理登记金额：{{pageData.account_case.confirmed_amount ? '¥' + pageData.account_case.confirmed_amount : '待填写'}}</text>
+      <text class="account-amount" wx:if="{{pageData.account_case.amount_recorded}}">登记人：{{pageData.account_case.amount_recorded_by_name}}｜{{pageData.account_case.amount_recorded_at}}</text>
+      <button class="account-button" bindtap="openAccounts">查看往来账明细</button>
+    </view>
+
+    <view class="locked-card" wx:if="{{pageData.actions.assistant_action_locked}}">
+      <text class="locked-title">销售助理任务已建立，当前等待物流取回</text>
+      <text class="locked-text">物流经理确认货已取回后，本页会自动解锁冲抵金额登记和分类入库操作，不会再生成一条新任务。</text>
+    </view>
+
+    <view class="credit-card" wx:if="{{pageData.actions.can_record_credit_amount}}">
+      <text class="credit-title">手动登记本批退货冲抵金额</text>
+      <text class="credit-rule">金额由厂家销售助理直接填写，不是确认商家报价，也不存在确认或驳回步骤。</text>
+      <view class="money-input-row">
+        <text class="currency">¥</text>
+        <input
+          class="money-input"
+          type="digit"
+          maxlength="18"
+          placeholder="0.00"
+          value="{{creditAmount}}"
+          bindinput="onCreditAmountInput"
+        />
+      </view>
+      <button
+        class="primary-button"
+        loading="{{recordingCreditAmount}}"
+        disabled="{{recordingCreditAmount}}"
+        bindtap="recordCreditAmount"
+      >登记冲抵金额</button>
+    </view>
+
+    <view class="process-card">
+      <view class="process-row"><text>提交退货</text><text>{{pageData.transfer.submittedText}}</text></view>
+      <view class="process-row"><text>物流取回</text><text>{{pageData.process.pickedText || '待处理'}}</text></view>
+      <view class="process-row"><text>分类入库</text><text>{{pageData.process.postedText || '待处理'}}</text></view>
+    </view>
+
+    <view class="material-card" wx:if="{{pageData.actions.can_view_logistics_documents}}">
+      <view class="material-head">
+        <text class="material-title">商家退货物流单据</text>
+        <text class="material-status">{{pageData.logistics_documents.length ? '已上传' : '待商家补传'}}</text>
+      </view>
+      <text class="material-rule">由本次扫码退货的商家发起账号上传，供厂家物流经理取货时查看；不构成取货前置条件。</text>
+      <view class="material-empty" wx:if="{{!pageData.logistics_documents.length}}">当前尚无物流单据，仍可继续确认取货。</view>
+      <view class="material-row" wx:for="{{pageData.logistics_documents}}" wx:key="id">
+        <view class="material-main">
+          <text class="material-name">第{{item.sequence_no}}份｜{{item.original_name}}</text>
+          <text class="material-meta">{{item.uploaded_by_name}}｜{{item.uploadedText}}</text>
+          <text class="material-remark" wx:if="{{item.remark}}">{{item.remark}}</text>
+        </view>
+        <button
+          class="preview-button"
+          data-path="{{item.preview_path}}"
+          data-type="{{item.file_type}}"
+          bindtap="previewReturnDocument"
+        >查看</button>
+      </view>
+    </view>
+
+    <view class="material-card" wx:if="{{pageData.actions.can_view_goods_list_documents}}">
+      <view class="material-head">
+        <text class="material-title">商家退货货品清单</text>
+        <text class="material-status">{{pageData.goods_list_documents.length ? '已上传' : '待商家补传'}}</text>
+      </view>
+      <text class="material-rule">首份货品清单已在商家最终提交退货时强制保存，供厂家销售经理和销售助理查看；后续文件为发起账号补传的更正版。</text>
+      <view class="material-empty" wx:if="{{!pageData.goods_list_documents.length}}">货品清单数据异常，请联系退货发起账号或管理员。</view>
+      <view class="material-row" wx:for="{{pageData.goods_list_documents}}" wx:key="id">
+        <view class="material-main">
+          <text class="material-name">第{{item.sequence_no}}份｜{{item.original_name}}</text>
+          <text class="material-meta">{{item.uploaded_by_name}}｜{{item.uploadedText}}</text>
+          <text class="material-remark" wx:if="{{item.remark}}">{{item.remark}}</text>
+        </view>
+        <button
+          class="preview-button"
+          data-path="{{item.preview_path}}"
+          data-type="{{item.file_type}}"
+          bindtap="previewReturnDocument"
+        >查看</button>
+      </view>
+    </view>
+
+    <button
+      class="primary-button"
+      wx:if="{{pageData.actions.can_confirm_pickup}}"
+      loading="{{confirmingPickup}}"
+      disabled="{{confirmingPickup}}"
+      bindtap="confirmPickup"
+    >确认货已取回</button>
+
+    <view class="posting-tip" wx:if="{{pageData.actions.can_post_inventory}}">请为本批每台设备选择一个入库分类，再一次性提交。</view>
+
+    <view class="device-card" wx:for="{{pageData.items}}" wx:key="id">
+      <view class="device-head">
+        <view class="device-main">
+          <text class="device-sn">{{item.device.sn}}</text>
+          <text class="device-model">{{item.device.product_model_name}}</text>
+        </view>
+        <text class="stock-pill">{{item.selectedLabel}}</text>
+      </view>
+      <view class="info-row"><text class="label">原生产批次</text><text class="value">{{item.source_batch.batch_no}}</text></view>
+      <view class="info-row"><text class="label">原配套版本</text><text class="value">{{item.source_bom.version}}</text></view>
+      <view class="info-row"><text class="label">原二维码</text><text class="value disabled">{{item.device.old_qr_code}} {{item.device.old_qr_status_name}}</text></view>
+
+      <block wx:if="{{pageData.actions.can_post_inventory}}">
+        <picker
+          mode="selector"
+          range="{{pageData.classification_options}}"
+          range-key="label"
+          value="{{item.selectedIndex}}"
+          data-index="{{index}}"
+          bindchange="onCategoryChange"
+        >
+          <view class="picker-field">{{item.selectedLabel}} <text>›</text></view>
+        </picker>
+        <input
+          class="remark-input"
+          maxlength="255"
+          placeholder="本台分类说明（选填）"
+          value="{{item.inputRemark}}"
+          data-index="{{index}}"
+          bindinput="onItemRemarkInput"
+        />
+      </block>
+
+      <view class="classified-info" wx:if="{{item.classifiedText}}">
+        {{item.classified_by_name}}｜{{item.classifiedText}}
+        <text wx:if="{{item.remark}}">｜{{item.remark}}</text>
+      </view>
+
+      <view class="internal-status" wx:if="{{pageData.process.phase === 'POSTED'}}">
+        <view class="internal-status-row">
+          <text>生产处置</text>
+          <text>{{item.production_status_name}}</text>
+        </view>
+        <view class="internal-status-row">
+          <text>配套处置</text>
+          <text>{{item.matching_status_name}}</text>
+        </view>
+      </view>
+
+      <view class="operation-card" wx:if="{{item.actions.can_submit_repair_diagnosis}}">
+        <text class="operation-title">生产经理：提交修复诊断</text>
+        <text class="operation-rule">先判断是否需要更换物料；需要换料时会解锁配套经理原任务，不另外制造新任务。</text>
+        <picker
+          mode="selector"
+          range="{{materialOptions}}"
+          range-key="label"
+          value="{{item.needsMaterialIndex}}"
+          data-index="{{index}}"
+          bindchange="onNeedsMaterialChange"
+        >
+          <view class="picker-field">{{materialOptions[item.needsMaterialIndex].label}} <text>›</text></view>
+        </picker>
+        <textarea
+          class="operation-textarea"
+          wx:if="{{item.needsMaterialSelected}}"
+          maxlength="1000"
+          placeholder="请填写需要更换的物料、数量或技术要求"
+          value="{{item.materialRequirementInput}}"
+          data-index="{{index}}"
+          data-field="materialRequirementInput"
+          bindinput="onOperationInput"
+        />
+        <textarea
+          class="operation-textarea"
+          maxlength="1000"
+          placeholder="生产诊断说明（选填）"
+          value="{{item.productionRemarkInput}}"
+          data-index="{{index}}"
+          data-field="productionRemarkInput"
+          bindinput="onOperationInput"
+        />
+        <button
+          class="primary-button"
+          disabled="{{operationBusyKey}}"
+          data-index="{{index}}"
+          data-action="REPAIR_DIAGNOSIS"
+          bindtap="submitProductionAction"
+        >提交修复诊断</button>
+      </view>
+
+      <view class="operation-card" wx:if="{{item.actions.can_complete_repair}}">
+        <text class="operation-title">生产经理：确认修复完成</text>
+        <text class="operation-rule" wx:if="{{item.material_plan}}">配套方案：{{item.material_plan}}</text>
+        <textarea
+          class="operation-textarea"
+          maxlength="1000"
+          placeholder="修复结果说明（选填）"
+          value="{{item.productionRemarkInput}}"
+          data-index="{{index}}"
+          data-field="productionRemarkInput"
+          bindinput="onOperationInput"
+        />
+        <button
+          class="primary-button"
+          disabled="{{operationBusyKey}}"
+          data-index="{{index}}"
+          data-action="REPAIR_COMPLETE"
+          bindtap="submitProductionAction"
+        >确认修复完成并转入待流转库存</button>
+      </view>
+
+      <view class="operation-card danger-operation" wx:if="{{item.actions.can_complete_disassembly}}">
+        <text class="operation-title">生产经理：完成拆机报废</text>
+        <text class="operation-rule">提交后本台旧产品生命周期结束；若存在三包物料，会解锁配套经理处置任务。</text>
+        <textarea
+          class="operation-textarea"
+          maxlength="1000"
+          placeholder="拆机结果和拆出物料清单（必填）"
+          value="{{item.disassemblyResultInput}}"
+          data-index="{{index}}"
+          data-field="disassemblyResultInput"
+          bindinput="onOperationInput"
+        />
+        <picker
+          mode="selector"
+          range="{{warrantyOptions}}"
+          range-key="label"
+          value="{{item.warrantyMaterialIndex}}"
+          data-index="{{index}}"
+          bindchange="onWarrantyMaterialChange"
+        >
+          <view class="picker-field">{{warrantyOptions[item.warrantyMaterialIndex].label}} <text>›</text></view>
+        </picker>
+        <textarea
+          class="operation-textarea"
+          maxlength="1000"
+          placeholder="拆机处置说明（选填）"
+          value="{{item.productionRemarkInput}}"
+          data-index="{{index}}"
+          data-field="productionRemarkInput"
+          bindinput="onOperationInput"
+        />
+        <button
+          class="danger-button"
+          disabled="{{operationBusyKey}}"
+          data-index="{{index}}"
+          data-action="DISASSEMBLY_COMPLETE"
+          bindtap="submitProductionAction"
+        >确认拆机并结束旧生命周期</button>
+      </view>
+
+      <view class="operation-card matching-operation" wx:if="{{item.actions.can_submit_repair_material_plan}}">
+        <text class="operation-title">配套经理：处理修复物料需求</text>
+        <text class="requirement-text">生产需求：{{item.material_requirement}}</text>
+        <textarea
+          class="operation-textarea"
+          maxlength="1000"
+          placeholder="修复物料方案（必填）"
+          value="{{item.materialPlanInput}}"
+          data-index="{{index}}"
+          data-field="materialPlanInput"
+          bindinput="onOperationInput"
+        />
+        <textarea
+          class="operation-textarea"
+          maxlength="1000"
+          placeholder="配套处置说明（选填）"
+          value="{{item.matchingRemarkInput}}"
+          data-index="{{index}}"
+          data-field="matchingRemarkInput"
+          bindinput="onOperationInput"
+        />
+        <button
+          class="primary-button"
+          disabled="{{operationBusyKey}}"
+          data-index="{{index}}"
+          data-action="REPAIR_MATERIAL_PLAN"
+          bindtap="submitMatchingAction"
+        >提交物料方案并解锁生产修复</button>
+      </view>
+
+      <view class="operation-card matching-operation" wx:if="{{item.actions.can_submit_disassembly_disposition}}">
+        <text class="operation-title">配套经理：处理拆机三包物料</text>
+        <text class="requirement-text">拆机结果：{{item.disassembly_result}}</text>
+        <textarea
+          class="operation-textarea"
+          maxlength="1000"
+          placeholder="三包物料追溯和处置意见（必填）"
+          value="{{item.warrantyDispositionInput}}"
+          data-index="{{index}}"
+          data-field="warrantyDispositionInput"
+          bindinput="onOperationInput"
+        />
+        <textarea
+          class="operation-textarea"
+          maxlength="1000"
+          placeholder="配套处置说明（选填）"
+          value="{{item.matchingRemarkInput}}"
+          data-index="{{index}}"
+          data-field="matchingRemarkInput"
+          bindinput="onOperationInput"
+        />
+        <button
+          class="primary-button"
+          disabled="{{operationBusyKey}}"
+          data-index="{{index}}"
+          data-action="DISASSEMBLY_MATERIAL_DISPOSITION"
+          bindtap="submitMatchingAction"
+        >完成三包物料处置</button>
+      </view>
+
+      <view class="operation-history" wx:if="{{item.productionProcessedText}}">
+        <text class="history-title">最近生产处置</text>
+        <text>{{item.production_processed_by_name}}｜{{item.productionProcessedText}}</text>
+        <text wx:if="{{item.production_remark}}">{{item.production_remark}}</text>
+        <text wx:if="{{item.material_requirement}}">物料需求：{{item.material_requirement}}</text>
+        <text wx:if="{{item.disassembly_result}}">拆机结果：{{item.disassembly_result}}</text>
+      </view>
+      <view class="operation-history" wx:if="{{item.matchingProcessedText}}">
+        <text class="history-title">最近配套处置</text>
+        <text>{{item.matching_processed_by_name}}｜{{item.matchingProcessedText}}</text>
+        <text wx:if="{{item.material_plan}}">物料方案：{{item.material_plan}}</text>
+        <text wx:if="{{item.warranty_disposition}}">三包物料处置：{{item.warranty_disposition}}</text>
+        <text wx:if="{{item.matching_remark}}">{{item.matching_remark}}</text>
+      </view>
+    </view>
+
+    <view class="posting-card" wx:if="{{pageData.actions.can_post_inventory}}">
+      <textarea
+        class="posting-textarea"
+        maxlength="255"
+        placeholder="本批下账入库说明（选填）"
+        value="{{postingRemark}}"
+        bindinput="onPostingRemarkInput"
+      />
+      <button
+        class="primary-button"
+        loading="{{posting}}"
+        disabled="{{posting}}"
+        bindtap="submitPosting"
+      >确认下账并分类入库</button>
+    </view>
+
+    <view class="complete-card" wx:if="{{pageData.process.phase === 'POSTED'}}">
+      <text class="complete-title">本批退货已分类入库</text>
+      <text class="complete-text">分类库存已进入后续拆机、待流转或修复流程。若冲抵金额尚未登记，销售助理原任务仍保持待处理；登记后才整体完成。</text>
+    </view>
+  </block>
+</view>

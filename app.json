@@ -26,12 +26,14 @@
     "pages/stock/goods_transfer_detail/goods_transfer_detail",
     "pages/stock/goods_transfer_settlement/goods_transfer_settlement",
     "pages/stock/goods_transfer_accounts/goods_transfer_accounts",
+    "pages/stock/factory_return_process/factory_return_process",
+    "pages/stock/factory_return_inventory/factory_return_inventory",
     "pages/supply_chain/responsibility/responsibility"
   ],
   "window": {
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#07c160",
-    "navigationBarTitleText": "渠道管理及售后服务系统",
+    "navigationBarTitleText": "PLDPlatform",
     "navigationBarTextStyle": "white"
   },
   "permission": {

@@ -143,8 +143,112 @@ page {
 }
 
 .count,
-.item-status {
+.item-status,
+.document-status {
   color: #079b65;
+  font-size: 22rpx;
+}
+
+.material-card {
+  border: 1rpx solid #bdebd8;
+  background: #fbfffd;
+}
+
+.material-rule,
+.selected-file,
+.document-name,
+.document-meta,
+.document-remark {
+  display: block;
+}
+
+.material-rule {
+  margin-top: 16rpx;
+  color: #557067;
+  font-size: 22rpx;
+  line-height: 1.65;
+}
+
+.file-choice-row {
+  display: flex;
+  gap: 18rpx;
+  margin-top: 20rpx;
+}
+
+.file-choice-button {
+  flex: 1;
+  margin: 0;
+  border-radius: 12rpx;
+  color: #067a4e;
+  background: #eaf9f2;
+  font-size: 23rpx;
+}
+
+.file-choice-button.pdf {
+  color: #6d28d9;
+  background: #f3efff;
+}
+
+.selected-file {
+  margin-top: 15rpx;
+  color: #067a4e;
+  font-size: 22rpx;
+  word-break: break-all;
+}
+
+.material-remark-input {
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: 18rpx;
+  padding: 20rpx;
+  border: 1rpx solid #dfe8e4;
+  border-radius: 12rpx;
+  background: #fff;
+  font-size: 24rpx;
+}
+
+.material-upload-button {
+  margin-top: 18rpx;
+  border-radius: 12rpx;
+  color: #fff;
+  background: #079b65;
+  font-size: 25rpx;
+}
+
+.document-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18rpx;
+  margin-top: 20rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid #e4ede9;
+}
+
+.document-main {
+  min-width: 0;
+}
+
+.document-name {
+  font-size: 24rpx;
+  font-weight: 650;
+  word-break: break-all;
+}
+
+.document-meta,
+.document-remark {
+  margin-top: 8rpx;
+  color: #718078;
+  font-size: 21rpx;
+}
+
+.preview-button {
+  flex-shrink: 0;
+  width: 118rpx;
+  margin: 0;
+  border-radius: 10rpx;
+  color: #067a4e;
+  background: #eaf9f2;
   font-size: 22rpx;
 }
 
@@ -255,5 +359,11 @@ page {
 .account-button::after,
 .receipt-button::after,
 .secondary-button::after {
+  border: 0;
+}
+
+.file-choice-button::after,
+.material-upload-button::after,
+.preview-button::after {
   border: 0;
 }

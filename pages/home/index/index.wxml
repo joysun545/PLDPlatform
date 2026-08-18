@@ -67,6 +67,11 @@
       <text>商品流转列表</text>
     </view>
 
+    <view class="menu-item" bindtap="goFactoryReturnInventory" wx:if="{{showFactoryReturnInventory}}">
+      <image src="/images/stock_manage.png" class="icon" />
+      <text>厂家退货库存</text>
+    </view>
+
     <!-- 数据统计 -->
     <view class="menu-item" bindtap="goStats" wx:if="{{showStats}}">
       <image src="/images/data_statistics.png" class="icon" />
