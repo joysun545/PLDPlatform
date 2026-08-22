@@ -44,6 +44,7 @@ Page({
     customerTypes: ['个人用户', '企业或车队'],
     customerTypeIndex: 0,
     existingCustomerIdentity: false,
+    addingDevice: false,
     form: {
       customer_name: '',
       contact_name: '',
@@ -102,17 +103,22 @@ Page({
           return;
         }
         const viewer = detail.viewer || {};
-        const profile = detail.customer_data || {};
+        const profile = detail.customer_profile || detail.customer_data || {};
+        const addingDevice = detail.acceptance_mode === 'ADD_DEVICE';
         const existingCustomerIdentity = Boolean(
           viewer.has_identity && viewer.role === 'customer_owner'
         );
+        const customerTypeIndex = String(
+          profile.customer_type || 'PERSONAL'
+        ).toUpperCase() === 'FLEET' ? 1 : 0;
         this.setData({
           loading: false,
           detail,
           existingCustomerIdentity,
-          customerTypeIndex: existingCustomerIdentity ? 1 : 0,
+          addingDevice,
+          customerTypeIndex,
           form: {
-            customer_name: viewer.organization_name || profile.customer_name || '',
+            customer_name: profile.customer_name || viewer.organization_name || '',
             contact_name: profile.contact_name || viewer.nickname || '',
             phone: profile.phone || viewer.phone || '',
             region: profile.region || viewer.region || '',
@@ -199,7 +205,10 @@ Page({
 
     const form = this.data.form;
     this.setData({ submitting: true });
-    wx.showLoading({ title: '正在建立用户身份...', mask: true });
+    wx.showLoading({
+      title: this.data.addingDevice ? '正在添加设备...' : '正在建立用户身份...',
+      mask: true
+    });
     wx.request({
       url: `${app.globalData.apiBase}/lifecycle/scan/customer-invitations/${this.data.token}/accept/`,
       method: 'POST',
@@ -228,7 +237,10 @@ Page({
         }
         const deviceId = res.data.data.device_id;
         app.refreshUserProfile(() => {
-          wx.showToast({ title: '加入成功', icon: 'success' });
+          wx.showToast({
+            title: this.data.addingDevice ? '设备添加成功' : '加入成功',
+            icon: 'success'
+          });
           setTimeout(() => this.openDeviceResult(deviceId), 500);
         });
       },

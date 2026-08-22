@@ -18,6 +18,10 @@ Page({
     activating: false,
     error: '',
     device: null,
+    asset: null,
+    production: null,
+    parameters: [],
+    lifecycle: [],
     customer: null,
     region: null,
     ownership: null,
@@ -92,6 +96,11 @@ Page({
     const device = scan.device || {};
     const customer = payload.customer || {};
     const profile = customer.profile || {};
+    const production = payload.production || {};
+    const lifecycle = (payload.lifecycle || []).map(item => ({
+      ...item,
+      created_at_text: formatDateTime(item.created_at)
+    }));
     if (device.installation) {
       device.installation.installed_at_text = formatDateTime(
         device.installation.installed_at
@@ -107,6 +116,13 @@ Page({
       loading: false,
       error: '',
       device,
+      asset: payload.asset || null,
+      production: {
+        ...production,
+        production_date_text: production.production_date || ''
+      },
+      parameters: payload.parameters || [],
+      lifecycle,
       customer,
       region: scan.region || null,
       ownership: scan.ownership || null,
@@ -194,6 +210,10 @@ Page({
     wx.navigateTo({
       url: `/pages/customer/aftersale/request/request?device_id=${this.data.deviceId}`
     });
+  },
+
+  goDeviceList() {
+    wx.redirectTo({ url: '/pages/customer/device/list/list' });
   },
 
   collectLocationAndActivate(vehicleNo) {

@@ -17,6 +17,25 @@
       <text class="device-sn">{{device.sn}}</text>
     </view>
 
+    <button class="list-btn" bindtap="goDeviceList">‹ 返回我的设备清单</button>
+
+    <view class="card" wx:if="{{parameters.length}}">
+      <view class="card-title">设备参数</view>
+      <view class="row" wx:for="{{parameters}}" wx:key="label">
+        <text class="label">{{item.label}}</text>
+        <text class="value">{{item.value}}{{item.unit || ''}}</text>
+      </view>
+    </view>
+
+    <view class="card" wx:if="{{production}}">
+      <view class="card-title">生产与配套信息</view>
+      <view class="row"><text class="label">生产厂家</text><text class="value">{{production.manufacturer || '-'}}</text></view>
+      <view class="row"><text class="label">生产批次</text><text class="value">{{production.batch_no || '-'}}</text></view>
+      <view class="row"><text class="label">生产日期</text><text class="value">{{production.production_date_text || '-'}}</text></view>
+      <view class="row"><text class="label">BOM版本</text><text class="value">{{production.bom_version || '-'}}</text></view>
+      <view class="row" wx:if="{{asset && asset.source_organization}}"><text class="label">来源商家</text><text class="value">{{asset.source_organization}}</text></view>
+    </view>
+
     <view class="card">
       <view class="card-title">用户身份</view>
       <view class="row"><text class="label">用户组织</text><text class="value">{{customer.organization_name}}</text></view>
@@ -67,6 +86,24 @@
       </view>
       <text class="telemetry-message" wx:else>{{telemetry.message}}</text>
       <text class="module-line" wx:if="{{telemetry.module}}">通讯模组：{{telemetry.module.material_name}} {{telemetry.module.spec_name}}</text>
+    </view>
+
+    <view class="card lifecycle-card">
+      <view class="card-title">生命周期记录</view>
+      <view class="timeline" wx:if="{{lifecycle.length}}">
+        <view class="timeline-item" wx:for="{{lifecycle}}" wx:key="id">
+          <view class="timeline-dot"></view>
+          <view class="timeline-main">
+            <view class="timeline-head">
+              <text class="timeline-title">{{item.event_type_name}}</text>
+              <text class="timeline-time">{{item.created_at_text}}</text>
+            </view>
+            <text class="timeline-route" wx:if="{{item.from_organization || item.to_organization}}">{{item.from_organization || '-'}} → {{item.to_organization || '-'}}</text>
+            <text class="timeline-meta">{{item.organization || ''}}{{item.operator ? ' · ' + item.operator : ''}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="document-empty" wx:else>暂无生命周期事件。</view>
     </view>
 
     <view class="activate-card" wx:if="{{baseCanActivate}}">

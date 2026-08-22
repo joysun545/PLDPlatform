@@ -223,7 +223,7 @@ Page({
 
   goMyDevice() {
     wx.navigateTo({
-      url: '/pages/common/scan_result/user/user?from_home=1'
+      url: '/pages/customer/device/list/list'
     });
   }
 });

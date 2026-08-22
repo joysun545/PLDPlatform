@@ -10,6 +10,8 @@ page { background: #f3f6f8; color: #17202a; }
 .model-name { font-size: 38rpx; font-weight: 700; }
 .model-code { font-size: 25rpx; opacity: .88; }
 .device-sn { margin-top: 15rpx; padding-top: 15rpx; border-top: 1rpx solid rgba(255,255,255,.25); font-family: monospace; }
+.list-btn { margin: 18rpx 0 0; padding: 0; color: #087d4b; background: transparent; text-align: left; font-size: 25rpx; line-height: 58rpx; }
+.list-btn::after { border: 0; }
 .card, .activate-card, .activated-card { margin-top: 24rpx; padding: 28rpx; background: #fff; border-radius: 20rpx; box-shadow: 0 8rpx 22rpx rgba(31,45,61,.06); }
 .card-title { margin-bottom: 18rpx; font-size: 30rpx; font-weight: 700; }
 .card-title-row { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; }
@@ -46,5 +48,15 @@ page { background: #f3f6f8; color: #17202a; }
 .metric-label { color: #728079; font-size: 22rpx; }
 .metric-value { color: #126544; font-size: 31rpx; font-weight: 700; }
 .module-line { display: block; margin-top: 13rpx; color: #8a959d; font-size: 21rpx; }
+.lifecycle-card { padding-bottom: 8rpx; }
+.timeline-item { position: relative; display: flex; gap: 18rpx; padding: 0 0 26rpx; }
+.timeline-item:not(:last-child)::before { position: absolute; top: 22rpx; bottom: 0; left: 8rpx; width: 2rpx; content: ''; background: #cfe9dc; }
+.timeline-dot { position: relative; z-index: 1; width: 18rpx; height: 18rpx; margin-top: 7rpx; border: 5rpx solid #e4f7ed; border-radius: 50%; background: #08a963; box-sizing: border-box; }
+.timeline-main { flex: 1; min-width: 0; }
+.timeline-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 18rpx; }
+.timeline-title { font-weight: 650; }
+.timeline-time { flex-shrink: 0; color: #8a959d; font-size: 21rpx; }
+.timeline-route, .timeline-meta { display: block; margin-top: 8rpx; color: #69767f; font-size: 23rpx; line-height: 1.5; }
+.timeline-meta { color: #929ca3; font-size: 21rpx; }
 .aftersale-btn { margin-top: 24rpx; color: #fff; background: #07a85c; border-radius: 14rpx; }
 .home-btn, .secondary-btn { margin: 28rpx 0 48rpx; color: #44515c; background: #fff; border-radius: 14rpx; }

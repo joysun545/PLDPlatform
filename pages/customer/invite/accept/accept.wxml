@@ -7,10 +7,15 @@
 
   <block wx:elif="{{detail}}">
     <view class="hero">
-      <text class="hero-label">设备用户邀请</text>
+      <text class="hero-label">{{addingDevice ? '添加新设备' : '设备用户邀请'}}</text>
       <text class="hero-title">{{detail.device.product_model}}</text>
       <text class="hero-sn">{{detail.device.sn}}</text>
-      <text class="hero-role">指定身份：{{detail.target_role.name}}</text>
+      <text class="hero-role">{{addingDevice ? '操作：添加到我的设备' : '指定身份：' + detail.target_role.name}}</text>
+    </view>
+
+    <view class="existing-tip" wx:if="{{addingDevice}}">
+      <text class="existing-title">已识别为现有终端用户</text>
+      <text>本次不会新建账号或组织，只会把这台设备加入您现有的“我的设备”。</text>
     </view>
 
     <view class="card">
@@ -40,7 +45,7 @@
           disabled="{{existingCustomerIdentity}}"
           bindchange="onCustomerTypeChange"
         >
-          <view class="picker-value">{{existingCustomerIdentity ? '已有用户组织' : customerTypes[customerTypeIndex]}} ›</view>
+          <view class="picker-value">{{customerTypes[customerTypeIndex]}} ›</view>
         </picker>
       </view>
 
@@ -79,7 +84,7 @@
       <checkbox-group bindchange="onAgreeChange">
         <label class="agreement">
           <checkbox value="agree" checked="{{agreed}}" color="#07c160" />
-          <text>我已核对设备和车辆资料，并同意建立用户负责人身份</text>
+          <text>{{addingDevice ? '我已核对设备和车辆资料，同意将设备添加到我的设备' : '我已核对设备和车辆资料，并同意建立用户负责人身份'}}</text>
         </label>
       </checkbox-group>
     </view>
@@ -90,6 +95,6 @@
       disabled="{{expired || submitting}}"
       loading="{{submitting}}"
       bindtap="acceptInvitation"
-    >{{expired ? '邀请已过期' : '接受邀请并进入设备页面'}}</button>
+    >{{expired ? '邀请已过期' : (addingDevice ? '添加设备并进入设备页面' : '接受邀请并进入设备页面')}}</button>
   </block>
 </view>
