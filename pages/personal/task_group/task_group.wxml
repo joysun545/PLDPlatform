@@ -1,0 +1,42 @@
+<view class="page">
+  <view wx:if="{{group}}" class="group-summary">
+    <view class="group-top">
+      <text class="group-title">同一批次任务</text>
+      <text class="group-count">共 {{group.child_count}} 项</text>
+    </view>
+    <text class="group-headline">{{group.title}}</text>
+    <view class="group-metrics">
+      <text>{{group.unread_count}} 项未读</text>
+      <text>{{group.action_pending_count}} 项待处理</text>
+      <text>{{group.completed_count}} 项已完成</text>
+    </view>
+    <text class="group-rule">
+      本页不会一次性读取全部任务，请逐项点击查看或处理。
+    </text>
+  </view>
+
+  <view wx:if="{{loading}}" class="empty">正在加载任务详情...</view>
+  <view wx:elif="{{tasks.length === 0}}" class="empty">暂无子任务</view>
+
+  <view wx:else class="task-list">
+    <view
+      wx:for="{{tasks}}"
+      wx:key="id"
+      class="child-card {{item.stateClass}}"
+      data-id="{{item.id}}"
+      bindtap="openChildTask"
+    >
+      <view class="child-top">
+        <text class="domain">{{item.domainName}}</text>
+        <text class="state {{item.stateClass}}">{{item.stateText}}</text>
+      </view>
+      <text class="child-title">{{item.title}}</text>
+      <text wx:if="{{item.summary}}" class="child-summary">{{item.summary}}</text>
+      <view class="child-bottom">
+        <text>{{item.cursor_time}}</text>
+        <text class="child-action">{{item.actionText}} ›</text>
+      </view>
+      <view wx:if="{{openingId === item.id}}" class="opening">正在打开...</view>
+    </view>
+  </view>
+</view>

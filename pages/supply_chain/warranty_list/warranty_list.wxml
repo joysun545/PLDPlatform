@@ -1,0 +1,127 @@
+<view class="page">
+  <view class="state-card" wx:if="{{loading}}">正在加载三包拆机数据…</view>
+  <view class="state-card error" wx:elif="{{errorMessage}}">
+    <text>{{errorMessage}}</text>
+    <button class="secondary-button" bindtap="retryLoad">重新加载</button>
+  </view>
+
+  <block wx:elif="{{pageData}}">
+    <view class="task-context-card" wx:if="{{taskGroup && taskGroup.items.length}}">
+      <view class="task-context-head">
+        <text class="task-context-title">本批次推送记录</text>
+        <text class="task-context-count">共 {{taskGroup.child_count}} 项</text>
+      </view>
+      <view
+        class="task-context-row {{item.state === 'NEW' ? 'unread' : ''}}"
+        wx:for="{{taskGroup.items}}"
+        wx:key="id"
+        data-task-id="{{item.id}}"
+        bindtap="markGroupTaskRead"
+      >
+        <view class="task-context-row-head">
+          <text class="task-context-row-title">{{item.title}}</text>
+          <text class="task-context-state {{item.readClass}}">{{item.readStateName}}</text>
+        </view>
+        <text class="task-context-summary">{{item.summary}}</text>
+        <text class="task-context-hint" wx:if="{{item.state === 'NEW'}}">点击标记已读</text>
+      </view>
+    </view>
+
+    <view class="hero-card">
+      <text class="hero-title">供应商退货协同清单</text>
+      <text class="hero-name">{{pageData.viewer.supplier_name}}</text>
+      <text class="hero-meta">当前身份：{{pageData.viewer.role_name}}</text>
+      <text class="hero-meta">数据范围：{{pageData.viewer.scope_name}}</text>
+    </view>
+
+    <view class="summary-grid">
+      <view class="summary-card">
+        <text class="summary-number">{{pageData.summary.returned_material_quantity}}</text>
+        <text class="summary-label">实际退回物料数量</text>
+      </view>
+      <view class="summary-card purple">
+        <text class="summary-number">{{pageData.summary.fault_occurrence_count}}</text>
+        <text class="summary-label">故障物料件次</text>
+      </view>
+      <view class="summary-card blue">
+        <text class="summary-number">{{pageData.summary.repair_return_quantity}}</text>
+        <text class="summary-label">修复换下退回数量</text>
+      </view>
+    </view>
+
+    <view class="rule-card">
+      <text class="rule-title">退回实物、故障件次和新料需求分别记录</text>
+      <text class="rule-text">实际退回数量用于实物流和结算；故障标记只用于质量统计件次。是否在保由原生产日期、拆机或换下日期及质保月数自动计算并只读展示。修复所需新料将在后续订单计划重新计数，本页不重复计入退回数量。</text>
+    </view>
+
+    <view class="tabs">
+      <view class="tab {{activeTab === 'cases' ? 'active' : ''}}" data-tab="cases" bindtap="switchTab">
+        拆机退货清单
+      </view>
+      <view class="tab {{activeTab === 'materials' ? 'active' : ''}}" data-tab="materials" bindtap="switchTab">
+        故障物料清单
+      </view>
+      <view class="tab {{activeTab === 'repair' ? 'active' : ''}}" data-tab="repair" bindtap="switchTab">
+        修复换料清单
+      </view>
+    </view>
+
+    <block wx:if="{{activeTab === 'cases'}}">
+      <view class="empty-card" wx:if="{{!pageData.return_materials.length}}">暂无拆机实际退回物料</view>
+      <view class="list-card {{item.focused ? 'focused' : ''}}" wx:for="{{pageData.return_materials}}" wx:key="id">
+        <view class="card-head">
+          <text class="primary-name">{{item.material_name}}</text>
+          <text class="warranty-tag">{{item.warranty_evaluation.result_name}}</text>
+        </view>
+        <text class="secondary-name">{{item.material_spec_name || '未指定规格'}}｜设备 {{item.device_sn}}</text>
+        <view class="line"><text>退货批次</text><text>{{item.return_flow_no}}</text></view>
+        <view class="line"><text>退货商家</text><text>{{item.return_merchant_name}}</text></view>
+        <view class="line"><text>原生产批次</text><text>{{item.production_batch_no}}</text></view>
+        <view class="line"><text>实际退回数量</text><text>{{item.returned_quantity}}</text></view>
+        <view class="line"><text>拆机日期</text><text>{{item.returnedText}}</text></view>
+        <view class="line"><text>质保区间</text><text>{{item.warrantyPeriodText}}</text></view>
+        <view class="material-summary">{{item.is_fault_material ? '同时记为故障物料1件次' : '仅记录实际退回，不计故障件次'}}｜{{item.trace_source_name}}</view>
+      </view>
+    </block>
+
+    <block wx:elif="{{activeTab === 'materials'}}">
+      <view class="empty-card" wx:if="{{!pageData.fault_materials.length}}">暂无故障物料件次</view>
+      <view class="list-card material {{item.focused ? 'focused' : ''}}" wx:for="{{pageData.fault_materials}}" wx:key="id">
+        <view class="card-head">
+          <text class="primary-name">{{item.material_name}}</text>
+          <text class="warranty-tag">{{item.warranty_evaluation.result_name}}</text>
+        </view>
+        <text class="secondary-name">{{item.material_spec_name || '未指定规格'}}</text>
+        <view class="line"><text>设备</text><text>{{item.device_sn}}</text></view>
+        <view class="line"><text>退货批次</text><text>{{item.return_flow_no}}</text></view>
+        <view class="line"><text>物料批次</text><text>{{item.material_batch || '暂无记录'}}</text></view>
+        <view class="line"><text>质保月数</text><text>{{item.warranty_evaluation.warranty_months ? item.warranty_evaluation.warranty_months + '个月' : '规则待补充'}}</text></view>
+        <view class="line"><text>质保区间</text><text>{{item.warrantyPeriodText}}</text></view>
+        <view class="line"><text>追溯来源</text><text>{{item.trace_source_name}}</text></view>
+        <view class="note" wx:if="{{item.original_note}}">生产现场说明：{{item.original_note}}</view>
+      </view>
+    </block>
+
+    <block wx:else>
+      <view class="empty-card" wx:if="{{!pageData.repair_material_requests.length}}">暂无厂家退货修复换料记录</view>
+      <view class="list-card material" wx:for="{{pageData.repair_material_requests}}" wx:key="id">
+        <view class="card-head">
+          <text class="primary-name">{{item.material_name}}</text>
+          <text class="repair-tag">{{item.actual_return_recorded ? '旧件已退回' : '等待修复换下'}}</text>
+        </view>
+        <text class="secondary-name">{{item.material_spec_name || '未指定规格'}}</text>
+        <view class="line"><text>设备</text><text>{{item.device_sn}}</text></view>
+        <view class="line"><text>退货批次</text><text>{{item.return_flow_no}}</text></view>
+        <view class="line"><text>原生产批次</text><text>{{item.production_batch_no}}</text></view>
+        <view class="line"><text>原BOM版本</text><text>{{item.bom_version}}</text></view>
+        <view class="line"><text>新料需求数量</text><text>{{item.requested_quantity}}（后续订单计划计数）</text></view>
+        <view class="line"><text>换下旧件退回数量</text><text>{{item.actual_return_quantity}}</text></view>
+        <view class="line"><text>自动质保结论</text><text>{{item.warranty_evaluation.result_name}}</text></view>
+        <view class="line"><text>质保区间</text><text>{{item.warrantyPeriodText}}</text></view>
+        <view class="line"><text>供应商追溯</text><text>{{item.trace_source_name}}</text></view>
+        <view class="line"><text>厂家推送日期</text><text>{{item.notifiedText}}</text></view>
+        <view class="note" wx:if="{{item.original_note}}">生产经理说明：{{item.original_note}}</view>
+      </view>
+    </block>
+  </block>
+</view>

@@ -5,11 +5,6 @@ const MATERIAL_OPTIONS = [
   { label: '需要更换物料', value: true }
 ];
 
-const WARRANTY_OPTIONS = [
-  { label: '没有三包物料', value: false },
-  { label: '存在三包物料', value: true }
-];
-
 function formatDate(value) {
   if (!value) return '';
   const date = new Date(value);
@@ -21,7 +16,7 @@ function formatDate(value) {
   );
 }
 
-function preparePage(data) {
+function preparePage(data, entryTaskId) {
   if (!data) return null;
   const options = data.classification_options || [];
   return {
@@ -49,16 +44,40 @@ function preparePage(data) {
       ...document,
       uploadedText: formatDate(document.uploaded_at)
     })),
+    workflow_tasks: (data.workflow_tasks || []).map(task => ({
+      ...task,
+      cursorText: formatDate(task.cursor_time),
+      nodeClass: `${!task.published
+        ? 'not-published'
+        : (task.action_state === 'COMPLETED'
+          ? 'completed'
+          : (task.action_state === 'PENDING' ? 'pending' : 'published'))}${
+            Number(task.task_id) === Number(entryTaskId) ? ' focused' : ''
+          }`,
+      readClass: task.read_state === 'UNREAD' ? 'unread' : 'read'
+    })),
     items: (data.items || []).map(item => {
       const selectedIndex = options.findIndex(option => option.value === item.stock_status);
+      const bomMaterialOptions = (item.bom_material_options || []).map(material => ({
+        ...material,
+        returnedSelected: !!material.returned_selected,
+        faultSelected: !!material.fault_selected,
+        selected: !!material.fault_selected,
+        noteInput: material.original_note || '',
+        repairSelected: !!material.repair_selected,
+        repairNoteInput: material.repair_note || ''
+      }));
       return {
         ...item,
+        bom_material_options: bomMaterialOptions,
         classifiedText: formatDate(item.classified_at),
         productionProcessedText: formatDate(item.production_processed_at),
         matchingProcessedText: formatDate(item.matching_processed_at),
         selectedIndex: selectedIndex >= 0 ? selectedIndex : 0,
         selectedStatus: selectedIndex >= 0 ? item.stock_status : '',
-        selectedLabel: selectedIndex >= 0 ? options[selectedIndex].label : '请选择入库分类',
+        selectedLabel: selectedIndex >= 0
+          ? options[selectedIndex].label
+          : (item.stock_status_name || '状态待确认'),
         inputRemark: item.remark || '',
         productionRemarkInput: item.production_remark || '',
         materialRequirementInput: item.material_requirement || '',
@@ -78,6 +97,8 @@ function preparePage(data) {
 Page({
   data: {
     transferId: 0,
+    taskGroupId: '',
+    entryTaskId: 0,
     loading: true,
     errorMessage: '',
     pageData: null,
@@ -87,8 +108,7 @@ Page({
     posting: false,
     recordingCreditAmount: false,
     operationBusyKey: '',
-    materialOptions: MATERIAL_OPTIONS,
-    warrantyOptions: WARRANTY_OPTIONS
+    materialOptions: MATERIAL_OPTIONS
   },
 
   onLoad(options) {
@@ -97,7 +117,11 @@ Page({
       this.setData({ loading: false, errorMessage: '退货流转参数无效' });
       return;
     }
-    this.setData({ transferId });
+    this.setData({
+      transferId,
+      taskGroupId: (options || {}).task_group_id || '',
+      entryTaskId: Number((options || {}).task_id || 0)
+    });
     app.ensureLogin(ok => {
       if (!ok) {
         this.setData({ loading: false, errorMessage: '登录失败，请重新进入小程序' });
@@ -133,7 +157,7 @@ Page({
           });
           return;
         }
-        const pageData = preparePage(body.data);
+        const pageData = preparePage(body.data, this.data.entryTaskId);
         this.setData({
           loading: false,
           pageData,
@@ -151,6 +175,24 @@ Page({
 
   retryLoad() {
     this.loadData();
+  },
+
+  markWorkflowTaskRead(event) {
+    const taskId = Number(event.currentTarget.dataset.taskId || 0);
+    const canMarkRead = event.currentTarget.dataset.canMarkRead === true ||
+      event.currentTarget.dataset.canMarkRead === 'true';
+    if (!taskId || !canMarkRead) return;
+    app.openUserTask(taskId, response => {
+      if (!response || response.code !== 0) {
+        wx.showToast({
+          title: (response && response.msg) || '任务读取失败',
+          icon: 'none'
+        });
+        return;
+      }
+      this.loadData();
+      if (typeof app.refreshTasks === 'function') app.refreshTasks();
+    });
   },
 
   confirmPickup() {
@@ -178,7 +220,9 @@ Page({
           wx.showToast({ title: body.msg || '确认取回失败', icon: 'none' });
           return;
         }
-        this.setData({ pageData: preparePage(body.data) });
+        this.setData({
+          pageData: preparePage(body.data, this.data.entryTaskId)
+        });
         if (typeof app.refreshTasks === 'function') app.refreshTasks();
         wx.showToast({ title: '已确认取回', icon: 'success' });
       },
@@ -249,7 +293,7 @@ Page({
           wx.showToast({ title: body.msg || '冲抵金额登记失败', icon: 'none' });
           return;
         }
-        const pageData = preparePage(body.data);
+        const pageData = preparePage(body.data, this.data.entryTaskId);
         this.setData({
           pageData,
           creditAmount: (pageData.account_case || {}).confirmed_amount || amount
@@ -304,7 +348,9 @@ Page({
           wx.showToast({ title: body.msg || '分类入库失败', icon: 'none' });
           return;
         }
-        this.setData({ pageData: preparePage(body.data) });
+        this.setData({
+          pageData: preparePage(body.data, this.data.entryTaskId)
+        });
         if (typeof app.refreshTasks === 'function') app.refreshTasks();
         wx.showModal({
           title: '分类入库完成',
@@ -340,14 +386,66 @@ Page({
     });
   },
 
-  onWarrantyMaterialChange(event) {
+  onReturnedMaterialSelectionChange(event) {
     const itemIndex = Number(event.currentTarget.dataset.index);
-    const optionIndex = Number(event.detail.value);
-    const option = WARRANTY_OPTIONS[optionIndex];
-    if (Number.isNaN(itemIndex) || !option) return;
+    if (Number.isNaN(itemIndex)) return;
+    const selectedIds = new Set((event.detail.value || []).map(value => Number(value)));
+    const materials = this.data.pageData.items[itemIndex].bom_material_options || [];
+    materials.forEach((material, materialIndex) => {
+      this.setData({
+        [`pageData.items[${itemIndex}].bom_material_options[${materialIndex}].returnedSelected`]:
+          selectedIds.has(Number(material.bom_item_id)),
+        [`pageData.items[${itemIndex}].bom_material_options[${materialIndex}].faultSelected`]:
+          selectedIds.has(Number(material.bom_item_id)) && !!material.faultSelected
+      });
+    });
+  },
+
+  onRepairMaterialSelectionChange(event) {
+    const itemIndex = Number(event.currentTarget.dataset.index);
+    if (Number.isNaN(itemIndex)) return;
+    const selectedIds = new Set((event.detail.value || []).map(value => Number(value)));
+    const materials = this.data.pageData.items[itemIndex].bom_material_options || [];
+    materials.forEach((material, materialIndex) => {
+      this.setData({
+        [`pageData.items[${itemIndex}].bom_material_options[${materialIndex}].repairSelected`]:
+          selectedIds.has(Number(material.bom_item_id))
+      });
+    });
+  },
+
+  onRepairMaterialNoteInput(event) {
+    const itemIndex = Number(event.currentTarget.dataset.itemIndex);
+    const materialIndex = Number(event.currentTarget.dataset.materialIndex);
+    if (Number.isNaN(itemIndex) || Number.isNaN(materialIndex)) return;
     this.setData({
-      [`pageData.items[${itemIndex}].warrantyMaterialIndex`]: optionIndex,
-      [`pageData.items[${itemIndex}].warrantyMaterialSelected`]: option.value
+      [`pageData.items[${itemIndex}].bom_material_options[${materialIndex}].repairNoteInput`]:
+        event.detail.value || ''
+    });
+  },
+
+  onFaultMaterialNoteInput(event) {
+    const itemIndex = Number(event.currentTarget.dataset.itemIndex);
+    const materialIndex = Number(event.currentTarget.dataset.materialIndex);
+    if (Number.isNaN(itemIndex) || Number.isNaN(materialIndex)) return;
+    this.setData({
+      [`pageData.items[${itemIndex}].bom_material_options[${materialIndex}].noteInput`]:
+        event.detail.value || ''
+    });
+  },
+
+  onFaultMaterialChange(event) {
+    const itemIndex = Number(event.currentTarget.dataset.itemIndex);
+    const materialIndex = Number(event.currentTarget.dataset.materialIndex);
+    if (Number.isNaN(itemIndex) || Number.isNaN(materialIndex)) return;
+    const material = this.data.pageData.items[itemIndex].bom_material_options[materialIndex];
+    if (!material.returnedSelected && event.detail.value) {
+      wx.showToast({ title: '请先勾选该实际退回物料', icon: 'none' });
+      return;
+    }
+    this.setData({
+      [`pageData.items[${itemIndex}].bom_material_options[${materialIndex}].faultSelected`]:
+        !!event.detail.value
     });
   },
 
@@ -358,17 +456,29 @@ Page({
     if (!item || !action || this.data.operationBusyKey) return;
     let content = '确认保存本台设备的生产处置结果？';
     if (action === 'REPAIR_DIAGNOSIS') {
-      if (item.needsMaterialSelected && !String(item.materialRequirementInput || '').trim()) {
-        wx.showToast({ title: '需要换料时请填写物料需求', icon: 'none' });
+      const selected = (item.bom_material_options || [])
+        .filter(material => material.repairSelected);
+      if (item.needsMaterialSelected && !selected.length) {
+        wx.showToast({ title: '请从原BOM至少勾选一项物料', icon: 'none' });
         return;
       }
       content = item.needsMaterialSelected
-        ? '提交后将解锁配套经理原任务，等待物料方案。'
+        ? `确认提交${selected.length}项换料需求？配套经理将核对原供应商并完成关联推送。`
         : '提交后本台设备可由生产经理继续确认修复完成。';
     }
-    if (action === 'DISASSEMBLY_COMPLETE' && !String(item.disassemblyResultInput || '').trim()) {
-      wx.showToast({ title: '请填写拆机结果和拆出物料清单', icon: 'none' });
-      return;
+    if (action === 'DISASSEMBLY_COMPLETE') {
+      const returned = (item.bom_material_options || [])
+        .filter(material => material.returnedSelected);
+      const faults = returned.filter(material => material.faultSelected);
+      if (!returned.length) {
+        wx.showToast({ title: '请至少勾选一项实际退回物料', icon: 'none' });
+        return;
+      }
+      if (!faults.length) {
+        wx.showToast({ title: '请至少标记一项故障原因物料', icon: 'none' });
+        return;
+      }
+      content = `确认保存${returned.length}项实际退回物料和${faults.length}项故障件次，并结束本台旧生命周期？质保状态由系统自动计算，原始事实保存后不可覆盖。`;
     }
     wx.showModal({
       title: '确认生产处置',
@@ -386,10 +496,22 @@ Page({
     };
     if (action === 'REPAIR_DIAGNOSIS') {
       payload.needs_replacement_material = !!item.needsMaterialSelected;
-      payload.material_requirement = item.materialRequirementInput || '';
+      if (item.needsMaterialSelected) {
+        payload.repair_materials = (item.bom_material_options || [])
+          .filter(material => material.repairSelected)
+          .map(material => ({
+            bom_item_id: material.bom_item_id,
+            note: material.repairNoteInput || ''
+          }));
+      }
     } else if (action === 'DISASSEMBLY_COMPLETE') {
-      payload.disassembly_result = item.disassemblyResultInput || '';
-      payload.has_warranty_material = !!item.warrantyMaterialSelected;
+      payload.returned_materials = (item.bom_material_options || [])
+        .filter(material => material.returnedSelected)
+        .map(material => ({
+          bom_item_id: material.bom_item_id,
+          note: material.noteInput || '',
+          is_fault_material: !!material.faultSelected
+        }));
     }
     const busyKey = `production-${item.id}-${action}`;
     this.setData({ operationBusyKey: busyKey });
@@ -413,22 +535,22 @@ Page({
     const action = event.currentTarget.dataset.action || '';
     const item = ((this.data.pageData || {}).items || [])[itemIndex];
     if (!item || !action || this.data.operationBusyKey) return;
-    if (action === 'REPAIR_MATERIAL_PLAN' && !String(item.materialPlanInput || '').trim()) {
-      wx.showToast({ title: '请填写修复物料方案', icon: 'none' });
+    if (action === 'REPAIR_MATERIAL_PLAN' && !item.actions.can_notify_repair_suppliers) {
+      wx.showToast({ title: '存在原供应商待确认，暂不能推送', icon: 'none' });
       return;
     }
     if (
       action === 'DISASSEMBLY_MATERIAL_DISPOSITION' &&
-      !String(item.warrantyDispositionInput || '').trim()
+      !item.actions.can_notify_warranty_suppliers
     ) {
-      wx.showToast({ title: '请填写三包物料处置意见', icon: 'none' });
+      wx.showToast({ title: '存在供应商待确认，暂不能通知', icon: 'none' });
       return;
     }
     wx.showModal({
       title: '确认配套处置',
       content: action === 'REPAIR_MATERIAL_PLAN'
-        ? '提交物料方案后，将解锁生产经理完成修复。'
-        : '确认保存本台拆机三包物料处置意见？',
+        ? '确认原BOM换料清单并按原供应商推送？供应商负责人必收；原订单已配置责任销售经理时同步通知。完成后将解锁生产经理继续修复。'
+        : '确认三包物料并按供应商分组通知？供应商负责人必收；原订单已配置责任销售经理时同步通知。',
       confirmText: '确认提交',
       success: modal => modal.confirm && this.doMatchingAction(itemIndex, action)
     });
@@ -442,8 +564,6 @@ Page({
     };
     if (action === 'REPAIR_MATERIAL_PLAN') {
       payload.material_plan = item.materialPlanInput || '';
-    } else {
-      payload.warranty_disposition = item.warrantyDispositionInput || '';
     }
     const busyKey = `matching-${item.id}-${action}`;
     this.setData({ operationBusyKey: busyKey });
@@ -468,7 +588,9 @@ Page({
       wx.showToast({ title: body.msg || '处置提交失败', icon: 'none' });
       return;
     }
-    this.setData({ pageData: preparePage(body.data) });
+    this.setData({
+      pageData: preparePage(body.data, this.data.entryTaskId)
+    });
     if (typeof app.refreshTasks === 'function') app.refreshTasks();
     wx.showToast({ title: successTitle, icon: 'success' });
   },

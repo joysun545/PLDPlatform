@@ -19,7 +19,7 @@
       <view class="success-icon">✓</view>
       <text class="success-title">订单计划创建成功</text>
       <text class="success-code">{{createdPlan.plan_code}}</text>
-      <text class="success-tip">配套任务已推送给厂家配套经理</text>
+      <text class="success-tip">{{createdSuccessTip}}</text>
     </view>
 
     <view class="card">
@@ -39,6 +39,10 @@
         <view class="created-item-head">
           <text>{{item.product_model_name}}</text>
           <text>× {{item.quantity}}</text>
+        </view>
+        <view class="created-split">
+          <text>调用退货库存 {{item.return_inventory_quantity}} 台</text>
+          <text>新生产 {{item.production_quantity}} 台</text>
         </view>
         <text class="code-line">订单批次：{{item.order_batch_code}}</text>
         <text class="code-line">生命周期：{{item.lifecycle_code}}</text>
@@ -189,6 +193,61 @@
           data-key="{{item.key}}"
           bindinput="onQuantityInput"
         />
+
+        <view class="reissue-card" wx:if="{{item.productModelId}}">
+          <view class="reissue-state" wx:if="{{item.reissueLoading}}">
+            正在查询厂家待流转库存…
+          </view>
+          <view class="reissue-state error" wx:elif="{{item.reissueError}}">
+            {{item.reissueError}}
+          </view>
+          <block wx:elif="{{item.reissueInfo}}">
+            <view class="reissue-head">
+              <view>
+                <text class="reissue-title">厂家待流转库存</text>
+                <text class="reissue-count">当前可用 {{item.reissueInfo.available_count}} 台</text>
+              </view>
+              <switch
+                color="#07b85e"
+                checked="{{item.useReturnInventory}}"
+                disabled="{{item.reissueInfo.available_count <= 0}}"
+                data-key="{{item.key}}"
+                bindchange="onUseReturnInventoryChange"
+              />
+            </view>
+
+            <view class="bom-compare">
+              <view class="bom-compare-block">
+                <text class="bom-label">待流转设备实际BOM</text>
+                <block wx:if="{{item.reissueInfo.return_inventory_boms.length}}">
+                  <text
+                    class="bom-line"
+                    wx:for="{{item.reissueInfo.return_inventory_boms}}"
+                    wx:for-item="bomRow"
+                    wx:key="bom_id"
+                  >{{bomRow.version}} · {{bomRow.count}} 台</text>
+                </block>
+                <text class="bom-empty" wx:else>暂无可用设备</text>
+              </view>
+              <view class="bom-compare-block">
+                <text class="bom-label">该商家最近订单BOM</text>
+                <text class="bom-line" wx:if="{{item.reissueInfo.recent_merchant_bom}}">
+                  {{item.reissueInfo.recent_merchant_bom.version}}
+                </text>
+                <text class="bom-empty" wx:else>暂无历史订单</text>
+              </view>
+            </view>
+
+            <view class="split-preview">
+              <view><text>{{item.quantity}}</text><text>总需求</text></view>
+              <view><text>{{item.returnInventoryQuantity}}</text><text>调用退货库存</text></view>
+              <view><text>{{item.productionQuantity}}</text><text>新生产</text></view>
+            </view>
+            <text class="reissue-note" wx:if="{{item.useReturnInventory}}">
+              系统提交时会逐台锁定待流转设备；每台保留原BOM、原批次和原生命周期追溯。
+            </text>
+          </block>
+        </view>
       </view>
 
       <button class="outline-button" bindtap="addProductRow">＋ 再添加一个产品型号</button>

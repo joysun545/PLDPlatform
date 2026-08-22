@@ -11,6 +11,7 @@ Page({
     showCreateOrderPlan: false,
     showOrderPlanList: false,
     showSupplierResponsibility: false,
+    showSupplierWarranty: false,
     showMatching: false,
     showStock: false,
     showGoodsTransfer: false,
@@ -63,6 +64,10 @@ Page({
         'merchant_stock'
       ].includes(role),
       showSupplierResponsibility: role === 'supplier_owner',
+      showSupplierWarranty: [
+        'supplier_owner',
+        'supplier_sales'
+      ].includes(role),
       showMatching: role === 'factory_matching',
 
       showStock: [
@@ -174,6 +179,13 @@ Page({
     wx.navigateTo({
       url: '/pages/supply_chain/responsibility/responsibility',
       fail: () => wx.showToast({ title: '责任分配页面打开失败', icon: 'none' })
+    });
+  },
+
+  goSupplierWarranty() {
+    wx.navigateTo({
+      url: '/pages/supply_chain/warranty_list/warranty_list',
+      fail: () => wx.showToast({ title: '三包清单页面打开失败', icon: 'none' })
     });
   },
 

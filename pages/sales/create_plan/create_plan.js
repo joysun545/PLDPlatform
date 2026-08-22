@@ -14,7 +14,29 @@ function emptyProductRow(key) {
     modelIndex: -1,
     productModelId: '',
     productModelName: '',
-    quantity: '1'
+    quantity: '1',
+    reissueLoading: false,
+    reissueError: '',
+    reissueInfo: null,
+    useReturnInventory: false,
+    returnInventoryQuantity: 0,
+    productionQuantity: 1
+  };
+}
+
+function withInventorySplit(row) {
+  const parsed = Number(row.quantity);
+  const quantity = Number.isInteger(parsed) && parsed > 0 ? parsed : 0;
+  const available = Number(
+    row.reissueInfo && row.reissueInfo.available_count
+  ) || 0;
+  const returnInventoryQuantity = row.useReturnInventory
+    ? Math.min(quantity, available)
+    : 0;
+  return {
+    ...row,
+    returnInventoryQuantity,
+    productionQuantity: Math.max(quantity - returnInventoryQuantity, 0)
   };
 }
 
@@ -41,7 +63,8 @@ Page({
     nextRowKey: 2,
     remark: '',
     clientRequestId: newClientRequestId(),
-    createdPlan: null
+    createdPlan: null,
+    createdSuccessTip: ''
   },
 
   onLoad() {
@@ -266,7 +289,13 @@ Page({
             models: category.models || [],
             modelIndex: -1,
             productModelId: '',
-            productModelName: ''
+            productModelName: '',
+            reissueLoading: false,
+            reissueError: '',
+            reissueInfo: null,
+            useReturnInventory: false,
+            returnInventoryQuantity: 0,
+            productionQuantity: Number(row.quantity) || 0
           }
         : row
     ));
@@ -284,9 +313,73 @@ Page({
         ...row,
         modelIndex,
         productModelId: productModel.id,
-        productModelName: productModel.name
+        productModelName: productModel.name,
+        reissueLoading: true,
+        reissueError: '',
+        reissueInfo: null,
+        useReturnInventory: false,
+        returnInventoryQuantity: 0,
+        productionQuantity: Number(row.quantity) || 0
       };
     });
+    this.setData({ productRows }, () => this.loadReissueOptions(key));
+  },
+
+  loadReissueOptions(key) {
+    const merchant = this.data.selectedMerchant;
+    const row = this.data.productRows.find(item => item.key === key);
+    if (!merchant || !row || !row.productModelId) return;
+    const requestedModelId = row.productModelId;
+    wx.request({
+      url: (
+        `${app.globalData.apiBase}/sales/order-plans/reissue-options/` +
+        `?merchant_id=${encodeURIComponent(merchant.id)}` +
+        `&product_model_id=${encodeURIComponent(requestedModelId)}`
+      ),
+      method: 'GET',
+      header: app.authHeader(),
+      success: res => {
+        const payload = res.data || {};
+        const current = this.data.productRows.find(item => item.key === key);
+        if (!current || String(current.productModelId) !== String(requestedModelId)) return;
+        if (res.statusCode === 401) {
+          app.reauthenticate();
+          this.updateReissueRow(key, null, '登录已失效，请重新进入');
+          return;
+        }
+        if (payload.code !== 0 || !payload.data) {
+          this.updateReissueRow(key, null, payload.msg || '退货库存查询失败');
+          return;
+        }
+        this.updateReissueRow(key, payload.data, '');
+      },
+      fail: () => this.updateReissueRow(key, null, '退货库存网络请求失败')
+    });
+  },
+
+  updateReissueRow(key, reissueInfo, reissueError) {
+    const productRows = this.data.productRows.map(row => {
+      if (row.key !== key) return row;
+      return withInventorySplit({
+        ...row,
+        reissueLoading: false,
+        reissueError,
+        reissueInfo,
+        useReturnInventory: reissueInfo && reissueInfo.available_count > 0
+          ? row.useReturnInventory
+          : false
+      });
+    });
+    this.setData({ productRows });
+  },
+
+  onUseReturnInventoryChange(e) {
+    const key = Number(e.currentTarget.dataset.key);
+    const productRows = this.data.productRows.map(row => (
+      row.key === key
+        ? withInventorySplit({ ...row, useReturnInventory: !!e.detail.value })
+        : row
+    ));
     this.setData({ productRows });
   },
 
@@ -295,7 +388,7 @@ Page({
     const quantity = e.detail.value;
     this.setData({
       productRows: this.data.productRows.map(row => (
-        row.key === key ? { ...row, quantity } : row
+        row.key === key ? withInventorySplit({ ...row, quantity }) : row
       ))
     });
   },
@@ -344,7 +437,8 @@ Page({
         items: this.data.productRows.map(row => ({
           category_id: row.categoryId,
           product_model_id: row.productModelId,
-          quantity: Number(row.quantity)
+          quantity: Number(row.quantity),
+          use_return_inventory: !!row.useReturnInventory
         }))
       },
       success: res => {
@@ -353,7 +447,19 @@ Page({
           wx.showToast({ title: body.msg || '订单计划创建失败', icon: 'none' });
           return;
         }
-        this.setData({ createdPlan: body.data });
+        const createdPlan = body.data;
+        const productionQuantity = (createdPlan.items || []).reduce(
+          (sum, item) => sum + (Number(item.production_quantity) || 0),
+          0
+        );
+        const returnInventoryQuantity = (createdPlan.items || []).reduce(
+          (sum, item) => sum + (Number(item.return_inventory_quantity) || 0),
+          0
+        );
+        const createdSuccessTip = productionQuantity > 0
+          ? `新生产${productionQuantity}台已进入配套链，总订单已同步销售助理`
+          : `全部调用退货库存${returnInventoryQuantity}台，已进入生产确认环节`;
+        this.setData({ createdPlan, createdSuccessTip });
         app.refreshTasks();
         wx.pageScrollTo({ scrollTop: 0, duration: 300 });
       },
@@ -376,7 +482,8 @@ Page({
       nextRowKey: this.data.nextRowKey + 1,
       remark: '',
       clientRequestId: newClientRequestId(),
-      createdPlan: null
+      createdPlan: null,
+      createdSuccessTip: ''
     });
   }
 });

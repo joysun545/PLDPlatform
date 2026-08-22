@@ -82,7 +82,9 @@ function preparePlan(plan) {
       ...item,
       bomVersion: item.bom_confirmation
         ? item.bom_confirmation.version
-        : '待配套确认',
+        : (Number(item.production_quantity) === 0
+            ? '沿用退货设备原BOM'
+            : '待配套确认'),
       materials: item.materials || []
     }))
   };

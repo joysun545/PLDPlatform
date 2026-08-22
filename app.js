@@ -219,12 +219,15 @@ App({
       'pages/personal/center/center',
       'pages/personal/edit/edit',
       'pages/personal/task_list/task_list',
+      'pages/personal/task_group/task_group',
       'pages/sales/create_plan/create_plan',
       'pages/sales/order_plan_list/order_plan_list',
       'pages/sales/order_logistics/order_logistics',
       'pages/sales/order_finance/order_finance',
       'pages/sales/matching_confirm/matching_confirm',
-      'pages/supply_chain/responsibility/responsibility'
+      'pages/supply_chain/responsibility/responsibility',
+      'pages/supply_chain/warranty_list/warranty_list',
+      'pages/supply_chain/warranty_notice/warranty_notice'
     ];
     if (protectedRoutes.includes(currentRoute)) return;
 
@@ -321,8 +324,17 @@ App({
         const items = (res.data.data && res.data.data.items) || [];
         this.globalData.taskList = items.map(it => ({
           id: it.id,
+          group_id: it.group_id || '',
+          entry_task_id: Number(it.entry_task_id) || Number(it.id),
+          entry_task_type: it.entry_task_type || it.type || '',
+          grouped: !!it.grouped,
+          child_count: Number(it.child_count) || 1,
+          unread_count: Number(it.unread_count) || 0,
+          action_pending_count: Number(it.action_pending_count) || 0,
+          completed_count: Number(it.completed_count) || 0,
           title: it.title,
           summary: it.summary || '',
+          latest_summary: it.latest_summary || '',
           url: it.link || '',
           isNew: it.state === 'NEW',
           state: it.state,
@@ -335,6 +347,27 @@ App({
         }));
         this._emitTaskUpdated();
       }
+    });
+  },
+
+  fetchTaskGroup(groupId, cb) {
+    if (!this.globalData.access_token || !groupId) {
+      cb && cb({ code: 401, msg: '登录状态已失效，请重新进入小程序' });
+      return;
+    }
+
+    wx.request({
+      url: `${this.globalData.apiBase}/workflow/task/group/`,
+      method: 'GET',
+      header: this.authHeader(),
+      data: { group_id: groupId },
+      success: (res) => {
+        if (res.statusCode === 401) {
+          this.reauthenticate();
+        }
+        cb && cb(res.data);
+      },
+      fail: () => cb && cb({ code: 1, msg: '网络请求失败' })
     });
   },
 

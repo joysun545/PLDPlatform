@@ -219,6 +219,7 @@ Page({
     const itemIndex = Number(e.currentTarget.dataset.itemIndex);
     const bomIndex = Number(e.detail.value);
     const item = this.data.items[itemIndex];
+    if (item && !item.requires_matching) return;
     const option = item && item.bomOptions[bomIndex];
     if (!item || !option || !asId(option.id)) return;
     if (asId(option.id) === asId(item.selectedBomId)) return;
@@ -354,17 +355,19 @@ Page({
   },
 
   doSubmit() {
-    const items = this.data.items.map(item => ({
-      order_plan_item_id: item.id,
-      source_bom_id: item.selectedBomId,
-      materials: item.materials.map(material => ({
-        material_id: material.id,
-        material_spec_id: material.selectedSpecId,
-        supplier_id: material.selectedSupplierId,
-        deleted: !!material.deleted,
-        remark: material.remark || ''
-      }))
-    }));
+    const items = this.data.items
+      .filter(item => item.requires_matching)
+      .map(item => ({
+        order_plan_item_id: item.id,
+        source_bom_id: item.selectedBomId,
+        materials: item.materials.map(material => ({
+          material_id: material.id,
+          material_spec_id: material.selectedSpecId,
+          supplier_id: material.selectedSupplierId,
+          deleted: !!material.deleted,
+          remark: material.remark || ''
+        }))
+      }));
     this.setData({ submitting: true });
     wx.showLoading({ title: '正在确认...', mask: true });
     wx.request({

@@ -54,7 +54,27 @@
             <text class="model-name">{{planItem.product_model.name}}</text>
             <text class="model-code">{{planItem.product_model.code}}</text>
           </view>
-          <view class="quantity-pill">{{planItem.quantity}} 台</view>
+          <view class="quantity-pill">{{planItem.quantity}} 台总需求</view>
+        </view>
+
+        <view class="quantity-split">
+          <view>
+            <text>{{planItem.return_inventory_quantity}}</text>
+            <text>退货库存</text>
+          </view>
+          <view>
+            <text>{{planItem.production_quantity}}</text>
+            <text>新生产·需配套</text>
+          </view>
+        </view>
+
+        <view class="reissue-summary" wx:if="{{planItem.return_inventory_quantity > 0}}">
+          <text class="reissue-summary-title">已逐台预占的待流转设备</text>
+          <view class="reissue-bom-row" wx:for="{{planItem.return_inventory_boms}}" wx:for-item="reissueBom" wx:key="bom_id">
+            <text>原BOM {{reissueBom.version}}</text>
+            <text>{{reissueBom.count}} 台</text>
+          </view>
+          <text class="reissue-summary-note">这部分不重新配套，原BOM与原批次按设备保留追溯。</text>
         </view>
 
         <view class="model-meta">
@@ -64,7 +84,7 @@
             range="{{planItem.bomOptions}}"
             range-key="display_name"
             value="{{planItem.bomIndex}}"
-            disabled="{{plan.read_only || switchingBom}}"
+            disabled="{{plan.read_only || switchingBom || !planItem.requires_matching}}"
             data-item-index="{{itemIndex}}"
             bindchange="onBomVersionChange"
           >
@@ -79,6 +99,10 @@
           已确认 {{planItem.confirmation.confirmed_version}}
           <text wx:if="{{planItem.confirmation.has_changes}}"> · 已生成新版本</text>
           <text wx:else> · 沿用默认版本</text>
+        </view>
+
+        <view wx:if="{{!planItem.requires_matching}}" class="matching-bypass-strip">
+          该型号已全部由退货待流转库存满足，无新生产数量，不参与本次BOM配套确认。
         </view>
 
         <block wx:for="{{planItem.materials}}" wx:key="id" wx:for-item="material" wx:for-index="materialIndex">

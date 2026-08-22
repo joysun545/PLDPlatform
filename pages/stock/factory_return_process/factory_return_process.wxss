@@ -7,6 +7,7 @@
 }
 
 .state-card,
+.workflow-card,
 .hero-card,
 .rule-card,
 .account-card,
@@ -28,6 +29,51 @@
 .state-card { text-align: center; color: #66706d; }
 .state-card.error { color: #b83b2e; }
 .secondary-button { width: 240rpx; margin-top: 24rpx; color: #087f5b; background: #e9f8f1; }
+
+.workflow-head,
+.workflow-node-head,
+.workflow-node-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18rpx;
+}
+.workflow-title,
+.workflow-subtitle,
+.workflow-node-title,
+.workflow-node-summary,
+.workflow-rule { display: block; }
+.workflow-title { font-size: 30rpx; font-weight: 700; }
+.workflow-subtitle { margin-top: 7rpx; color: #77817e; font-size: 22rpx; }
+.workflow-count { color: #087f5b; font-size: 23rpx; }
+.workflow-node {
+  margin-top: 20rpx;
+  padding: 22rpx;
+  border: 1rpx solid #d9e8e2;
+  border-left: 7rpx solid #2cb383;
+  border-radius: 15rpx;
+  background: #fbfffd;
+}
+.workflow-node.pending { border-left-color: #e5a400; background: #fffdf7; }
+.workflow-node.completed { border-left-color: #79c85f; background: #fbfff9; }
+.workflow-node.focused { box-shadow: 0 0 0 5rpx rgba(8, 159, 105, 0.14); }
+.workflow-node.not-published { border-color: #e4e7e6; border-left-color: #bec6c3; background: #f6f7f7; opacity: 0.72; }
+.workflow-node-title { flex: 1; font-size: 26rpx; font-weight: 700; }
+.workflow-read { flex-shrink: 0; padding: 5rpx 12rpx; border-radius: 999rpx; font-size: 21rpx; }
+.workflow-read.unread { color: #a35d00; background: #fff0d7; }
+.workflow-read.read { color: #4b7165; background: #eaf7f1; }
+.workflow-node.not-published .workflow-read { color: #737b78; background: #e8ebea; }
+.workflow-node-event,
+.workflow-node-summary { display: block; margin-top: 11rpx; color: #68736f; font-size: 23rpx; line-height: 1.55; }
+.workflow-node-event { color: #3f6659; }
+.workflow-node-bottom { margin-top: 13rpx; color: #8a9390; font-size: 21rpx; }
+.workflow-action { font-weight: 650; }
+.workflow-action.PENDING { color: #b25d00; }
+.workflow-action.COMPLETED { color: #39862e; }
+.workflow-action.WAITING,
+.workflow-action.NOT_PUBLISHED { color: #77807d; }
+.workflow-read-hint { color: #087f5b; }
+.workflow-rule { margin-top: 18rpx; color: #7c8582; font-size: 21rpx; line-height: 1.55; }
 
 .hero-card { color: #fff; background: linear-gradient(135deg, #08b878, #087f69); }
 .hero-head,
@@ -170,6 +216,18 @@
   background: #fff9f7;
 }
 
+.repair-material-panel {
+  margin-top: 18rpx;
+  padding: 18rpx;
+  border: 1rpx solid #c9e7da;
+  border-radius: 14rpx;
+  background: #f7fffb;
+}
+
+.repair-material-panel .fault-note {
+  margin-top: 16rpx;
+}
+
 .operation-title,
 .operation-rule,
 .requirement-text,
@@ -233,4 +291,129 @@
   color: #33433d;
   font-size: 24rpx;
   font-weight: 700;
+}
+
+.fault-option,
+.fault-fact {
+  margin-top: 18rpx;
+  padding: 20rpx;
+  border: 1rpx solid #dfe8e4;
+  border-radius: 14rpx;
+  background: #fff;
+}
+
+.fault-option.selected {
+  border-color: #85d7b7;
+  background: #f7fffb;
+}
+
+.fault-check-row,
+.fault-title-row,
+.warranty-row {
+  display: flex;
+  align-items: center;
+}
+
+.fault-check-row {
+  align-items: flex-start;
+}
+
+.fault-main {
+  flex: 1;
+  min-width: 0;
+  margin-left: 14rpx;
+}
+
+.fault-title-row {
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.fault-name,
+.fault-meta,
+.trace-source,
+.fault-note-text,
+.fault-empty {
+  display: block;
+}
+
+.fault-name {
+  color: #263a33;
+  font-size: 26rpx;
+  font-weight: 700;
+}
+
+.key-part,
+.warranty-tag {
+  flex-shrink: 0;
+  padding: 5rpx 12rpx;
+  border-radius: 999rpx;
+  font-size: 20rpx;
+}
+
+.key-part {
+  color: #9a4b00;
+  background: #fff0d7;
+}
+
+.warranty-tag {
+  color: #6d28d9;
+  background: #f0e9ff;
+}
+
+.fault-meta,
+.trace-source,
+.fault-note-text,
+.fault-empty {
+  margin-top: 8rpx;
+  color: #6c7773;
+  font-size: 22rpx;
+  line-height: 1.55;
+}
+
+.trace-source {
+  color: #167156;
+}
+
+.trace-source.inferred {
+  color: #a05a00;
+}
+
+.fault-detail {
+  margin-top: 18rpx;
+  padding-top: 18rpx;
+  border-top: 1rpx dashed #d5e4de;
+}
+
+.fault-note {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 18rpx;
+  border: 1rpx solid #dfe6e3;
+  border-radius: 12rpx;
+  background: #fff;
+  font-size: 24rpx;
+}
+
+.warranty-row {
+  justify-content: space-between;
+  margin-top: 16rpx;
+  color: #5b456f;
+  font-size: 24rpx;
+}
+
+.fault-fact {
+  border-color: #ded1ff;
+  background: #fdfbff;
+}
+
+.unresolved-warning {
+  margin-top: 18rpx;
+  padding: 18rpx;
+  border-left: 6rpx solid #c24835;
+  border-radius: 10rpx;
+  color: #8b382d;
+  background: #fff2ef;
+  font-size: 23rpx;
+  line-height: 1.6;
 }

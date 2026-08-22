@@ -8,6 +8,7 @@
     "pages/personal/center/center",
     "pages/personal/edit/edit",
     "pages/personal/task_list/task_list",
+    "pages/personal/task_group/task_group",
     "pages/scan/scan/scan",
     "pages/scan/result/result",
     "pages/customer/invite/accept/accept",
@@ -28,12 +29,14 @@
     "pages/stock/goods_transfer_accounts/goods_transfer_accounts",
     "pages/stock/factory_return_process/factory_return_process",
     "pages/stock/factory_return_inventory/factory_return_inventory",
-    "pages/supply_chain/responsibility/responsibility"
+    "pages/supply_chain/responsibility/responsibility",
+    "pages/supply_chain/warranty_list/warranty_list",
+    "pages/supply_chain/warranty_notice/warranty_notice"
   ],
   "window": {
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#07c160",
-    "navigationBarTitleText": "PLDPlatform",
+    "navigationBarTitleText": "渠道管理及售后服务系统",
     "navigationBarTextStyle": "white"
   },
   "permission": {

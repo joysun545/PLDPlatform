@@ -8,6 +8,7 @@ const DOMAIN_NAMES = {
   ACTIVATE: '激活',
   PROFILE: '资料',
   SALES: '销售订单',
+  SUPPLY_CHAIN: '供应链',
   SYSTEM: '系统'
 };
 
@@ -45,13 +46,19 @@ Page({
   syncTasks() {
     const taskList = (app.globalData.taskList || []).map(task => ({
       ...task,
-      stateText: task.state === 'DONE'
-        ? '已完成'
-        : (task.state === 'READ' ? '已读' : '未读'),
+      stateText: task.grouped
+        ? (task.unread_count > 0
+          ? `${task.unread_count}项未读`
+          : (task.action_pending_count > 0 ? '待处理' : '已完成'))
+        : (task.state === 'DONE'
+          ? '已完成'
+          : (task.state === 'READ' ? '已读' : '未读')),
       stateClass: task.state === 'DONE'
         ? 'done'
         : (task.state === 'READ' ? 'read' : 'new'),
-      domainName: DOMAIN_NAMES[task.domain] || '任务'
+      domainName: task.grouped
+        ? '退货协同'
+        : (DOMAIN_NAMES[task.domain] || '任务')
     }));
 
     this.setData({
@@ -64,11 +71,12 @@ Page({
   },
 
   openTask(e) {
-    const taskId = Number(e.currentTarget.dataset.id);
-    const task = this.data.taskList.find(item => Number(item.id) === taskId);
-    if (!taskId || !task || this.data.openingId) return;
+    const cardId = Number(e.currentTarget.dataset.id);
+    const task = this.data.taskList.find(item => Number(item.id) === cardId);
+    const taskId = Number((task || {}).entry_task_id || cardId);
+    if (!cardId || !taskId || !task || this.data.openingId) return;
 
-    this.setData({ openingId: taskId });
+    this.setData({ openingId: cardId });
     app.openUserTask(taskId, (response) => {
       this.setData({ openingId: null });
 

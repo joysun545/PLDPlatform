@@ -1,0 +1,46 @@
+<view class="page">
+  <view class="state-card" wx:if="{{loading}}">正在加载三包物料任务…</view>
+  <view class="state-card error" wx:elif="{{errorMessage}}">
+    <text>{{errorMessage}}</text>
+    <button class="secondary-button" bindtap="retryLoad">重新加载</button>
+  </view>
+
+  <block wx:elif="{{pageData}}">
+    <view class="hero-card">
+      <view class="hero-head">
+        <text class="hero-title">供应商三包物料通知</text>
+        <text class="status-pill">{{pageData.status_name}}</text>
+      </view>
+      <text class="supplier-name">{{pageData.supplier.name}}</text>
+      <text class="hero-meta">{{pageData.factory.name}}｜{{pageData.return_flow_no}}</text>
+      <text class="hero-meta">当前身份：{{pageData.viewer.role_name}}</text>
+    </view>
+
+    <view class="device-card">
+      <text class="device-sn">{{pageData.device_sn}}</text>
+      <text class="device-model">{{pageData.product_model_name}}</text>
+      <text class="confirmed">配套确认：{{pageData.confirmed_by_name}}｜{{pageData.confirmedText}}</text>
+    </view>
+
+    <view class="rule-card">
+      <text class="rule-title">负责人和责任销售经理各自知晓</text>
+      <text class="rule-text">打开任务即完成本账号的知晓记录，不会代替另一个账号完成。本阶段不自动判断质量责任，也不覆盖生产现场原始记录。</text>
+    </view>
+
+    <view class="material-card" wx:for="{{pageData.materials}}" wx:key="id">
+      <view class="material-head">
+        <text class="material-name">{{item.material_name}}</text>
+        <text class="warranty-tag">{{item.warranty_evaluation.result_name || '三包期内'}}</text>
+      </view>
+      <text class="material-line">规格：{{item.material_spec_name || '未指定规格'}}</text>
+      <text class="material-line">实际物料批次：{{item.material_batch || '暂无记录'}}</text>
+      <text class="material-line">追溯来源：{{item.trace_source_name}}</text>
+      <text class="material-note" wx:if="{{item.original_note}}">生产现场说明：{{item.original_note}}</text>
+    </view>
+
+    <view class="complete-card">
+      <text class="complete-title">本页为知晓记录</text>
+      <text class="complete-text">任务打开后系统自动记录本账号已知晓。</text>
+    </view>
+  </block>
+</view>

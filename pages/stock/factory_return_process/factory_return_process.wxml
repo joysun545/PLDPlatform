@@ -6,6 +6,38 @@
   </view>
 
   <block wx:elif="{{pageData}}">
+    <view class="workflow-card" wx:if="{{pageData.workflow_tasks.length}}">
+      <view class="workflow-head">
+        <view>
+          <text class="workflow-title">本批次我的任务</text>
+          <text class="workflow-subtitle">已推送 {{pageData.workflow_task_summary.published}} / {{pageData.workflow_task_summary.total}} 项</text>
+        </view>
+        <text class="workflow-count">{{pageData.workflow_task_summary.unread}} 未读</text>
+      </view>
+      <view
+        wx:for="{{pageData.workflow_tasks}}"
+        wx:key="type"
+        class="workflow-node {{item.nodeClass}}"
+        data-task-id="{{item.task_id}}"
+        data-can-mark-read="{{item.can_mark_read}}"
+        bindtap="markWorkflowTaskRead"
+      >
+        <view class="workflow-node-head">
+          <text class="workflow-node-title">{{item.sequence}}. {{item.title}}</text>
+          <text class="workflow-read {{item.readClass}}">{{item.read_state_name}}</text>
+        </view>
+        <text class="workflow-node-event" wx:if="{{item.event_title && item.event_title !== item.title}}">最新：{{item.event_title}}</text>
+        <text class="workflow-node-summary">{{item.summary}}</text>
+        <view class="workflow-node-bottom">
+          <text wx:if="{{item.cursorText}}">{{item.cursorText}}</text>
+          <text wx:else>业务条件满足后推送</text>
+          <text wx:if="{{item.is_action}}" class="workflow-action {{item.action_state}}">{{item.action_state_name}}</text>
+          <text wx:elif="{{item.can_mark_read}}" class="workflow-read-hint">点击标记已读</text>
+        </view>
+      </view>
+      <text class="workflow-rule">未推送节点仅用于说明本岗位后续流程，不可读取或操作；已推送任务需逐项阅读。</text>
+    </view>
+
     <view class="hero-card">
       <view class="hero-head">
         <text class="hero-title">厂家退货取回与入库</text>
@@ -191,16 +223,42 @@
         >
           <view class="picker-field">{{materialOptions[item.needsMaterialIndex].label}} <text>›</text></view>
         </picker>
-        <textarea
-          class="operation-textarea"
-          wx:if="{{item.needsMaterialSelected}}"
-          maxlength="1000"
-          placeholder="请填写需要更换的物料、数量或技术要求"
-          value="{{item.materialRequirementInput}}"
-          data-index="{{index}}"
-          data-field="materialRequirementInput"
-          bindinput="onOperationInput"
-        />
+        <view class="repair-material-panel" wx:if="{{item.needsMaterialSelected}}">
+          <text class="operation-rule">请从本设备原BOM中勾选需要更换的物料。系统保存原规格、原生产批次和原供应商追溯来源，生产经理无需手写物料名称或指定供应商。</text>
+          <checkbox-group data-index="{{index}}" bindchange="onRepairMaterialSelectionChange">
+            <view
+              class="fault-option {{material.repairSelected ? 'selected' : ''}}"
+              wx:for="{{item.bom_material_options}}"
+              wx:for-item="material"
+              wx:for-index="materialIndex"
+              wx:key="bom_item_id"
+            >
+              <label class="fault-check-row">
+                <checkbox value="{{material.bom_item_id}}" checked="{{material.repairSelected}}" color="#079b65" />
+                <view class="fault-main">
+                  <view class="fault-title-row">
+                    <text class="fault-name">{{material.material_name}}</text>
+                    <text class="key-part" wx:if="{{material.is_key_part}}">关键件</text>
+                  </view>
+                  <text class="fault-meta">原规格：{{material.material_spec_name}}｜原BOM数量：{{material.quantity}}</text>
+                  <text class="fault-meta">追溯原供应商：{{material.supplier_name}}</text>
+                  <text class="trace-source {{material.supplier_inferred ? 'inferred' : ''}}">来源：{{material.trace_source_name}}</text>
+                </view>
+              </label>
+              <input
+                class="fault-note"
+                wx:if="{{material.repairSelected}}"
+                maxlength="500"
+                placeholder="本项换料技术说明（选填）"
+                value="{{material.repairNoteInput}}"
+                data-item-index="{{index}}"
+                data-material-index="{{materialIndex}}"
+                bindinput="onRepairMaterialNoteInput"
+              />
+            </view>
+          </checkbox-group>
+          <text class="fault-empty" wx:if="{{!item.bom_material_options.length}}">该设备原BOM没有可选物料，请先补齐生产批次数据。</text>
+        </view>
         <textarea
           class="operation-textarea"
           maxlength="1000"
@@ -242,30 +300,61 @@
 
       <view class="operation-card danger-operation" wx:if="{{item.actions.can_complete_disassembly}}">
         <text class="operation-title">生产经理：完成拆机报废</text>
-        <text class="operation-rule">提交后本台旧产品生命周期结束；若存在三包物料，会解锁配套经理处置任务。</text>
+        <text class="operation-rule">系统按本台实际BOM列出物料，关键件默认勾选为实际退回件，可按现场情况反选。实际退回数量用于实物流和结算；“故障原因物料”只记录质量件次。是否在保由生产批次、拆机日期和质保月数自动计算。</text>
+        <checkbox-group data-index="{{index}}" bindchange="onReturnedMaterialSelectionChange">
+          <view
+            class="fault-option {{material.returnedSelected ? 'selected' : ''}}"
+            wx:for="{{item.bom_material_options}}"
+            wx:for-item="material"
+            wx:for-index="materialIndex"
+            wx:key="bom_item_id"
+          >
+            <label class="fault-check-row">
+              <checkbox
+                value="{{material.bom_item_id}}"
+                checked="{{material.returnedSelected}}"
+                color="#079b65"
+              />
+              <view class="fault-main">
+                <view class="fault-title-row">
+                  <text class="fault-name">{{material.material_name}}</text>
+                  <text class="key-part" wx:if="{{material.is_key_part}}">关键件</text>
+                </view>
+                <text class="fault-meta">规格：{{material.material_spec_name}}｜数量：{{material.quantity}}</text>
+                <text class="fault-meta">供应商：{{material.supplier_name}}</text>
+                <text class="trace-source {{material.supplier_inferred ? 'inferred' : ''}}">来源：{{material.trace_source_name}}</text>
+                <text class="trace-source">系统质保：{{material.warranty_evaluation.result_name}}（{{material.warranty_evaluation.warranty_start_date || '起算日待补'}} 至 {{material.warranty_evaluation.warranty_end_date || '截止日待补'}}）</text>
+              </view>
+            </label>
+            <view class="fault-detail" wx:if="{{material.returnedSelected}}">
+              <input
+                class="fault-note"
+                maxlength="500"
+                placeholder="本物料现场说明（选填）"
+                value="{{material.noteInput}}"
+                data-item-index="{{index}}"
+                data-material-index="{{materialIndex}}"
+                bindinput="onFaultMaterialNoteInput"
+              />
+              <view class="warranty-row">
+                <text>导致本次拆机的故障物料</text>
+                <switch
+                  checked="{{material.faultSelected}}"
+                  color="#7c3aed"
+                  data-item-index="{{index}}"
+                  data-material-index="{{materialIndex}}"
+                  bindchange="onFaultMaterialChange"
+                />
+              </view>
+              <text class="fault-meta">质保结论只读，由系统自动计算，不能手动切换。</text>
+            </view>
+          </view>
+        </checkbox-group>
+        <text class="fault-empty" wx:if="{{!item.bom_material_options.length}}">该设备实际BOM没有可选物料，请先检查生产批次数据。</text>
         <textarea
           class="operation-textarea"
           maxlength="1000"
-          placeholder="拆机结果和拆出物料清单（必填）"
-          value="{{item.disassemblyResultInput}}"
-          data-index="{{index}}"
-          data-field="disassemblyResultInput"
-          bindinput="onOperationInput"
-        />
-        <picker
-          mode="selector"
-          range="{{warrantyOptions}}"
-          range-key="label"
-          value="{{item.warrantyMaterialIndex}}"
-          data-index="{{index}}"
-          bindchange="onWarrantyMaterialChange"
-        >
-          <view class="picker-field">{{warrantyOptions[item.warrantyMaterialIndex].label}} <text>›</text></view>
-        </picker>
-        <textarea
-          class="operation-textarea"
-          maxlength="1000"
-          placeholder="拆机处置说明（选填）"
+          placeholder="本台拆机总体说明（选填）"
           value="{{item.productionRemarkInput}}"
           data-index="{{index}}"
           data-field="productionRemarkInput"
@@ -281,12 +370,25 @@
       </view>
 
       <view class="operation-card matching-operation" wx:if="{{item.actions.can_submit_repair_material_plan}}">
-        <text class="operation-title">配套经理：处理修复物料需求</text>
-        <text class="requirement-text">生产需求：{{item.material_requirement}}</text>
+        <text class="operation-title">配套经理：核对原供应商并推送换料需求</text>
+        <text class="operation-rule">以下物料由生产经理从本设备原BOM勾选。请核对原供应商追溯结果；系统会按供应商分组，供应商负责人必收，原订单首次确认配套时已配置责任销售经理的，才同步通知对应销售经理。未配置销售经理不阻断本次处置。</text>
+        <view class="fault-fact" wx:for="{{item.repair_material_requirements}}" wx:for-item="requirement" wx:key="id">
+          <view class="fault-title-row">
+            <text class="fault-name">{{requirement.material_name}}</text>
+            <text class="key-part">换料需求</text>
+          </view>
+          <text class="fault-meta">规格：{{requirement.material_spec_name || '未指定规格'}}｜数量：{{requirement.requested_quantity}}</text>
+          <text class="fault-meta">原供应商：{{requirement.supplier_name}}</text>
+          <text class="trace-source {{requirement.supplier_inferred ? 'inferred' : ''}}">来源：{{requirement.trace_source_name}}</text>
+          <text class="fault-note-text" wx:if="{{requirement.original_note}}">生产说明：{{requirement.original_note}}</text>
+        </view>
+        <view class="unresolved-warning" wx:if="{{item.repair_material_summary.supplier_pending_confirmation}}">
+          有 {{item.repair_material_summary.supplier_pending_confirmation}} 项物料的原供应商待确认。为防止错配，当前不能推送。
+        </view>
         <textarea
           class="operation-textarea"
           maxlength="1000"
-          placeholder="修复物料方案（必填）"
+          placeholder="配套方案补充说明（选填）"
           value="{{item.materialPlanInput}}"
           data-index="{{index}}"
           data-field="materialPlanInput"
@@ -303,25 +405,34 @@
         />
         <button
           class="primary-button"
-          disabled="{{operationBusyKey}}"
+          disabled="{{operationBusyKey || !item.actions.can_notify_repair_suppliers}}"
           data-index="{{index}}"
           data-action="REPAIR_MATERIAL_PLAN"
           bindtap="submitMatchingAction"
-        >提交物料方案并解锁生产修复</button>
+        >确认原供应商并推送换料需求</button>
       </view>
 
       <view class="operation-card matching-operation" wx:if="{{item.actions.can_submit_disassembly_disposition}}">
-        <text class="operation-title">配套经理：处理拆机三包物料</text>
-        <text class="requirement-text">拆机结果：{{item.disassembly_result}}</text>
-        <textarea
-          class="operation-textarea"
-          maxlength="1000"
-          placeholder="三包物料追溯和处置意见（必填）"
-          value="{{item.warrantyDispositionInput}}"
-          data-index="{{index}}"
-          data-field="warrantyDispositionInput"
-          bindinput="onOperationInput"
-        />
+        <text class="operation-title">配套经理：核对退回物料并通知供应商</text>
+        <text class="operation-rule">下列为生产经理确认的实际退回物料。故障标记用于质量件次；质保结论由系统自动计算。系统按原供应商分组，供应商负责人必收；原订单首次配套已配置责任销售经理时才同步通知。</text>
+        <block wx:for="{{item.material_return_records}}" wx:for-item="fact" wx:key="id">
+          <view class="fault-fact" wx:if="{{fact.return_kind === 'DISASSEMBLY'}}">
+            <view class="fault-title-row">
+              <text class="fault-name">{{fact.material_name}}</text>
+              <text class="warranty-tag" wx:if="{{fact.is_fault_material}}">故障原因物料</text>
+              <text class="key-part" wx:else>实际退回件</text>
+            </view>
+            <text class="fault-meta">规格：{{fact.material_spec_name || '未指定规格'}}｜实际退回数量：{{fact.returned_quantity}}</text>
+            <text class="fault-meta">物料批次：{{fact.material_batch || '暂无实际批次记录'}}</text>
+            <text class="fault-meta">供应商：{{fact.supplier_name}}</text>
+            <text class="trace-source {{fact.supplier_inferred ? 'inferred' : ''}}">来源：{{fact.trace_source_name}}</text>
+            <text class="trace-source">自动质保：{{fact.warranty_evaluation.result_name}}｜{{fact.warranty_evaluation.warranty_start_date || '起算日待补'}} 至 {{fact.warranty_evaluation.warranty_end_date || '截止日待补'}}</text>
+            <text class="fault-note-text" wx:if="{{fact.original_note}}">生产说明：{{fact.original_note}}</text>
+          </view>
+        </block>
+        <view class="unresolved-warning" wx:if="{{item.material_return_summary.supplier_pending_confirmation}}">
+          有 {{item.material_return_summary.supplier_pending_confirmation}} 项实际退回物料的供应商待确认。为防止错配，确认前不能发送任务。
+        </view>
         <textarea
           class="operation-textarea"
           maxlength="1000"
@@ -333,11 +444,11 @@
         />
         <button
           class="primary-button"
-          disabled="{{operationBusyKey}}"
+          disabled="{{operationBusyKey || !item.actions.can_notify_warranty_suppliers}}"
           data-index="{{index}}"
           data-action="DISASSEMBLY_MATERIAL_DISPOSITION"
           bindtap="submitMatchingAction"
-        >完成三包物料处置</button>
+        >确认退回物料及自动质保结果并通知供应商</button>
       </view>
 
       <view class="operation-history" wx:if="{{item.productionProcessedText}}">

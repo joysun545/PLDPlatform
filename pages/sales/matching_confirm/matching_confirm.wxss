@@ -158,6 +158,80 @@ page {
   font-size: 25rpx;
 }
 
+.quantity-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14rpx;
+  margin-top: 22rpx;
+}
+
+.quantity-split view {
+  padding: 18rpx 12rpx;
+  border-radius: 16rpx;
+  background: #edf8f3;
+  text-align: center;
+}
+
+.quantity-split text {
+  display: block;
+}
+
+.quantity-split text:first-child {
+  color: #08734f;
+  font-size: 31rpx;
+  font-weight: 700;
+}
+
+.quantity-split text:last-child {
+  margin-top: 5rpx;
+  color: #677a70;
+  font-size: 22rpx;
+}
+
+.reissue-summary {
+  margin-top: 18rpx;
+  padding: 20rpx;
+  border: 1rpx solid #cae6d8;
+  border-radius: 17rpx;
+  background: #f2faf6;
+}
+
+.reissue-summary-title,
+.reissue-summary-note {
+  display: block;
+}
+
+.reissue-summary-title {
+  color: #08734f;
+  font-size: 25rpx;
+  font-weight: 650;
+}
+
+.reissue-bom-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 12rpx;
+  color: #405e51;
+  font-size: 23rpx;
+}
+
+.reissue-summary-note {
+  margin-top: 14rpx;
+  color: #718078;
+  font-size: 21rpx;
+  line-height: 1.55;
+}
+
+.matching-bypass-strip {
+  margin-top: 18rpx;
+  padding: 18rpx 20rpx;
+  border-radius: 15rpx;
+  color: #596c62;
+  background: #f0f3f1;
+  font-size: 23rpx;
+  line-height: 1.6;
+}
+
 .model-meta {
   margin-top: 22rpx;
   padding: 20rpx 18rpx;

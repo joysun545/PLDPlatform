@@ -161,6 +161,122 @@ page {
   width: 220rpx;
 }
 
+.reissue-card {
+  margin-top: 24rpx;
+  padding: 22rpx;
+  border: 1rpx solid #cde8da;
+  border-radius: 18rpx;
+  background: #f1faf5;
+}
+
+.reissue-state {
+  color: #527065;
+  font-size: 24rpx;
+}
+
+.reissue-state.error {
+  color: #a8544d;
+}
+
+.reissue-head,
+.created-split {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.reissue-title,
+.reissue-count,
+.bom-label,
+.bom-line,
+.bom-empty,
+.reissue-note,
+.created-split text {
+  display: block;
+}
+
+.reissue-title {
+  color: #087847;
+  font-size: 27rpx;
+  font-weight: 650;
+}
+
+.reissue-count {
+  margin-top: 6rpx;
+  color: #64776d;
+  font-size: 23rpx;
+}
+
+.bom-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14rpx;
+  margin-top: 20rpx;
+}
+
+.bom-compare-block {
+  min-height: 112rpx;
+  padding: 18rpx;
+  border-radius: 14rpx;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.bom-label {
+  color: #738078;
+  font-size: 21rpx;
+}
+
+.bom-line {
+  margin-top: 8rpx;
+  color: #1e392d;
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
+.bom-empty {
+  margin-top: 8rpx;
+  color: #9aa49e;
+  font-size: 22rpx;
+}
+
+.split-preview {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10rpx;
+  margin-top: 20rpx;
+}
+
+.split-preview view {
+  padding: 16rpx 8rpx;
+  border-radius: 14rpx;
+  background: #e4f6ec;
+  text-align: center;
+}
+
+.split-preview text {
+  display: block;
+}
+
+.split-preview text:first-child {
+  color: #087847;
+  font-size: 30rpx;
+  font-weight: 700;
+}
+
+.split-preview text:last-child {
+  margin-top: 5rpx;
+  color: #62736a;
+  font-size: 19rpx;
+}
+
+.reissue-note {
+  margin-top: 18rpx;
+  color: #527065;
+  font-size: 22rpx;
+  line-height: 1.6;
+}
+
 .textarea-field {
   min-height: 180rpx;
   margin-top: 22rpx;
@@ -344,6 +460,21 @@ button::after {
   margin-bottom: 16rpx;
   font-size: 26rpx;
   font-weight: 600;
+}
+
+.created-split {
+  gap: 12rpx;
+  margin-bottom: 14rpx;
+}
+
+.created-split text {
+  flex: 1;
+  padding: 10rpx 12rpx;
+  border-radius: 10rpx;
+  color: #17704c;
+  background: #e3f6eb;
+  font-size: 21rpx;
+  text-align: center;
 }
 
 .code-line {

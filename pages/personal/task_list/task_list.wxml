@@ -26,9 +26,15 @@
       </view>
       <text class="task-title">{{item.title}}</text>
       <text wx:if="{{item.summary}}" class="task-summary">{{item.summary}}</text>
+      <text wx:if="{{item.grouped && item.latest_summary}}" class="latest-summary">
+        最近：{{item.latest_summary}}
+      </text>
       <view class="task-bottom">
         <text>{{item.cursor_time}}</text>
-        <text wx:if="{{item.need_action}}" class="need-action">需要处理</text>
+        <text wx:if="{{item.grouped}}" class="group-entry">
+          进入任务详情 ›
+        </text>
+        <text wx:elif="{{item.need_action}}" class="need-action">需要处理</text>
         <text wx:else class="ack-task">查看即知晓</text>
       </view>
       <view wx:if="{{openingId === item.id}}" class="opening">正在打开...</view>

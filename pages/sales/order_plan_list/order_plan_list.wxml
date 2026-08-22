@@ -91,6 +91,13 @@
         </view>
         <text class="quantity">{{planItem.quantity}} 台</text>
       </view>
+      <view
+        class="meta-row"
+        wx:if="{{plan.scope !== 'supplier' && planItem.return_inventory_quantity > 0}}"
+      >
+        <text>数量拆分</text>
+        <text>退货库存 {{planItem.return_inventory_quantity}} 台 · 新生产 {{planItem.production_quantity}} 台</text>
+      </view>
       <view class="meta-row"><text>订单批次</text><text>{{planItem.order_batch_code}}</text></view>
       <view class="meta-row"><text>BOM版本</text><text>{{planItem.bomVersion}}</text></view>
 
@@ -225,6 +232,12 @@
       </view>
       <text class="outbound-tip" wx:if="{{plan.canConfirmOutbound}}">
         核对订单后可直接一键发货，无需逐台扫描。
+      </text>
+      <text
+        class="outbound-tip"
+        wx:if="{{plan.stockConfirmation.state === 'PENDING_PRINT'}}"
+      >
+        本订单全部调用退货待流转库存。请先在网页打印中心生成并确认新二维码，同一任务随后将更新为可发货。
       </text>
       <button
         wx:if="{{plan.canConfirmOutbound}}"
