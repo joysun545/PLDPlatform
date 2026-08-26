@@ -20,7 +20,8 @@ Page({
     total: 0,
     activatedCount: 0,
     pendingActivationCount: 0,
-    devices: []
+    devices: [],
+    vehicles: []
   },
 
   onLoad() {
@@ -67,6 +68,13 @@ Page({
           install_status_name: item.install_status === 'INSTALLED' ? '已安装' : '待安装',
           activation_status_name: item.activation_status === 'ACTIVATED' ? '已激活' : '待激活'
         }));
+        const deviceMap = {};
+        devices.forEach(item => { deviceMap[item.id] = item; });
+        const vehicles = (payload.vehicles || []).map(vehicle => ({
+          ...vehicle,
+          devices: (vehicle.devices || []).map(item => deviceMap[item.id] || item),
+          shareToken: ''
+        }));
         this.setData({
           loading: false,
           loaded: true,
@@ -75,14 +83,39 @@ Page({
           total: Number(payload.total) || 0,
           activatedCount: Number(payload.activated_count) || 0,
           pendingActivationCount: Number(payload.pending_activation_count) || 0,
-          devices
+          devices,
+          vehicles
         });
+        this.prepareDriverShares();
       },
       fail: () => this.setData({ loading: false, error: '网络请求失败' }),
       complete: () => {
         if (pullDown) wx.stopPullDownRefresh();
       }
     });
+  },
+
+  prepareDriverShares() {
+    (this.data.vehicles || []).forEach((vehicle, index) => {
+      if (!vehicle.can_share_driver || !vehicle.id) return;
+      wx.request({
+        url: `${app.globalData.apiBase}/lifecycle/customer/vehicles/${vehicle.id}/driver-invitations/`,
+        method: 'POST',
+        header: app.authHeader(),
+        success: res => {
+          const token = res.data && res.data.code === 0 && res.data.data && res.data.data.token;
+          if (token) this.setData({ [`vehicles[${index}].shareToken`]: token });
+        }
+      });
+    });
+  },
+
+  onShareAppMessage(e) {
+    const dataset = (e.target && e.target.dataset) || {};
+    return dataset.token ? {
+      title: `邀请你管理车辆 ${dataset.vehicle || ''} 的设备`,
+      path: `/pages/customer/driver/accept/accept?token=${dataset.token}`
+    } : { title: '我的车辆设备', path: '/pages/customer/device/list/list' };
   },
 
   openDevice(e) {

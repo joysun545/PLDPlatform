@@ -18,12 +18,22 @@
       </view>
     </view>
 
-    <view class="empty" wx:if="{{!devices.length}}">
+    <view class="empty" wx:if="{{!vehicles.length}}">
       <text class="empty-title">还没有绑定设备</text>
       <text>完成商家安装并接受设备邀请后，设备会显示在这里。</text>
     </view>
 
-    <view class="device-card" wx:for="{{devices}}" wx:key="id" data-id="{{item.id}}" bindtap="openDevice">
+    <view class="vehicle-section" wx:for="{{vehicles}}" wx:key="id" wx:for-item="vehicle">
+      <view class="vehicle-head">
+        <view class="vehicle-info">
+          <text class="vehicle-label">绑定车辆</text>
+          <text class="vehicle-title">{{vehicle.vehicle_no}}</text>
+          <text wx:if="{{vehicle.sharing_text}}" class="sharing-text">{{vehicle.sharing_text}}</text>
+          <text wx:elif="{{vehicle.can_share_driver}}" class="sharing-empty">当前未与司机共享</text>
+        </view>
+        <button wx:if="{{vehicle.can_share_driver}}" class="share-btn" open-type="share" data-token="{{vehicle.shareToken}}" data-vehicle="{{vehicle.vehicle_no}}" disabled="{{!vehicle.shareToken}}">一键分享给司机</button>
+      </view>
+    <view class="device-card" wx:for="{{vehicle.devices}}" wx:key="id" data-id="{{item.id}}" bindtap="openDevice">
       <view class="device-head">
         <view class="device-heading">
           <text class="category">{{item.category}}</text>
@@ -39,6 +49,7 @@
         <view class="meta"><text class="meta-label">绑定时间</text><text>{{item.accepted_at_text || '-'}}</text></view>
       </view>
       <view class="open-line">查看参数和生命周期数据 ›</view>
+    </view>
     </view>
   </block>
 </view>

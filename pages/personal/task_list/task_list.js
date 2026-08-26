@@ -3,7 +3,7 @@ const app = getApp();
 
 const DOMAIN_NAMES = {
   LOGISTICS: '物流',
-  AFTERSALE: '售后',
+  AFTERSALE: '售后服务',
   INSTALL: '装车',
   ACTIVATE: '激活',
   PROFILE: '资料',
@@ -57,8 +57,9 @@ Page({
         ? 'done'
         : (task.state === 'READ' ? 'read' : 'new'),
       domainName: task.grouped
-        ? '退货协同'
-        : (DOMAIN_NAMES[task.domain] || '任务')
+        ? (task.group_label || (task.domain === 'AFTERSALE' ? '售后工单' : '业务协同'))
+        : (DOMAIN_NAMES[task.domain] || '任务'),
+      isWorkorder: !!task.is_workorder
     }));
 
     this.setData({

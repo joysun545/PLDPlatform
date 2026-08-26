@@ -1,0 +1,36 @@
+<view class="uploader">
+  <camera
+    class="camera"
+    mode="normal"
+    device-position="back"
+    flash="auto"
+    binderror="onCameraError"
+  ></camera>
+  <view
+    class="shutter {{recording ? 'recording' : ''}}"
+    bindtouchstart="startCapture"
+    bindtouchend="endCapture"
+    bindtouchcancel="cancelCapture"
+  >
+    <view class="shutter-core"></view>
+  </view>
+  <text class="capture-tip">{{recording ? '正在录像，松开结束' : '轻点拍照，长按录像（录像同步收音）'}}</text>
+
+  <view class="tools">
+    <button class="tool" size="mini" disabled="{{disabled || files.length >= maxCount}}" bindtap="chooseLocalMedia">从本地选择图片/视频</button>
+    <button wx:if="{{allowDocument}}" class="tool" size="mini" disabled="{{disabled || files.length >= maxCount}}" bindtap="chooseDocument">选择物流单据/凭证</button>
+  </view>
+
+  <view class="media-grid" wx:if="{{files.length}}">
+    <view class="media-item" wx:for="{{files}}" wx:key="key" wx:for-item="file" wx:for-index="fileIndex">
+      <image wx:if="{{file.media_type === 'IMAGE'}}" src="{{file.path}}" mode="aspectFill" data-index="{{fileIndex}}" bindtap="preview"></image>
+      <view wx:elif="{{file.media_type === 'VIDEO'}}" class="video-card" data-index="{{fileIndex}}" bindtap="preview">
+        <text>视频</text><text class="small">点击预览</text>
+      </view>
+      <view wx:else class="document-card"><text>单据</text><text class="small">{{file.name || '文件'}}</text></view>
+      <view class="media-state {{file.status === 'FAILED' ? 'failed' : ''}}">{{file.status === 'SUCCESS' ? '已上传' : file.status === 'UPLOADING' ? '上传中' : file.status === 'FAILED' ? '上传失败' : '待上传'}}</view>
+      <view class="remove" data-index="{{fileIndex}}" catchtap="onRemoveFile">删除</view>
+      <view wx:if="{{file.status === 'FAILED'}}" class="retry" data-index="{{fileIndex}}" catchtap="retry">重试</view>
+    </view>
+  </view>
+</view>

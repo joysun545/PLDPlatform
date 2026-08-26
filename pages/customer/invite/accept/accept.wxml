@@ -14,7 +14,7 @@
     </view>
 
     <view class="existing-tip" wx:if="{{addingDevice}}">
-      <text class="existing-title">已识别为现有终端用户</text>
+      <text class="existing-title">已识别为现有用户负责人</text>
       <text>本次不会新建账号或组织，只会把这台设备加入您现有的“我的设备”。</text>
     </view>
 
@@ -37,21 +37,8 @@
       <text class="form-tip">目标岗位由邀请方指定，不能自行更改。</text>
 
       <view class="field">
-        <text class="field-label">使用主体</text>
-        <picker
-          mode="selector"
-          range="{{customerTypes}}"
-          value="{{customerTypeIndex}}"
-          disabled="{{existingCustomerIdentity}}"
-          bindchange="onCustomerTypeChange"
-        >
-          <view class="picker-value">{{customerTypes[customerTypeIndex]}} ›</view>
-        </picker>
-      </view>
-
-      <view class="field" wx:if="{{customerTypeIndex === 1}}">
-        <text class="field-label">企业或车队名称 *</text>
-        <input class="input" value="{{form.customer_name}}" disabled="{{existingCustomerIdentity}}" data-field="customer_name" bindinput="onFieldInput" placeholder="请输入企业或车队名称" />
+        <text class="field-label">用户身份</text>
+        <view class="picker-value">用户负责人账号</view>
       </view>
 
       <view class="field">

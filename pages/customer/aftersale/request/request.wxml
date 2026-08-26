@@ -1,8 +1,62 @@
 <view class="page">
-  <view class="card">
-    <text class="title">申请售后</text>
-    <text class="desc">设备档案已经带入。售后故障描述、图片、服务角色推送及进度交互将在下一阶段接入此页面。</text>
-    <text class="device">设备ID：{{deviceId}}</text>
-    <button bindtap="goBack">返回设备详情</button>
-  </view>
+  <view wx:if="{{loading}}" class="state">正在读取设备信息...</view>
+  <view wx:elif="{{error}}" class="state error"><text>{{error}}</text><button bindtap="goBack">返回</button></view>
+
+  <block wx:elif="{{context}}">
+    <view class="hero">
+      <text class="eyebrow">一机一码 · 售后服务</text>
+      <text class="title">发起售后申请</text>
+      <text>{{context.device.product_model}}｜{{context.device.sn}}</text>
+    </view>
+
+    <view class="card grid">
+      <view><text>设备型号</text><text class="strong">{{context.device.product_model}}</text></view>
+      <view><text>设备编码</text><text class="strong">{{context.device.sn}}</text></view>
+      <view><text>激活时间</text><text class="strong">{{context.activation.activated_at || '尚未激活'}}</text></view>
+      <view><text>质保期限</text><text class="strong">{{context.warranty.summary}}</text></view>
+    </view>
+
+    <view class="card">
+      <view class="row" bindtap="toggleBom">
+        <text class="section-title">关键配套物料 BOM</text>
+        <text class="link">{{bomExpanded ? '收起' : '展开'}}</text>
+      </view>
+      <block wx:if="{{bomExpanded}}">
+        <view wx:for="{{context.bom.key_materials}}" wx:key="material_id" class="bom-row">
+          <text>{{item.material_name}}</text>
+          <text>{{item.specification_name || '未指定规格'}} × {{item.quantity}}</text>
+        </view>
+        <text wx:if="{{!context.bom.key_materials.length}}" class="muted">该设备未配置关键物料快照。</text>
+      </block>
+    </view>
+
+    <view class="card">
+      <text class="section-title">一、确认真实位置</text>
+      <text class="tip">提交前必须确认当前GPS位置，并补充现场名称或详细地址。</text>
+      <button class="secondary" bindtap="obtainLocation">获取当前位置</button>
+      <view wx:if="{{location}}" class="location-ready">
+        <text>GPS：{{location.latitude}}, {{location.longitude}}</text>
+        <text>{{locationConfirmed ? '已确认真实位置' : '待填写并确认'}}</text>
+      </view>
+      <input class="field" value="{{locationName}}" bindinput="onLocationName" placeholder="现场名称，例如：重庆市渝北区某服务区" />
+      <input class="field" value="{{locationAddress}}" bindinput="onLocationAddress" placeholder="详细地址（建议填写）" />
+      <button class="confirm-location" disabled="{{!location}}" bindtap="confirmLocation">{{locationConfirmed ? '位置已确认' : '确认此真实位置'}}</button>
+    </view>
+
+    <view class="card">
+      <text class="section-title">二、故障描述</text>
+      <text class="tip">请拍摄故障现象。轻点取景框拍照，长按录像；录像会同步录入现场语音。</text>
+      <aftersale-media-uploader
+        files="{{media}}"
+        max-count="{{remainingCount}}"
+        disabled="{{submitting}}"
+        bindchange="onMediaChange"
+        bindretry="onMediaRetry"
+      ></aftersale-media-uploader>
+      <text wx:if="{{existingMedia.length}}" class="muted">草稿中已有 {{existingMedia.length}} 个附件；本次可继续追加。</text>
+      <textarea class="description" maxlength="1000" value="{{faultDescription}}" bindinput="onFaultDescription" placeholder="请描述故障现象、发生条件、已尝试的处理方式及当前状态"></textarea>
+    </view>
+
+    <button class="submit" loading="{{submitting}}" disabled="{{submitting}}" bindtap="submit">提交售后申请</button>
+  </block>
 </view>

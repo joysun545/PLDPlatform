@@ -109,7 +109,13 @@ Page({
         'merchant_sales'
       ].includes(role),
 
-      showAftersale: !['tourist', 'factory_admin'].includes(role),
+      // 终端用户需要从首页持续查看自己发起的服务单；不应只能依靠
+      // "我的任务"里的临时推送入口。销售经理仍保留同一列表入口。
+      showAftersale: [
+        'factory_sales',
+        'customer_owner',
+        'driver'
+      ].includes(role),
       showMyDevice: ['customer_owner', 'driver'].includes(role)
     });
   },

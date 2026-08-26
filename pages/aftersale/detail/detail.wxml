@@ -1,0 +1,199 @@
+<view class="page">
+  <view wx:if="{{loading}}" class="state">正在读取售后申请...</view>
+  <view wx:elif="{{error}}" class="state error"><text>{{error}}</text><button bindtap="backHome">返回首页</button></view>
+
+  <block wx:elif="{{detail}}">
+    <view class="hero">
+      <text class="eyebrow">售后服务单</text>
+      <text class="title">{{detail.status_name}}</text>
+      <text>{{detail.case_no}}</text>
+      <text class="stage">{{detail.execution_stage_name}}</text>
+    </view>
+
+    <view class="card grid">
+      <view><text>申请人</text><text class="strong">{{detail.applicant.name}}</text><text>{{detail.applicant.organization}}</text></view>
+      <view><text>设备型号</text><text class="strong">{{detail.device.product_model}}</text><text>{{detail.device.sn}}</text></view>
+      <view><text>激活时间</text><text class="strong">{{detail.activation.activated_at || '未记录'}}</text></view>
+      <view><text>质保期限</text><text class="strong">{{detail.warranty.summary || '待确认'}}</text></view>
+    </view>
+
+    <view class="card">
+      <view class="row" bindtap="toggleBom"><text class="section-title">关键配套物料 BOM</text><text class="link">{{bomExpanded ? '收起' : '展开'}}</text></view>
+      <block wx:if="{{bomExpanded}}">
+        <view wx:for="{{detail.bom.key_materials}}" wx:key="material_id" class="bom-row">
+          <text>{{item.material_name}}</text><text>{{item.specification_name || '未指定规格'}} × {{item.quantity}}</text>
+        </view>
+      </block>
+    </view>
+
+    <view class="card">
+      <text class="section-title">故障描述与真实位置</text>
+      <text class="description">{{detail.fault_description}}</text>
+      <text class="location">{{detail.location.name}}</text>
+      <text class="muted">{{detail.location.address}}　{{detail.location.latitude}}, {{detail.location.longitude}}</text>
+      <view class="media-list" wx:if="{{mediaFiles.length}}">
+        <view wx:for="{{mediaFiles}}" wx:key="id" class="media-row" data-index="{{index}}" bindtap="openMedia">
+          <text>{{item.purpose_name}} · {{item.media_type_name}}</text>
+          <text class="link">{{item.loading ? '读取中' : '查看附件'}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="card" wx:if="{{detail.dispatch.route}}">
+      <text class="section-title">厂家处理信息</text>
+      <text>路径：{{detail.dispatch.route_name}}</text>
+      <text>初步认定：{{detail.dispatch.preliminary_fault_type_name || '待判断'}}</text>
+      <text class="description">认定依据：{{detail.dispatch.diagnosis_note || '待填写'}}</text>
+      <text class="description">处理方案：{{detail.dispatch.repair_plan || '待填写'}}</text>
+      <view wx:if="{{detail.dispatch.assignee.name}}" class="contact">
+        <text>执行人：{{detail.dispatch.assignee.name}}　{{detail.dispatch.assignee.role_name}}</text>
+        <text>电话：{{detail.dispatch.assignee.phone || '未登记'}}</text>
+        <text>地址：{{detail.dispatch.assignee.organization_address || '未登记'}}</text>
+      </view>
+    </view>
+
+    <view class="notice" wx:if="{{detail.applicant_instruction.title}}">
+      <text class="notice-title">{{detail.applicant_instruction.title}}</text>
+      <text>{{detail.applicant_instruction.message}}</text>
+      <text wx:if="{{detail.applicant_instruction.contact.phone}}">联系电话：{{detail.applicant_instruction.contact.phone}}</text>
+      <text wx:if="{{detail.applicant_instruction.contact.organization_address}}">地址：{{detail.applicant_instruction.contact.organization_address}}</text>
+      <text wx:if="{{detail.applicant_instruction.repair_plan}}">厂家方案：{{detail.applicant_instruction.repair_plan}}</text>
+    </view>
+
+    <view class="card action" wx:if="{{detail.actions.can_triage}}">
+      <text class="section-title">厂家销售经理：故障认定与指派</text>
+      <picker range="{{detail.triage_options.preliminary_fault_types}}" range-key="label" bindchange="onTriageFault">
+        <view class="picker">初步故障认定：{{triage.faultIndex >= 0 ? detail.triage_options.preliminary_fault_types[triage.faultIndex].label : '请选择'}}</view>
+      </picker>
+      <textarea value="{{triage.diagnosisNote}}" bindinput="onTriageNote" placeholder="填写根据图片、视频、故障描述作出的判断依据"></textarea>
+      <textarea value="{{triage.repairPlan}}" bindinput="onTriagePlan" placeholder="填写维修方案、注意事项和给发起人的说明"></textarea>
+      <picker range="{{detail.triage_options.routes}}" range-key="label" bindchange="onTriageRoute">
+        <view class="picker">处理路径：{{triage.route || '请选择'}}</view>
+      </picker>
+      <picker wx:if="{{triage.candidates.length}}" range="{{triage.candidates}}" range-key="name" bindchange="onTriageCandidate">
+        <view class="picker">实际维修人：{{triage.candidateIndex >= 0 ? triage.candidates[triage.candidateIndex].name + '｜' + triage.candidates[triage.candidateIndex].organization : '请选择'}}</view>
+      </picker>
+      <view wx:if="{{triage.candidateIndex >= 0}}" class="candidate-info">
+        <text>{{triage.candidates[triage.candidateIndex].role_name}}　{{triage.candidates[triage.candidateIndex].phone}}</text>
+        <text>{{triage.candidates[triage.candidateIndex].address || triage.candidates[triage.candidateIndex].unavailable_reason}}</text>
+      </view>
+      <block wx:if="{{triage.route === 'THIRD_PARTY'}}">
+        <input class="field" data-field="thirdPartyName" bindinput="onTriageThirdInput" placeholder="第三方维修店名称" />
+        <input class="field" data-field="thirdPartyContactName" bindinput="onTriageThirdInput" placeholder="联系人姓名（可选）" />
+        <input class="field" data-field="thirdPartyPhone" bindinput="onTriageThirdInput" placeholder="联系电话" />
+        <input class="field" data-field="thirdPartyAddress" bindinput="onTriageThirdInput" placeholder="详细地址" />
+      </block>
+      <block wx:if="{{triage.route === 'REMOTE'}}">
+        <text class="subheading">远程排障直接结案信息</text>
+        <picker range="{{detail.final_fault_types}}" range-key="label" bindchange="onFinalFault"><view class="picker">最终故障类型：{{finalForm.faultIndex >= 0 ? detail.final_fault_types[finalForm.faultIndex].label : '请选择'}}</view></picker>
+        <picker range="{{detail.solution_types}}" range-key="label" bindchange="onFinalSolution"><view class="picker">最终解决方案：{{finalForm.solutionIndex >= 0 ? detail.solution_types[finalForm.solutionIndex].label : '请选择'}}</view></picker>
+        <checkbox-group bindchange="onFinalMaterials"><label class="check-row" wx:for="{{detail.final_material_options}}" wx:key="material_id"><checkbox value="{{item.bom_item_id || item.material_id}}" />{{item.material_name}} {{item.specification_name}}</label></checkbox-group>
+        <textarea value="{{finalForm.solutionNote}}" bindinput="onFinalNote" placeholder="填写最终解决方案说明"></textarea>
+      </block>
+      <button loading="{{submitting}}" disabled="{{submitting}}" bindtap="submitTriage">确认认定并派送/结案</button>
+    </view>
+
+    <view class="card action" wx:if="{{detail.actions.can_applicant_shipment}}">
+      <text class="section-title">发起人：寄送设备维修</text>
+      <text class="tip">请上传寄送物流单据，再确认寄送。维修人确认收件后才会收到维修任务。</text>
+      <aftersale-media-uploader files="{{actionMedia}}" max-count="9" allow-document="{{true}}" disabled="{{submitting}}" bindchange="onActionMediaChange" bindretry="onActionMediaRetry"></aftersale-media-uploader>
+      <input class="field" data-field="shipmentCompany" value="{{shipmentCompany}}" bindinput="onShipmentInput" placeholder="物流公司" />
+      <input class="field" data-field="shipmentTrackingNo" value="{{shipmentTrackingNo}}" bindinput="onShipmentInput" placeholder="物流单号" />
+      <button loading="{{submitting}}" disabled="{{submitting}}" bindtap="submitApplicantShipment">上传单据并确认寄送</button>
+    </view>
+
+    <view class="card action" wx:if="{{detail.actions.can_repair_receipt}}">
+      <text class="section-title">维修执行人：确认收到设备</text>
+      <textarea value="{{receiptNote}}" bindinput="onRepairInput" data-field="receiptNote" placeholder="可填写收件检查说明"></textarea>
+      <button loading="{{submitting}}" disabled="{{submitting}}" bindtap="submitRepairReceipt">确认已收到寄修设备</button>
+    </view>
+
+    <view class="card action" wx:if="{{detail.actions.can_repair_complete}}">
+      <text class="section-title">维修执行人：完成维修</text>
+      <text class="tip">上传维修前后图片或测试视频，并记录真实处理结果。</text>
+      <aftersale-media-uploader files="{{actionMedia}}" max-count="9" allow-document="{{false}}" disabled="{{submitting}}" bindchange="onActionMediaChange" bindretry="onActionMediaRetry"></aftersale-media-uploader>
+      <textarea value="{{repairSummary}}" data-field="repairSummary" bindinput="onRepairInput" placeholder="处理说明"></textarea>
+      <view class="switch-row"><text>是否更换物料</text><switch checked="{{repairMaterialReplaced}}" bindchange="onRepairReplaced" color="#07a85d" /></view>
+      <checkbox-group wx:if="{{repairMaterialReplaced}}" bindchange="onRepairMaterials">
+        <label class="check-row" wx:for="{{detail.bom.items}}" wx:key="material_id"><checkbox value="{{item.bom_item_id || item.material_id}}" />{{item.material_name}} {{item.specification_name}}</label>
+      </checkbox-group>
+      <input class="field" value="{{actualProcessedAt}}" data-field="actualProcessedAt" bindinput="onRepairInput" placeholder="实际处理时间，例如 2026-08-26T14:30" />
+      <button loading="{{submitting}}" disabled="{{submitting}}" bindtap="submitRepairComplete">确认维修完成</button>
+    </view>
+
+    <view class="card action" wx:if="{{detail.actions.can_return_shipment}}">
+      <text class="section-title">维修执行人：寄回设备</text>
+      <text class="tip">请上传返件物流单据，发起人将收到确认售后结果任务。</text>
+      <aftersale-media-uploader files="{{actionMedia}}" max-count="9" allow-document="{{true}}" disabled="{{submitting}}" bindchange="onActionMediaChange" bindretry="onActionMediaRetry"></aftersale-media-uploader>
+      <input class="field" data-field="returnCompany" value="{{returnCompany}}" bindinput="onShipmentInput" placeholder="物流公司" />
+      <input class="field" data-field="returnTrackingNo" value="{{returnTrackingNo}}" bindinput="onShipmentInput" placeholder="物流单号" />
+      <button loading="{{submitting}}" disabled="{{submitting}}" bindtap="submitReturnShipment">上传返件单据并确认寄回</button>
+    </view>
+
+    <view class="card action" wx:if="{{detail.actions.can_applicant_confirm}}">
+      <text class="section-title">发起人：确认售后结果</text>
+      <text class="tip">七天内未确认时，系统将自动转交厂家销售经理做最终归因结案。</text>
+      <textarea value="{{applicantFeedback}}" bindinput="onApplicantFeedback" placeholder="可填写使用结果或补充反馈"></textarea>
+      <button loading="{{submitting}}" disabled="{{submitting}}" data-confirmed="true" bindtap="submitApplicantConfirm">确认售后已完成</button>
+      <button class="secondary" loading="{{submitting}}" disabled="{{submitting}}" data-confirmed="false" bindtap="submitApplicantConfirm">问题仍未完全解决</button>
+    </view>
+
+    <view class="card action" wx:if="{{detail.actions.can_third_party_material_shipment}}">
+      <text class="section-title">厂家销售经理：第三方备件寄送</text>
+      <text class="tip">此路径只记录真实发生的寄送、费用和故障物料返还事实，不自动扣减库存。</text>
+      <aftersale-media-uploader files="{{actionMedia}}" max-count="9" allow-document="{{true}}" disabled="{{submitting}}" bindchange="onActionMediaChange" bindretry="onActionMediaRetry"></aftersale-media-uploader>
+      <input class="field" data-field="thirdCompany" bindinput="onThirdInput" placeholder="物流公司" />
+      <input class="field" data-field="thirdTrackingNo" bindinput="onThirdInput" placeholder="物流单号" />
+      <checkbox-group bindchange="onThirdMaterials"><label class="check-row" wx:for="{{detail.bom.items}}" wx:key="material_id"><checkbox value="{{item.bom_item_id || item.material_id}}" />{{item.material_name}} {{item.specification_name}}</label></checkbox-group>
+      <button loading="{{submitting}}" disabled="{{submitting}}" bindtap="submitThirdMaterialShipment">确认备件寄送</button>
+    </view>
+
+    <view class="card action" wx:if="{{detail.actions.can_third_party_expense}}">
+      <text class="section-title">厂家销售经理：第三方维修费用</text>
+      <aftersale-media-uploader files="{{actionMedia}}" max-count="9" allow-document="{{true}}" disabled="{{submitting}}" bindchange="onActionMediaChange" bindretry="onActionMediaRetry"></aftersale-media-uploader>
+      <input class="field" data-field="thirdAmount" bindinput="onThirdInput" placeholder="维修费用金额（元）" type="digit" />
+      <textarea data-field="thirdRemark" bindinput="onThirdInput" placeholder="费用说明（可选）"></textarea>
+      <button loading="{{submitting}}" disabled="{{submitting}}" bindtap="submitThirdExpense">确认费用凭证</button>
+    </view>
+
+    <view class="card action" wx:if="{{detail.actions.can_third_party_fault_material_return}}">
+      <text class="section-title">厂家销售经理：故障物料返还</text>
+      <aftersale-media-uploader files="{{actionMedia}}" max-count="9" allow-document="{{true}}" disabled="{{submitting}}" bindchange="onActionMediaChange" bindretry="onActionMediaRetry"></aftersale-media-uploader>
+      <input class="field" data-field="thirdReturnCompany" bindinput="onThirdInput" placeholder="返还物流公司" />
+      <input class="field" data-field="thirdReturnTrackingNo" bindinput="onThirdInput" placeholder="返还物流单号" />
+      <button loading="{{submitting}}" disabled="{{submitting}}" bindtap="submitThirdFaultReturn">确认故障物料已返还</button>
+    </view>
+
+    <view class="card action" wx:if="{{detail.actions.can_factory_close}}">
+      <text class="section-title">厂家销售经理：最终归因与结案</text>
+      <picker range="{{detail.final_fault_types}}" range-key="label" bindchange="onFinalFault"><view class="picker">最终故障类型：{{finalForm.faultIndex >= 0 ? detail.final_fault_types[finalForm.faultIndex].label : '请选择'}}</view></picker>
+      <picker range="{{detail.solution_types}}" range-key="label" bindchange="onFinalSolution"><view class="picker">最终解决方案：{{finalForm.solutionIndex >= 0 ? detail.solution_types[finalForm.solutionIndex].label : '请选择'}}</view></picker>
+      <checkbox-group bindchange="onFinalMaterials"><label class="check-row" wx:for="{{detail.final_material_options}}" wx:key="material_id"><checkbox value="{{item.bom_item_id || item.material_id}}" />{{item.material_name}} {{item.specification_name}}</label></checkbox-group>
+      <textarea value="{{finalForm.solutionNote}}" bindinput="onFinalNote" placeholder="最终解决方案、责任归因及后续建议"></textarea>
+      <button loading="{{submitting}}" disabled="{{submitting}}" bindtap="submitFactoryClose">确认整个售后服务完成</button>
+    </view>
+
+    <view class="card" wx:if="{{detail.final.closed_at}}">
+      <text class="section-title">结案结果</text>
+      <text>故障类型：{{detail.final.fault_type_name}}</text>
+      <text>解决方案：{{detail.final.solution_type_name}}</text>
+      <text class="description">{{detail.final.solution_note}}</text>
+      <text class="muted">结案人：{{detail.final.closed_by}}　{{detail.final.closed_at}}</text>
+    </view>
+
+    <view class="card" wx:if="{{detail.lifecycle_history.length}}">
+      <text class="section-title">设备历史（安装、流转、维修）</text>
+      <view wx:for="{{detail.lifecycle_history}}" wx:key="id" class="history-row">
+        <text>{{item.event_type_name}}</text>
+        <text>{{item.organization || item.from_organization || '-'}}　{{item.created_at}}</text>
+      </view>
+    </view>
+
+    <view class="card">
+      <text class="section-title">售后处理记录</text>
+      <view wx:for="{{detail.history}}" wx:key="id" class="history-row">
+        <text>{{item.event_type}}</text><text>{{item.actor || '系统'}}　{{item.created_at}}</text>
+      </view>
+    </view>
+  </block>
+</view>

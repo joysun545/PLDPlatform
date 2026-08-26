@@ -14,6 +14,15 @@ page { background: #f3f6f8; color: #17202a; }
 .empty { display: flex; flex-direction: column; gap: 14rpx; margin-top: 28rpx; padding: 70rpx 38rpx; color: #74818a; background: #fff; border-radius: 20rpx; text-align: center; line-height: 1.6; }
 .empty-title { color: #29343c; font-size: 31rpx; font-weight: 700; }
 .device-card { margin-top: 24rpx; padding: 28rpx; background: #fff; border-radius: 20rpx; box-shadow: 0 8rpx 22rpx rgba(31,45,61,.06); }
+.vehicle-section { margin-top: 24rpx; }
+.vehicle-head { display: flex; align-items: center; justify-content: space-between; padding: 24rpx; background: #eefbf6; border-left: 8rpx solid #07c160; border-radius: 18rpx; }
+.vehicle-info { min-width: 0; flex: 1; padding-right: 18rpx; }
+.vehicle-label { display: block; color: #728078; font-size: 24rpx; }
+.vehicle-title { display: block; margin-top: 6rpx; color: #173d2c; font-size: 34rpx; font-weight: 700; }
+.sharing-text { display: block; margin-top: 12rpx; color: #087d4b; font-size: 23rpx; line-height: 1.5; }
+.sharing-empty { display: block; margin-top: 12rpx; color: #84928a; font-size: 22rpx; }
+.share-btn { margin: 0; padding: 0 22rpx; line-height: 70rpx; border-radius: 35rpx; background: #07c160; color: #fff; font-size: 25rpx; }
+.share-btn[disabled] { background: #b9dccc; color: #fff; }
 .device-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 18rpx; }
 .device-heading { display: flex; flex: 1; flex-direction: column; gap: 7rpx; }
 .category { color: #078d5f; font-size: 23rpx; }

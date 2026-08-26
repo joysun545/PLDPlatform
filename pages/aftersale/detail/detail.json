@@ -1,5 +1,5 @@
 {
-  "navigationBarTitleText": "发起售后申请",
+  "navigationBarTitleText": "售后详情",
   "usingComponents": {
     "aftersale-media-uploader": "/components/aftersale-media-uploader/index"
   }

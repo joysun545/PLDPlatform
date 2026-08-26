@@ -1,7 +1,7 @@
 <view class="page">
   <view wx:if="{{group}}" class="group-summary">
     <view class="group-top">
-      <text class="group-title">同一批次任务</text>
+      <text class="group-title">{{group.group_label || '同一业务任务'}}</text>
       <text class="group-count">共 {{group.child_count}} 项</text>
     </view>
     <text class="group-headline">{{group.title}}</text>
@@ -11,7 +11,7 @@
       <text>{{group.completed_count}} 项已完成</text>
     </view>
     <text class="group-rule">
-      本页不会一次性读取全部任务，请逐项点击查看或处理。
+      {{group.is_workorder ? '服务单按最新进展合并展示；历史处理记录仍完整保留。' : '本页不会一次性读取全部任务，请逐项点击查看或处理。'}}
     </text>
   </view>
 

@@ -12,10 +12,14 @@
     "pages/scan/scan/scan",
     "pages/scan/result/result",
     "pages/customer/invite/accept/accept",
+    "pages/customer/driver/accept/accept",
     "pages/customer/device/list/list",
     "pages/customer/device/result/result",
     "pages/customer/document/reader/reader",
     "pages/customer/aftersale/request/request",
+    "pages/customer/aftersale/detail/detail",
+    "pages/aftersale/list/list",
+    "pages/aftersale/detail/detail",
     "pages/logs/logs",
     "pages/sales/create_plan/create_plan",
     "pages/sales/order_plan_list/order_plan_list",
@@ -42,7 +46,10 @@
   },
   "permission": {
     "scope.userLocation": {
-      "desc": "你的位置信息将用于装车位置记录"
+      "desc": "你的位置信息将用于售后申请中的真实位置确认"
+    },
+    "scope.camera": {
+      "desc": "用于拍摄售后故障图片和录制故障视频"
     }
   },
   "style": "v2",

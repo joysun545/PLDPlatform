@@ -1,0 +1,24 @@
+.page { min-height: 100vh; padding: 32rpx; box-sizing: border-box; background: #f4f7f6; color: #1f2d29; }
+.state { margin-top: 220rpx; text-align: center; color: #687672; display: flex; flex-direction: column; gap: 24rpx; }
+.state-title { color: #1f2d29; font-size: 36rpx; font-weight: 700; }
+.error { color: #b54b4b; }
+.hero { padding: 42rpx 38rpx; border-radius: 32rpx; background: linear-gradient(135deg, #08b978, #008e75); color: #fff; display: flex; flex-direction: column; gap: 14rpx; }
+.hero-label { font-size: 26rpx; opacity: .85; }
+.hero-title { font-size: 52rpx; font-weight: 700; }
+.hero-subtitle { font-size: 28rpx; opacity: .92; }
+.tip { margin: 28rpx 0; padding: 28rpx; background: #eaf8f2; color: #28715b; border-left: 8rpx solid #08a973; border-radius: 20rpx; line-height: 1.7; }
+.card { margin-top: 24rpx; padding: 30rpx; border-radius: 26rpx; background: #fff; box-shadow: 0 10rpx 30rpx rgba(26, 77, 61, .06); }
+.card-title { margin-bottom: 18rpx; font-size: 32rpx; font-weight: 700; }
+.row { padding: 20rpx 0; border-bottom: 1rpx solid #edf1ef; display: flex; justify-content: space-between; gap: 24rpx; }
+.label { color: #78847f; }
+.value { text-align: right; }
+.device { padding: 22rpx 0; border-bottom: 1rpx solid #edf1ef; display: flex; align-items: center; justify-content: space-between; gap: 20rpx; }
+.device-main { display: flex; flex: 1; flex-direction: column; gap: 8rpx; }
+.device-name { font-weight: 600; }
+.device-sn { color: #87928e; font-size: 24rpx; }
+.device-status { color: #078b65; font-size: 24rpx; }
+.accepted, .blocked { margin-top: 30rpx; padding: 26rpx; border-radius: 20rpx; text-align: center; }
+.accepted { background: #eaf8f2; color: #078b65; }
+.blocked { background: #fff0ec; color: #b7533f; }
+.primary-btn { margin-top: 28rpx; background: #08a873; color: #fff; border-radius: 22rpx; }
+.secondary-btn { margin-top: 20rpx; color: #078b65; background: #fff; }

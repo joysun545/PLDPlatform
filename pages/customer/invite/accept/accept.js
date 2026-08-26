@@ -41,8 +41,6 @@ Page({
     detail: null,
     countdown: '00:00',
     expired: false,
-    customerTypes: ['个人用户', '企业或车队'],
-    customerTypeIndex: 0,
     existingCustomerIdentity: false,
     addingDevice: false,
     form: {
@@ -108,15 +106,11 @@ Page({
         const existingCustomerIdentity = Boolean(
           viewer.has_identity && viewer.role === 'customer_owner'
         );
-        const customerTypeIndex = String(
-          profile.customer_type || 'PERSONAL'
-        ).toUpperCase() === 'FLEET' ? 1 : 0;
         this.setData({
           loading: false,
           detail,
           existingCustomerIdentity,
           addingDevice,
-          customerTypeIndex,
           form: {
             customer_name: profile.customer_name || viewer.organization_name || '',
             contact_name: profile.contact_name || viewer.nickname || '',
@@ -155,11 +149,6 @@ Page({
     }
   },
 
-  onCustomerTypeChange(e) {
-    if (this.data.existingCustomerIdentity) return;
-    this.setData({ customerTypeIndex: Number(e.detail.value) || 0 });
-  },
-
   onFieldInput(e) {
     const field = e.currentTarget.dataset.field;
     if (!field) return;
@@ -177,9 +166,6 @@ Page({
 
   validateForm() {
     const form = this.data.form;
-    if (this.data.customerTypeIndex === 1 && !form.customer_name.trim()) {
-      return '请填写企业或车队名称';
-    }
     if (!form.contact_name.trim()) return '请填写联系人';
     if (!form.phone.trim()) return '请填写联系电话';
     if (!form.region.trim()) return '请选择所在地区';
@@ -214,8 +200,8 @@ Page({
       method: 'POST',
       header: app.authHeader(),
       data: {
-        customer_type: this.data.customerTypeIndex === 1 ? 'FLEET' : 'PERSONAL',
-        customer_name: form.customer_name.trim(),
+        customer_type: 'PERSONAL',
+        customer_name: '',
         contact_name: form.contact_name.trim(),
         phone: form.phone.trim(),
         region: form.region.trim(),
