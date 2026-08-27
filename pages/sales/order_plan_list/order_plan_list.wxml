@@ -31,6 +31,7 @@
       class="plan-card {{plan.canOpen ? 'clickable' : ''}}"
       wx:for="{{plans}}"
       wx:for-item="plan"
+      wx:for-index="planIndex"
       wx:key="id"
       data-id="{{plan.id}}"
       bindtap="openPlan"
@@ -82,7 +83,7 @@
       </view>
     </view>
 
-    <view class="item-block" wx:for="{{plan.items}}" wx:for-item="planItem" wx:key="id">
+    <view class="item-block" wx:for="{{plan.items}}" wx:for-item="planItem" wx:for-index="itemIndex" wx:key="id">
       <view class="item-head">
         <view class="item-title-wrap">
           <text class="item-category">{{planItem.category.name}}</text>
@@ -106,7 +107,8 @@
           class="material-row"
           wx:for="{{planItem.materials}}"
           wx:for-item="material"
-          wx:key="material_id"
+          wx:for-index="materialIndex"
+          wx:key="bom_item_id"
         >
           <view>
             <text class="material-name">{{material.material_name}}</text>
@@ -115,6 +117,46 @@
           <view class="material-quantity">
             <text>单台 {{material.quantity_per_device}}</text>
             <text>合计 {{material.required_quantity}}</text>
+          </view>
+          <view class="batch-editor" wx:if="{{plan.canConfirmDelivery}}" catchtap="noop">
+            <text class="batch-label">供应商生产批次（必填）</text>
+            <input
+              class="batch-input"
+              value="{{material.batchCode}}"
+              placeholder="填写产品标注的供应商原生产批次"
+              data-plan-index="{{planIndex}}"
+              data-item-index="{{itemIndex}}"
+              data-material-index="{{materialIndex}}"
+              bindinput="onBatchCodeInput"
+              catchtap="noop"
+            />
+            <picker
+              wx:if="{{material.batchChoices.length}}"
+              mode="selector"
+              range="{{material.batchChoiceLabels}}"
+              data-plan-index="{{planIndex}}"
+              data-item-index="{{itemIndex}}"
+              data-material-index="{{materialIndex}}"
+              bindchange="onBatchChoiceChange"
+              catchtap="noop"
+            >
+              <view class="batch-picker">从历史批次选择 ›</view>
+            </picker>
+            <picker
+              mode="date"
+              value="{{material.productionDate}}"
+              data-plan-index="{{planIndex}}"
+              data-item-index="{{itemIndex}}"
+              data-material-index="{{materialIndex}}"
+              bindchange="onBatchDateChange"
+              catchtap="noop"
+            >
+              <view class="batch-date">生产日期（选填）：{{material.productionDate || '请选择'}}</view>
+            </picker>
+          </view>
+          <view class="batch-readonly" wx:elif="{{material.batchCode}}">
+            <text>供应商生产批次：{{material.batchCode}}</text>
+            <text wx:if="{{material.productionDate}}">生产日期：{{material.productionDate}}</text>
           </view>
         </view>
       </view>

@@ -85,7 +85,22 @@ function preparePlan(plan) {
         : (Number(item.production_quantity) === 0
             ? '沿用退货设备原BOM'
             : '待配套确认'),
-      materials: item.materials || []
+      materials: (item.materials || []).map(material => {
+        const supplierBatch = material.supplier_batch || {};
+        const selected = supplierBatch.selected || {};
+        const choices = supplierBatch.choices || [];
+        return {
+          ...material,
+          batchCode: selected.batch_code || '',
+          productionDate: selected.production_date || '',
+          batchChoices: choices,
+          batchChoiceLabels: choices.map(choice => (
+            choice.production_date
+              ? `${choice.batch_code} · ${choice.production_date}`
+              : choice.batch_code
+          ))
+        };
+      })
     }))
   };
 }
@@ -208,6 +223,8 @@ Page({
     this.loadPlans();
   },
 
+  noop() {},
+
   openPlan(e) {
     const plan = this.data.plans.find(
       item => item.id === Number(e.currentTarget.dataset.id)
@@ -237,10 +254,60 @@ Page({
     });
   },
 
+  onBatchCodeInput(e) {
+    const { planIndex, itemIndex, materialIndex } = e.currentTarget.dataset;
+    this.setData({
+      [`plans[${planIndex}].items[${itemIndex}].materials[${materialIndex}].batchCode`]:
+        String(e.detail.value || '').trim()
+    });
+  },
+
+  onBatchChoiceChange(e) {
+    const { planIndex, itemIndex, materialIndex } = e.currentTarget.dataset;
+    const material = this.data.plans[planIndex].items[itemIndex].materials[materialIndex];
+    const choice = material.batchChoices[Number(e.detail.value)];
+    if (!choice) return;
+    this.setData({
+      [`plans[${planIndex}].items[${itemIndex}].materials[${materialIndex}].batchCode`]:
+        choice.batch_code || '',
+      [`plans[${planIndex}].items[${itemIndex}].materials[${materialIndex}].productionDate`]:
+        choice.production_date || ''
+    });
+  },
+
+  onBatchDateChange(e) {
+    const { planIndex, itemIndex, materialIndex } = e.currentTarget.dataset;
+    this.setData({
+      [`plans[${planIndex}].items[${itemIndex}].materials[${materialIndex}].productionDate`]:
+        e.detail.value || ''
+    });
+  },
+
   confirmDelivery(e) {
     const planId = Number(e.currentTarget.dataset.id);
     const plan = this.data.plans.find(item => item.id === planId);
     if (!plan || !plan.canConfirmDelivery || this.data.confirmingPlanId) return;
+
+    const materialBatches = [];
+    for (const planItem of plan.items || []) {
+      for (const material of planItem.materials || []) {
+        const batchCode = String(material.batchCode || '').trim();
+        if (!batchCode) {
+          wx.showToast({
+            title: `请填写${material.material_name}的供应商生产批次`,
+            icon: 'none',
+            duration: 2600
+          });
+          return;
+        }
+        materialBatches.push({
+          order_plan_item_id: planItem.id,
+          bom_item_id: material.bom_item_id,
+          batch_code: batchCode,
+          production_date: material.productionDate || ''
+        });
+      }
+    }
 
     const role = (this.data.viewer && this.data.viewer.role) || '';
     const content = role === 'supplier_owner'
@@ -253,12 +320,12 @@ Page({
       confirmText: '确认配送',
       success: modal => {
         if (!modal.confirm) return;
-        this.submitDeliveryConfirmation(plan);
+        this.submitDeliveryConfirmation(plan, materialBatches);
       }
     });
   },
 
-  submitDeliveryConfirmation(plan) {
+  submitDeliveryConfirmation(plan, materialBatches) {
     const confirmation = plan.confirmation || {};
     this.setData({ confirmingPlanId: plan.id });
     wx.showLoading({ title: '正在确认...', mask: true });
@@ -271,7 +338,8 @@ Page({
       },
       data: {
         supplier_id: confirmation.supplier && confirmation.supplier.id,
-        usertask_id: confirmation.task_id
+        usertask_id: confirmation.task_id,
+        material_batches: materialBatches
       },
       success: res => {
         const body = res.data || {};

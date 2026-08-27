@@ -515,3 +515,42 @@ button::after {
   background: #a8d8bf;
   color: #fff;
 }
+
+.batch-editor,
+.batch-readonly {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 16rpx;
+  padding: 18rpx;
+  border-radius: 12rpx;
+  background: #f3faf6;
+}
+
+.batch-label,
+.batch-readonly text {
+  display: block;
+  color: #315d47;
+  font-size: 22rpx;
+  line-height: 1.55;
+}
+
+.batch-input {
+  height: 72rpx;
+  margin-top: 12rpx;
+  padding: 0 18rpx;
+  border: 1rpx solid #b9d8c7;
+  border-radius: 10rpx;
+  background: #fff;
+  color: #17251e;
+  font-size: 24rpx;
+}
+
+.batch-picker,
+.batch-date {
+  margin-top: 12rpx;
+  padding: 16rpx 18rpx;
+  border-radius: 10rpx;
+  background: #e4f3ea;
+  color: #078d4c;
+  font-size: 22rpx;
+}
