@@ -5,9 +5,11 @@
   <block wx:elif="{{detail}}">
     <view class="hero">
       <text class="eyebrow">售后服务单</text>
-      <text class="title">{{detail.status_name}}</text>
+      <text class="title">{{detail.viewer_stage.badge || detail.execution_stage_name || detail.status_name}}</text>
       <text>{{detail.case_no}}</text>
-      <text class="stage">{{detail.execution_stage_name}}</text>
+      <text class="stage" wx:if="{{detail.viewer_stage.mode === 'ACTION_REQUIRED'}}">当前步骤正在由您完成</text>
+      <text class="stage" wx:elif="{{detail.viewer_stage.mode === 'COMPLETED'}}">已结案</text>
+      <text class="stage" wx:else>当前真实流程</text>
     </view>
 
     <view class="card grid">
@@ -52,7 +54,15 @@
       </view>
     </view>
 
-    <view class="notice" wx:if="{{detail.applicant_instruction.title}}">
+    <view
+      class="notice viewer-stage {{detail.viewer_stage.mode === 'COMPLETED' ? 'completed' : ''}}"
+      wx:if="{{detail.viewer_stage.title}}"
+    >
+      <text class="notice-title">{{detail.viewer_stage.title}}</text>
+      <text wx:if="{{detail.viewer_stage.message}}">{{detail.viewer_stage.message}}</text>
+    </view>
+
+    <view class="notice" wx:if="{{detail.viewer.is_applicant && detail.applicant_instruction.title}}">
       <text class="notice-title">{{detail.applicant_instruction.title}}</text>
       <text>{{detail.applicant_instruction.message}}</text>
       <text wx:if="{{detail.applicant_instruction.contact.phone}}">联系电话：{{detail.applicant_instruction.contact.phone}}</text>

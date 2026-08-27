@@ -1,25 +1,16 @@
 <view class="uploader">
-  <camera
-    class="camera"
-    mode="normal"
-    device-position="back"
-    flash="auto"
-    binderror="onCameraError"
-  ></camera>
-  <view
-    class="shutter {{recording ? 'recording' : ''}}"
-    bindtouchstart="startCapture"
-    bindtouchend="endCapture"
-    bindtouchcancel="cancelCapture"
-  >
-    <view class="shutter-core"></view>
+  <view class="capture-panel">
+    <text class="capture-title">添加现场图片或视频</text>
+    <text class="capture-tip">拍摄会打开手机系统相机，可选择拍照或录像</text>
+    <button class="camera-button" disabled="{{disabled || files.length >= maxCount}}" bindtap="chooseCameraMedia">打开相机拍照/录像</button>
   </view>
-  <text class="capture-tip">{{recording ? '正在录像，松开结束' : '轻点拍照，长按录像（录像同步收音）'}}</text>
 
   <view class="tools">
-    <button class="tool" size="mini" disabled="{{disabled || files.length >= maxCount}}" bindtap="chooseLocalMedia">从本地选择图片/视频</button>
-    <button wx:if="{{allowDocument}}" class="tool" size="mini" disabled="{{disabled || files.length >= maxCount}}" bindtap="chooseDocument">选择物流单据/凭证</button>
+    <button class="tool" disabled="{{disabled || files.length >= maxCount}}" bindtap="chooseLocalMedia">从手机相册选择图片/视频</button>
+    <button wx:if="{{allowDocument}}" class="tool" disabled="{{disabled || files.length >= maxCount}}" bindtap="chooseDocument">从手机相册选择物流单据/凭证</button>
   </view>
+
+  <text class="selected-count" wx:if="{{files.length}}">已选择 {{files.length}} 个附件，请确认缩略图后再提交</text>
 
   <view class="media-grid" wx:if="{{files.length}}">
     <view class="media-item" wx:for="{{files}}" wx:key="key" wx:for-item="file" wx:for-index="fileIndex">

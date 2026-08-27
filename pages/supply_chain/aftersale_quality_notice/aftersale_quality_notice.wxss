@@ -1,0 +1,26 @@
+.page { min-height: 100vh; padding: 28rpx; box-sizing: border-box; background: #f5f7f8; color: #202124; }
+.state-card, .hero-card, .info-card, .result-card, .material-card, .privacy-card { margin-bottom: 24rpx; padding: 28rpx; border-radius: 22rpx; background: #fff; box-shadow: 0 10rpx 28rpx rgba(20,45,40,.06); }
+.state-card { text-align: center; color: #66706d; }
+.state-card.error { color: #b83b2e; }
+.secondary-button { width: 240rpx; margin-top: 24rpx; color: #087f5b; background: #e9f8f1; }
+.hero-card { color: #fff; background: linear-gradient(135deg, #08b878, #087f69); }
+.hero-head, .material-head { display: flex; align-items: center; justify-content: space-between; gap: 18rpx; }
+.hero-title { font-size: 34rpx; font-weight: 700; }
+.status-pill { padding: 8rpx 16rpx; border-radius: 999rpx; color: #087f5b; background: #eafff5; font-size: 22rpx; }
+.supplier-name { display: block; margin-top: 22rpx; font-size: 31rpx; font-weight: 700; }
+.hero-meta { display: block; margin-top: 10rpx; font-size: 24rpx; opacity: .9; }
+.section-title { display: block; margin-bottom: 20rpx; font-size: 29rpx; font-weight: 700; }
+.section-title.outside { margin: 34rpx 4rpx 18rpx; }
+.info-row { display: flex; justify-content: space-between; gap: 26rpx; padding: 14rpx 0; border-bottom: 1rpx solid #edf0ef; font-size: 24rpx; }
+.info-row:last-child { border-bottom: 0; }
+.label { flex: 0 0 150rpx; color: #72807b; }
+.result-card { border-left: 8rpx solid #0b9b69; }
+.result-main { display: block; color: #087f5b; font-size: 30rpx; font-weight: 700; }
+.result-line, .material-line { display: block; margin-top: 13rpx; color: #66716e; font-size: 24rpx; line-height: 1.6; }
+.material-card { border: 1rpx solid #d7eee5; background: #fbfffd; }
+.material-name { font-size: 28rpx; font-weight: 700; }
+.key-tag { padding: 7rpx 13rpx; border-radius: 999rpx; color: #936100; background: #fff1c2; font-size: 20rpx; }
+.privacy-card { color: #5d6870; background: #eef5f8; }
+.privacy-title { display: block; font-size: 27rpx; font-weight: 700; }
+.privacy-text { display: block; margin-top: 12rpx; font-size: 23rpx; line-height: 1.7; }
+.secondary-button::after { border: 0; }

@@ -16,15 +16,26 @@ Page({
       const isCustomer = ['customer_owner', 'driver'].includes(
         (app.globalData.role || '').trim()
       );
+      const isFactoryAftersales = (
+        (app.globalData.role || '').trim() === 'factory_aftersales'
+      );
       this.setData({
         isCustomer,
-        pageTitle: isCustomer ? '我的售后服务' : '售后服务',
+        pageTitle: isCustomer
+          ? '我的售后服务'
+          : isFactoryAftersales
+            ? '我的售后维修'
+            : '售后服务',
         pageSubtitle: isCustomer
           ? '查看每台设备的申请进展、处理方案与结案结果'
-          : '申请、判断、维修与结案',
+          : isFactoryAftersales
+            ? '查看厂家销售经理分派给您的维修工单'
+            : '申请、判断、维修与结案',
         emptyText: isCustomer
           ? '暂无售后服务单，可从“我的设备”进入设备详情发起申请'
-          : '暂无需要查看的售后单'
+          : isFactoryAftersales
+            ? '暂无分派给您的售后维修工单'
+            : '暂无需要查看的售后单'
       });
       this.load();
     });

@@ -1,0 +1,53 @@
+<view class="page">
+  <view wx:if="{{loading}}" class="state-card">正在加载脱敏质量通知…</view>
+  <view wx:elif="{{errorMessage}}" class="state-card error">
+    <text>{{errorMessage}}</text>
+    <button class="secondary-button" bindtap="retryLoad">重新加载</button>
+  </view>
+
+  <block wx:elif="{{notice}}">
+    <view class="hero-card">
+      <view class="hero-head">
+        <text class="hero-title">{{notice.notice_title}}</text>
+        <text class="status-pill">已结案知晓</text>
+      </view>
+      <text class="supplier-name">{{notice.supplier.name}}</text>
+      <text class="hero-meta">售后单号：{{notice.case_no}}</text>
+      <text class="hero-meta">结案时间：{{notice.closedAtText}}</text>
+    </view>
+
+    <view class="info-card">
+      <text class="section-title">产品与批次</text>
+      <view class="info-row"><text class="label">厂家</text><text>{{notice.factory_name}}</text></view>
+      <view class="info-row"><text class="label">产品型号</text><text>{{notice.device.product_model}}</text></view>
+      <view class="info-row"><text class="label">设备 SN</text><text>{{notice.device.sn}}</text></view>
+      <view class="info-row"><text class="label">生产批次</text><text>{{notice.device.production_batch || '—'}}</text></view>
+      <view class="info-row"><text class="label">BOM 版本</text><text>{{notice.device.bom_version || '—'}}</text></view>
+    </view>
+
+    <view class="result-card">
+      <text class="section-title">厂家最终结论</text>
+      <text class="result-main">{{notice.final.fault_type_name}}</text>
+      <text class="result-line">处理方案：{{notice.final.solution_type_name}}</text>
+      <text class="result-line">结案说明：{{notice.final.solution_note}}</text>
+      <text class="result-line">维修摘要：{{notice.repair.summary || '—'}}</text>
+    </view>
+
+    <view class="section-title outside">涉及本供应商的故障更换物料</view>
+    <view wx:for="{{notice.materials}}" wx:key="bom_item_id" class="material-card">
+      <view class="material-head">
+        <text class="material-name">{{item.material_name}}</text>
+        <text wx:if="{{item.is_key_part}}" class="key-tag">关键物料</text>
+      </view>
+      <text class="material-line">规格：{{item.specification_name || '—'}}</text>
+      <text class="material-line">BOM 数量：{{item.quantity || '—'}}</text>
+      <text class="material-line">处理结果：已确认故障并完成更换</text>
+    </view>
+
+    <view class="privacy-card">
+      <text class="privacy-title">隐私与任务说明</text>
+      <text class="privacy-text">{{notice.privacy_note}}</text>
+      <text class="privacy-text">本任务为知晓任务，打开任务后即视为已阅读，无需提交操作。</text>
+    </view>
+  </block>
+</view>

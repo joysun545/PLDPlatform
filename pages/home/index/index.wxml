@@ -67,6 +67,11 @@
       <text>三包拆机清单</text>
     </view>
 
+    <view class="menu-item" bindtap="goSupplierQualityNotices" wx:if="{{showSupplierQualityNotices}}">
+      <image src="/images/aftersale.png" class="icon" />
+      <text>售后质量通知</text>
+    </view>
+
     <view class="menu-item" bindtap="goGoodsTransferList" wx:if="{{showGoodsTransferList}}">
       <image src="/images/data_statistics.png" class="icon" />
       <text>商品流转列表</text>

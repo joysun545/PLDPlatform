@@ -12,6 +12,7 @@ Page({
     showOrderPlanList: false,
     showSupplierResponsibility: false,
     showSupplierWarranty: false,
+    showSupplierQualityNotices: false,
     showMatching: false,
     showStock: false,
     showGoodsTransfer: false,
@@ -68,6 +69,10 @@ Page({
         'supplier_owner',
         'supplier_sales'
       ].includes(role),
+      showSupplierQualityNotices: [
+        'supplier_owner',
+        'supplier_sales'
+      ].includes(role),
       showMatching: role === 'factory_matching',
 
       showStock: [
@@ -113,6 +118,7 @@ Page({
       // "我的任务"里的临时推送入口。销售经理仍保留同一列表入口。
       showAftersale: [
         'factory_sales',
+        'factory_aftersales',
         'customer_owner',
         'driver'
       ].includes(role),
@@ -192,6 +198,13 @@ Page({
     wx.navigateTo({
       url: '/pages/supply_chain/warranty_list/warranty_list',
       fail: () => wx.showToast({ title: '三包清单页面打开失败', icon: 'none' })
+    });
+  },
+
+  goSupplierQualityNotices() {
+    wx.navigateTo({
+      url: '/pages/supply_chain/aftersale_quality_list/aftersale_quality_list',
+      fail: () => wx.showToast({ title: '售后质量通知打开失败', icon: 'none' })
     });
   },
 

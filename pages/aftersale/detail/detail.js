@@ -1,5 +1,12 @@
 const app = getApp();
 
+function uploadFailureMessage(res, body) {
+  if (res && res.statusCode === 413) return '视频超过服务器上传限制，请联系管理员调整上传容量';
+  if (res && (res.statusCode === 502 || res.statusCode === 504)) return '视频上传超时，请检查网络后重试';
+  if (body && body.msg) return body.msg;
+  return '附件上传失败（HTTP ' + ((res && res.statusCode) || '未知') + '）';
+}
+
 function apiRequest(url, method = 'GET', data = null) {
   return new Promise((resolve, reject) => {
     wx.request({
@@ -99,7 +106,7 @@ Page({
       .then(detail => {
         const dispatch = detail.dispatch || {};
         const currentTriage = this.data.triage;
-        this.setData({
+        const nextData = {
           detail,
           mediaFiles: (detail.media || []).map(item => ({
             ...item,
@@ -109,13 +116,16 @@ Page({
           })),
           loading: false,
           error: '',
-          actionMedia: [],
           triage: {
             ...currentTriage,
             diagnosisNote: dispatch.diagnosis_note || currentTriage.diagnosisNote || '',
             repairPlan: dispatch.repair_plan || currentTriage.repairPlan || ''
           }
-        });
+        };
+        // Returning from the album/file picker can trigger onShow(). Preserve
+        // the files selected for the current action during a silent refresh.
+        if (!silent) nextData.actionMedia = [];
+        this.setData(nextData);
       })
       .catch(err => {
         if (!silent) this.setData({ loading: false, error: err.message || '无法读取售后申请' });
@@ -195,6 +205,7 @@ Page({
         url: app.globalData.apiBase + '/lifecycle/after-sales/applications/' + this.data.applicationId + '/media/',
         filePath: item.path,
         name: 'file',
+        timeout: 180000,
         header: app.authHeader(null),
         formData: {
           media_type: item.media_type,
@@ -211,14 +222,17 @@ Page({
             this.updateActionMedia(index, { status: 'SUCCESS', serverMediaId: body.data && body.data.id });
             resolve();
           } else {
-            const message = (body && body.msg) || '附件上传失败';
+            const message = uploadFailureMessage(res, body);
             this.updateActionMedia(index, { status: 'FAILED', error: message });
             reject(new Error(message));
           }
         },
-        fail: () => {
-          this.updateActionMedia(index, { status: 'FAILED', error: '网络上传失败' });
-          reject(new Error('附件上传失败，请稍后重试'));
+        fail: err => {
+          const message = (err && err.errMsg && err.errMsg.includes('timeout'))
+            ? '视频上传超时，请保持网络稳定后重试'
+            : '附件上传失败，请检查网络后重试';
+          this.updateActionMedia(index, { status: 'FAILED', error: message });
+          reject(new Error(message));
         }
       });
     });

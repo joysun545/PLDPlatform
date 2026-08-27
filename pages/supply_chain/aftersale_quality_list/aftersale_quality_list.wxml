@@ -1,0 +1,37 @@
+<view class="page">
+  <view class="summary-card">
+    <text class="summary-title">售后质量通知</text>
+    <text class="summary-count">共 {{count}} 条</text>
+    <text class="summary-note">仅展示已向当前账号送达的脱敏物料质量通知</text>
+  </view>
+
+  <view wx:if="{{loading}}" class="state-card">正在加载…</view>
+  <view wx:elif="{{errorMessage}}" class="state-card error">
+    <text>{{errorMessage}}</text>
+    <button class="secondary-button" bindtap="retryLoad">重新加载</button>
+  </view>
+  <view wx:elif="{{!items.length}}" class="state-card">暂无售后质量通知</view>
+
+  <view
+    wx:for="{{items}}"
+    wx:key="task_id"
+    class="notice-card"
+    data-application-id="{{item.application_id}}"
+    data-supplier-id="{{item.supplier_id}}"
+    bindtap="openNotice"
+  >
+    <view class="card-head">
+      <text class="case-no">{{item.case_no}}</text>
+      <text class="state-pill {{item.is_unread ? 'new' : ''}}">{{item.is_unread ? '未读' : '已知晓'}}</text>
+    </view>
+    <text class="notice-title">{{item.title}}</text>
+    <text class="line">厂家：{{item.factory_name}}</text>
+    <text class="line">型号：{{item.product_model}}</text>
+    <text class="line">设备 SN：{{item.sn}}</text>
+    <text class="materials">涉及物料：{{item.materialsText}}</text>
+    <view class="card-foot">
+      <text>{{item.closedAtText}}</text>
+      <text class="detail-action">查看脱敏详情 ›</text>
+    </view>
+  </view>
+</view>

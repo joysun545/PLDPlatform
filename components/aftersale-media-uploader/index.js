@@ -18,27 +18,6 @@ Component({
     }
   },
 
-  data: {
-    recording: false,
-    longPressTriggered: false
-  },
-
-  lifetimes: {
-    attached() {
-      this.cameraContext = wx.createCameraContext();
-      this.captureStartRequested = false;
-      this.stopAfterRecordStart = false;
-      this.recordingActive = false;
-      this.recordStopInFlight = false;
-    },
-    detached() {
-      if (this.longPressTimer) clearTimeout(this.longPressTimer);
-      this.captureStartRequested = false;
-      this.stopAfterRecordStart = false;
-      this.recordingActive = false;
-    }
-  },
-
   methods: {
     remaining() {
       return Math.max(0, Number(this.properties.maxCount || 0) - this.properties.files.length);
@@ -64,133 +43,53 @@ Component({
       this.triggerEvent('change', { files: next });
     },
 
-    startCapture() {
-      if (
-        this.properties.disabled ||
-        !this.remaining() ||
-        this.captureStartRequested ||
-        this.recordingActive ||
-        this.recordStopInFlight
-      ) return;
-      this.stopAfterRecordStart = false;
-      this.setData({ longPressTriggered: false });
-      this.longPressTimer = setTimeout(() => {
-        this.longPressTimer = null;
-        // Mark this before startRecord resolves.  A user can release their
-        // finger while the native camera is still starting; in that case we
-        // must stop the video as soon as it starts instead of taking a photo.
-        this.captureStartRequested = true;
-        this.setData({ longPressTriggered: true });
-        this.cameraContext.startRecord({
-          success: () => {
-            this.recordingActive = true;
-            this.setData({ recording: true });
-            if (this.stopAfterRecordStart) {
-              this.stopRecording();
-            } else {
-              wx.showToast({ title: '正在录制，松开结束', icon: 'none' });
-            }
-          },
-          fail: () => {
-            this.captureStartRequested = false;
-            this.stopAfterRecordStart = false;
-            this.recordingActive = false;
-            this.setData({ recording: false });
-            wx.showToast({ title: '无法开始录像，请检查相机权限', icon: 'none' });
-          }
-        });
-      }, 350);
-    },
-
-    endCapture() {
-      if (this.longPressTimer) {
-        clearTimeout(this.longPressTimer);
-        this.longPressTimer = null;
-      }
-      if (this.captureStartRequested) {
-        if (this.recordingActive) {
-          this.stopRecording();
-        } else {
-          this.stopAfterRecordStart = true;
-        }
-        return;
-      }
-      if (!this.data.longPressTriggered) {
-        this.cameraContext.takePhoto({
-          quality: 'high',
-          success: res => this.append([this.createFile(res.tempImagePath, 'IMAGE')]),
-          fail: () => wx.showToast({ title: '拍照失败，请检查相机权限', icon: 'none' })
-        });
-      }
-    },
-
-    stopRecording() {
-      if (!this.recordingActive || this.recordStopInFlight) return;
-      this.recordStopInFlight = true;
-      this.cameraContext.stopRecord({
-        success: res => {
-          this.append([this.createFile(res.tempVideoPath, 'VIDEO')]);
-        },
-        fail: () => wx.showToast({ title: '录像保存失败，请重试', icon: 'none' }),
-        complete: () => {
-          this.captureStartRequested = false;
-          this.stopAfterRecordStart = false;
-          this.recordingActive = false;
-          this.recordStopInFlight = false;
-          this.setData({ recording: false });
-        }
-      });
-    },
-
-    cancelCapture() {
-      this.endCapture();
-    },
-
-    onCameraError() {
-      if (this.longPressTimer) {
-        clearTimeout(this.longPressTimer);
-        this.longPressTimer = null;
-      }
-      this.captureStartRequested = false;
-      this.stopAfterRecordStart = false;
-      this.recordingActive = false;
-      this.recordStopInFlight = false;
-      this.setData({ recording: false });
-      wx.showToast({ title: '相机不可用，请检查相机权限', icon: 'none' });
-    },
-
-    chooseLocalMedia() {
+    chooseMedia(sourceType, failureTitle) {
       if (this.properties.disabled || !this.remaining()) return;
       wx.chooseMedia({
         count: this.remaining(),
         mediaType: ['image', 'video'],
-        sourceType: ['album'],
+        sourceType: [sourceType],
+        camera: 'back',
+        maxDuration: 60,
         success: res => {
-          this.append((res.tempFiles || []).map(file => this.createFile(
+          const files = (res.tempFiles || []).map(file => this.createFile(
             file.tempFilePath,
             file.fileType === 'video' ? 'VIDEO' : 'IMAGE',
-            { duration_seconds: file.duration || null }
-          )));
+            {
+              duration_seconds: file.duration || null,
+              size: file.size || null
+            }
+          ));
+          if (!files.length) {
+            wx.showToast({ title: '没有读取到图片或视频', icon: 'none' });
+            return;
+          }
+          this.append(files);
+        },
+        fail: err => {
+          const message = String((err && err.errMsg) || '');
+          if (message.includes('cancel')) return;
+          wx.showToast({
+            title: message.includes('auth') || message.includes('permission')
+              ? '请允许小程序使用相机或相册'
+              : failureTitle,
+            icon: 'none'
+          });
         }
       });
     },
 
+    chooseCameraMedia() {
+      this.chooseMedia('camera', '打开拍摄功能失败，请重试');
+    },
+
+    chooseLocalMedia() {
+      this.chooseMedia('album', '选择图片或视频失败，请重试');
+    },
+
     chooseDocument() {
-      if (this.properties.disabled || !this.properties.allowDocument || !this.remaining()) return;
-      wx.chooseMessageFile({
-        count: this.remaining(),
-        type: 'file',
-        success: res => {
-          this.append((res.tempFiles || []).map(file => {
-            const name = file.name || '';
-            const suffix = name.split('.').pop().toLowerCase();
-            let mediaType = 'DOCUMENT';
-            if (['jpg', 'jpeg', 'png', 'webp', 'heic'].includes(suffix)) mediaType = 'IMAGE';
-            if (['mp4', 'mov', 'm4v', '3gp'].includes(suffix)) mediaType = 'VIDEO';
-            return this.createFile(file.path, mediaType, { name });
-          }));
-        }
-      });
+      if (!this.properties.allowDocument) return;
+      this.chooseMedia('album', '选择物流单据或凭证失败，请重试');
     },
 
     onRemoveFile(e) {

@@ -228,13 +228,16 @@ App({
       'pages/sales/matching_confirm/matching_confirm',
       'pages/supply_chain/responsibility/responsibility',
       'pages/supply_chain/warranty_list/warranty_list',
-      'pages/supply_chain/warranty_notice/warranty_notice'
+      'pages/supply_chain/warranty_notice/warranty_notice',
+      'pages/supply_chain/aftersale_quality_notice/aftersale_quality_notice',
+      'pages/supply_chain/aftersale_quality_list/aftersale_quality_list'
     ];
     if (protectedRoutes.includes(currentRoute)) return;
 
     const manageRoles = [
       'factory_admin',
       'factory_sales',
+      'factory_aftersales',
       'factory_matching',
       'factory_production',
       'factory_logistics',

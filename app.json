@@ -36,7 +36,9 @@
     "pages/stock/factory_return_inventory/factory_return_inventory",
     "pages/supply_chain/responsibility/responsibility",
     "pages/supply_chain/warranty_list/warranty_list",
-    "pages/supply_chain/warranty_notice/warranty_notice"
+    "pages/supply_chain/warranty_notice/warranty_notice",
+    "pages/supply_chain/aftersale_quality_notice/aftersale_quality_notice",
+    "pages/supply_chain/aftersale_quality_list/aftersale_quality_list"
   ],
   "window": {
     "backgroundTextStyle": "light",
@@ -47,12 +49,14 @@
   "permission": {
     "scope.userLocation": {
       "desc": "你的位置信息将用于售后申请中的真实位置确认"
-    },
-    "scope.camera": {
-      "desc": "用于拍摄售后故障图片和录制故障视频"
     }
   },
   "style": "v2",
+  "networkTimeout": {
+    "request": 30000,
+    "uploadFile": 180000,
+    "downloadFile": 120000
+  },
   "sitemapLocation": "sitemap.json",
   "tabBar": {
     "color": "#999999",
