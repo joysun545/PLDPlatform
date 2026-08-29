@@ -3,3 +3,14 @@
 .selected { box-shadow: 0 0 0 4rpx rgba(7,193,96,.24); }
 .action-panel { border: 2rpx solid #bdebd3; }
 .small { font-size: 24rpx; }
+.tip { margin-top: 18rpx; padding: 18rpx; border-radius: 14rpx; background: #eefaf4; color: #35604b; font-size: 26rpx; line-height: 1.6; }
+.section-subtitle { margin: 28rpx 0 14rpx; font-size: 29rpx; font-weight: 700; color: #173d2e; }
+.method-current { margin-top: 20rpx; font-size: 28rpx; font-weight: 700; color: #07965a; }
+.method-btn { margin-top: 16rpx; border: 2rpx solid #08aa64; background: #effbf5; color: #078c54; }
+.compact { margin-top: 16rpx; font-size: 26rpx; }
+.method-help { margin: 8rpx 12rpx 20rpx; font-size: 24rpx; }
+.pickup-box { margin-top: 22rpx; padding-top: 6rpx; border-top: 2rpx solid #edf2ef; }
+.inline-pickers { display: flex; gap: 16rpx; }
+.inline-pickers picker { flex: 1; }
+.transfer-code { margin-top: 26rpx; padding: 22rpx; border: 2rpx dashed #08aa64; border-radius: 18rpx; text-align: center; }
+.transfer-qr { width: 420rpx; height: 420rpx; margin: 12rpx auto; }

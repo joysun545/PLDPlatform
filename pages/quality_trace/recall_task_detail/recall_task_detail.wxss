@@ -1,0 +1,11 @@
+@import "../common.wxss";
+.summary { margin-top: 16rpx; color: #426058; line-height: 1.6; }
+.metrics { display: flex; flex-wrap: wrap; gap: 18rpx; margin-top: 24rpx; }
+.metrics > view { min-width: 132rpx; display: flex; flex-direction: column; }
+.metric { color: #08a866; font-size: 42rpx; font-weight: 700; }
+.guide { padding: 18rpx 0; line-height: 1.65; border-bottom: 1rpx solid #edf2ef; }
+.guide:last-child { border-bottom: 0; }
+.device { border-left: 8rpx solid #08aa64; }
+.chain-group { border: 2rpx solid #dceee5; }
+.device-line { padding: 18rpx 0; border-top: 1rpx solid #edf2ef; line-height: 1.55; }
+.code { color: #60736d; font-size: 25rpx; word-break: break-all; }

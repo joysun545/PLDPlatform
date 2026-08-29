@@ -1,0 +1,3 @@
+@import "../common.wxss";
+.tip { margin: 20rpx 0; padding: 20rpx; border-radius: 14rpx; background: #eefaf4; color: #35604b; line-height: 1.7; }
+.textarea { box-sizing: border-box; width: 100%; min-height: 240rpx; margin: 22rpx 0; padding: 22rpx; border-radius: 14rpx; background: #f4f7f5; }

@@ -1,0 +1,13 @@
+<view class="page">
+  <view class="hero">
+    <view class="hero-title">召回设备临时交接</view>
+    <view class="hero-sub">该流转码只用于已激活设备交给来源商家，不依赖产品原二维码。</view>
+  </view>
+  <view class="error" wx:if="{{error}}">{{error}}</view>
+  <view class="card">
+    <view class="card-title">商家接管确认</view>
+    <view class="tip">请当面核对设备 SN 或生命周期编码、实物状态及召回批次。确认后设备进入召回专用保管，不能转入普通可售库存。</view>
+    <textarea class="textarea" value="{{receiptNote}}" bindinput="input" placeholder="填写核对结果和接管说明" />
+    <button class="primary" bindtap="accept" loading="{{busy}}">确认接管召回设备</button>
+  </view>
+</view>

@@ -83,10 +83,14 @@ function formatTime(value) {
 
 const statusLabels = {
   DRAFT: '待发布', ACTIVE: '召回中', COMPLETED: '已完成', CANCELLED: '已取消',
+  SUPERSEDED: '已由主批次接管',
   PENDING_NOTICE: '待通知', NOTIFIED: '待确认', ACKNOWLEDGED: '已确认',
   RETURN_IN_PROGRESS: '退回中', RECEIVED: '已收回', DISPOSED: '已处置',
   UNREACHABLE: '无法联系', EXEMPTED: '已豁免',
   PENDING_CUSTOMER_ACK: '待用户确认', PICKUP_SCHEDULED: '已预约取回',
+  PENDING_CUSTOMER_CHOICE: '待选择交付方式', METHOD_SELECTED: '已选择交付方式',
+  DIRECT_SHIPPED: '用户已直寄', PICKUP_REQUESTED: '待厂家受理取件',
+  PICKUP_ACCEPTED: '厂家已受理取件',
   MERCHANT_RECEIVED: '商家已接管', PREPARING: '待发出', IN_TRANSIT: '运输中'
 };
 

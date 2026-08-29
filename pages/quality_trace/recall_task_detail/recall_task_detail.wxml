@@ -1,0 +1,80 @@
+<view class="page">
+  <view class="hero" wx:if="{{campaign}}">
+    <view class="row"><text class="hero-title">{{campaign.recall_no}}</text><text>{{campaign.statusText}}</text></view>
+    <view class="hero-sub">{{campaign.title}} · 截止 {{campaign.deadline}}</view>
+  </view>
+  <view class="error" wx:if="{{error}}">{{error}}</view>
+
+  <view class="card" wx:if="{{scope}}">
+    <view class="card-title">{{scope.organization.name}}的召回任务</view>
+    <view class="summary">{{task.summary}}</view>
+    <view class="metrics">
+      <view><text class="metric">{{scope.device_count}}</text><text class="muted">相关设备</text></view>
+      <view wx:if="{{scope.audience_type === 'MERCHANT'}}"><text class="metric">{{scope.own_inventory_count}}</text><text class="muted">本组织库存</text></view>
+      <view wx:if="{{scope.audience_type === 'MERCHANT'}}"><text class="metric">{{scope.downstream_inventory_count}}</text><text class="muted">下级库存</text></view>
+      <view wx:if="{{scope.audience_type === 'MERCHANT'}}"><text class="metric">{{scope.activated_user_device_count}}</text><text class="muted">用户已激活</text></view>
+    </view>
+  </view>
+
+  <view class="card" wx:if="{{scope.operation_guides.length}}">
+    <view class="card-title">操作方法</view>
+    <view class="guide" wx:for="{{scope.operation_guides}}" wx:key="index">{{index + 1}}. {{item}}</view>
+  </view>
+
+  <block wx:if="{{scope.customer_devices.length}}">
+    <view class="section-title">您名下已激活召回设备（{{scope.customer_device_count}}台）</view>
+    <view class="card device" wx:for="{{scope.customer_devices}}" wx:key="recall_device_id">
+      <view class="card-title">SN：{{item.sn}}</view>
+      <view class="code">生命周期编码：{{item.lifecycle_code || '暂无可用编码，以SN为准'}}</view>
+      <view class="muted">{{item.production_batch}}</view>
+    </view>
+  </block>
+
+  <block wx:if="{{scope.own_inventory.length}}">
+    <view class="section-title">本组织库存（{{scope.own_inventory_count}}台）</view>
+    <view class="card device" wx:for="{{scope.own_inventory}}" wx:key="recall_device_id">
+      <view class="card-title">SN：{{item.sn}}</view>
+      <view class="code">生命周期编码：{{item.lifecycle_code || '暂无可用编码，以SN为准'}}</view>
+      <view class="muted">{{item.production_batch}}</view>
+    </view>
+  </block>
+
+  <block wx:if="{{scope.downstream_inventory.length}}">
+    <view class="section-title">下级商家库存（{{scope.downstream_inventory_count}}台）</view>
+    <view class="card chain-group" wx:for="{{scope.downstream_inventory}}" wx:key="group_id">
+      <view class="row"><text class="card-title">{{item.organization.name}}</text><text class="tag">{{item.device_count}}台</text></view>
+      <view class="device-line" wx:for="{{item.devices}}" wx:for-item="device" wx:key="recall_device_id">
+        <view>SN：{{device.sn}}</view><view class="code">生命周期编码：{{device.lifecycle_code || '暂无，以SN为准'}}</view>
+      </view>
+    </view>
+  </block>
+
+  <block wx:if="{{scope.activated_user_devices.length}}">
+    <view class="section-title">本链路已激活用户设备（{{scope.activated_user_device_count}}台）</view>
+    <view class="card chain-group" wx:for="{{scope.activated_user_devices}}" wx:key="group_id">
+      <view class="row"><text class="card-title">{{item.customer_organization.name}}</text><text class="tag">{{item.device_count}}台</text></view>
+      <view class="muted" wx:if="{{item.source_merchant}}">服务商家：{{item.source_merchant.name}}</view>
+      <view class="device-line" wx:for="{{item.devices}}" wx:for-item="device" wx:key="recall_device_id">
+        <view>SN：{{device.sn}}</view><view class="code">生命周期编码：{{device.lifecycle_code || '暂无，以SN为准'}}</view>
+      </view>
+    </view>
+  </block>
+
+  <block wx:if="{{scope.in_transit_devices.length}}">
+    <view class="section-title">在途召回设备（{{scope.in_transit_device_count}}台）</view>
+    <view class="card device" wx:for="{{scope.in_transit_devices}}" wx:key="recall_device_id">
+      <view class="card-title">SN：{{item.sn}}</view>
+      <view class="muted">{{item.from_organization.name}} → {{item.to_organization.name}}</view>
+      <view class="code">流转单：{{item.flow_no}}</view>
+    </view>
+  </block>
+
+  <block wx:if="{{scope.factory_inventory.length || scope.manual_trace.length || scope.unassigned_organizations.length}}">
+    <view class="section-title">厂家协调事项</view>
+    <view class="card device" wx:for="{{scope.factory_inventory}}" wx:key="recall_device_id"><view class="card-title">厂家库存：{{item.sn}}</view><view class="code">{{item.lifecycle_code || '以SN为准'}}</view></view>
+    <view class="card device" wx:for="{{scope.manual_trace}}" wx:key="recall_device_id"><view class="card-title">位置待核查：{{item.sn}}</view><view class="code">{{item.lifecycle_code || '以SN为准'}}</view></view>
+    <view class="card chain-group" wx:for="{{scope.unassigned_organizations}}" wx:key="group_id"><view class="card-title">{{item.organization.name}} · {{item.device_count}}台</view><view class="muted">{{item.reason}}</view></view>
+  </block>
+
+  <button class="primary" wx:if="{{campaign}}" bindtap="openRecallDetail">进入召回详情</button>
+</view>

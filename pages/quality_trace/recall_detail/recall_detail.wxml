@@ -1,14 +1,15 @@
 <view class="page">
   <view class="hero" wx:if="{{campaign}}">
-    <view class="row"><text class="hero-title">{{campaign.recall_no}}</text><text>{{campaign.status}}</text></view>
-    <view class="hero-sub">{{campaign.title}} · {{campaign.device_count}} 台 · 截止 {{campaign.deadline}}</view>
+    <view class="row"><text class="hero-title">{{campaign.recall_no}}</text><text>{{campaign.statusText || campaign.status}}</text></view>
+    <view class="hero-sub">{{campaign.title}} · {{campaign.device_count}} 台{{campaign.scope_label ? ' · ' + campaign.scope_label : ''}} · 截止 {{campaign.deadline}}</view>
   </view>
   <view class="error" wx:if="{{error}}">{{error}}</view>
 
   <view class="card action-panel" wx:if="{{campaign && isFactory}}">
     <view class="card-title">厂家召回控制台</view>
+    <view class="muted">召回原因：{{campaign.reason}}</view>
+    <view class="tip">已激活设备的用户交接由系统在发布召回时自动建立，无需逐台创建。</view>
     <button class="primary" wx:if="{{campaign.status === 'DRAFT'}}" bindtap="launch" loading="{{busy}}">发布召回</button>
-    <button class="secondary" wx:if="{{campaign.status === 'ACTIVE'}}" bindtap="publishTasks" loading="{{busy}}">推送召回任务</button>
     <button class="secondary" wx:if="{{campaign.status === 'ACTIVE'}}" bindtap="refreshProgress" loading="{{busy}}">刷新召回进度</button>
     <button class="primary" wx:if="{{campaign.status === 'ACTIVE'}}" bindtap="completeCampaign" loading="{{busy}}">完成召回并转正式隔离</button>
   </view>
@@ -17,19 +18,85 @@
   <view class="card device {{selected.id === item.id ? 'selected' : ''}}" wx:for="{{devices}}" wx:key="id" data-id="{{item.id}}" bindtap="selectDevice">
     <view class="row"><text class="card-title">{{item.sn}}</text><text class="tag">{{item.statusText}}</text></view>
     <view class="muted">{{item.product_model.name || item.product_model.product_model_name}}</view>
+    <view class="small" wx:if="{{item.handover}}">交付方式：{{item.handover.delivery_method_label || '待用户选择'}}</view>
     <view class="small">运输节点：{{item.transport_legs.length}} · {{item.isolation ? '已隔离' : '未隔离'}}</view>
   </view>
 
   <view class="card action-panel" wx:if="{{selected}}">
     <view class="card-title">当前节点操作</view>
-    <view class="muted" wx:if="{{!selected.canAcknowledge && !selected.canSchedule && !selected.canMerchantReceive && !selected.canCreateTransport && !selected.canDispatch && !selected.canReceive && !selected.canIsolate}}">当前节点无需您操作，请关注流程进度。</view>
 
-    <button class="primary" wx:if="{{isFactory && !selected.handover && selected.status !== 'UNREACHABLE'}}" bindtap="initializeHandover">建立用户交接单</button>
     <block wx:if="{{isFactory && selected.status === 'UNREACHABLE'}}">
       <button class="primary" data-decision="APPROVED" bindtap="decideUnreachable">批准无法联系例外</button>
       <button class="danger-btn" data-decision="REJECTED" bindtap="decideUnreachable">驳回并继续联系</button>
     </block>
-    <button class="primary" wx:if="{{selected.canAcknowledge}}" bindtap="acknowledge">确认收到召回通知</button>
+
+    <block wx:if="{{isCustomer && selected.handover}}">
+      <view class="tip">用户负责人和该车辆的共享司机看到同一交接状态；任一人提交后实时同步。</view>
+      <view class="method-current">当前方式：{{selected.handover.delivery_method_label || '尚未选择'}}</view>
+      <view class="tip" wx:if="{{selected.handover.delivery_method}}">当前节点：{{selected.handover.status_label}}</view>
+      <view class="muted" wx:if="{{selected.handover.method_locked}}">交付已经开始，方式已锁定。</view>
+
+      <button class="secondary compact" wx:if="{{selected.canSelectDelivery && selected.handover.delivery_method && !changingMethod}}" bindtap="changeDelivery">交付尚未执行，可更换方式</button>
+
+      <block wx:if="{{selected.canSelectDelivery && (!selected.handover.delivery_method || changingMethod)}}">
+        <view class="section-subtitle">请选择本台设备的交付方式</view>
+        <button class="method-btn" data-method="MERCHANT_HANDOVER" bindtap="selectDelivery">交给来源商家</button>
+        <view class="muted method-help">无需设备原二维码；选择后向商家出示临时召回流转码。</view>
+        <button class="method-btn" data-method="CUSTOMER_DIRECT_SHIP" bindtap="selectDelivery">自己直接发货回厂</button>
+        <view class="muted method-help">选择后填写物流单号，并上传包装或物流单据照片。</view>
+
+        <view class="pickup-box">
+          <view class="section-subtitle">厂家上门取件信息</view>
+          <input class="input" data-key="contactName" bindinput="input" value="{{contactName}}" placeholder="联系人" />
+          <input class="input" data-key="contactPhone" bindinput="input" value="{{contactPhone}}" placeholder="联系电话" />
+          <input class="input" data-key="pickupAddress" bindinput="input" value="{{pickupAddress}}" placeholder="详细取件地址" />
+          <view class="inline-pickers">
+            <picker mode="date" bindchange="pickDate"><view class="picker">{{pickupDate || '可取件日期'}}</view></picker>
+            <picker mode="time" bindchange="pickTime"><view class="picker">{{pickupTime || '可取件时间'}}</view></picker>
+          </view>
+          <button class="method-btn" data-method="FACTORY_PICKUP" bindtap="selectDelivery">申请厂家上门取件</button>
+        </view>
+      </block>
+
+      <view class="transfer-code" wx:if="{{selected.handover.delivery_method === 'MERCHANT_HANDOVER' && selected.qrImageUrl}}">
+        <view class="section-subtitle">临时召回流转码</view>
+        <image class="transfer-qr" src="{{selected.qrImageUrl}}" mode="aspectFit" show-menu-by-longpress="{{true}}" />
+        <view class="muted">仅限本台召回设备，由来源商家扫码接管；有效至 {{selected.handover.merchant_transfer_expires_at}}。</view>
+      </view>
+
+      <block wx:if="{{selected.canSubmitDirect}}">
+        <view class="section-subtitle">下一步：上传直寄物流并确认发出</view>
+        <view class="tip">确认后，厂家总工程师、销售经理、销售助理和物流经理将收到“用户已寄回，待收货”任务。</view>
+        <input class="input" data-key="provider" bindinput="input" value="{{provider}}" placeholder="物流承运方" />
+        <input class="input" data-key="trackingNo" bindinput="input" value="{{trackingNo}}" placeholder="物流单号" />
+        <button class="secondary" bindtap="chooseEvidence">{{evidence ? '已上传：' + evidence.original_name : '上传包装或物流单据照片'}}</button>
+        <button class="primary" bindtap="submitDirectShipment">确认已发货回厂</button>
+      </block>
+
+      <view class="tip" wx:if="{{selected.handover.status === 'PICKUP_REQUESTED'}}">取件申请已推送厂家总工程师和厂家物流经理，请等待厂家安排物流。</view>
+
+      <block wx:if="{{selected.canSubmitFactoryPickupShipment}}">
+        <view class="section-subtitle">下一步：确认设备已交给取件物流</view>
+        <view class="tip">厂家已受理取件。设备交给物流后，请上传物流单据、取件或包装照片。</view>
+        <input class="input" data-key="provider" bindinput="input" value="{{provider}}" placeholder="物流承运方" />
+        <input class="input" data-key="trackingNo" bindinput="input" value="{{trackingNo}}" placeholder="物流单号（如有）" />
+        <button class="secondary" bindtap="chooseEvidence">{{evidence ? '已上传：' + evidence.original_name : '上传物流单据或取件凭证'}}</button>
+        <button class="primary" bindtap="submitFactoryPickupShipment">确认设备已发出</button>
+      </block>
+
+      <view class="tip" wx:if="{{selected.handover.status === 'PICKUP_SHIPPED'}}">设备已交付取件物流，厂家相关岗位已收到待收货任务。</view>
+      <view class="tip" wx:if="{{selected.handover.status === 'DIRECT_SHIPPED'}}">直寄物流已提交，厂家相关岗位正在等待收货。</view>
+      <view class="tip" wx:if="{{selected.handover.status === 'MERCHANT_RECEIVED'}}">来源商家已扫码接管，设备正在沿召回专用链路逐级退回。</view>
+    </block>
+
+    <block wx:if="{{selected.canAcceptFactoryPickup}}">
+      <view class="section-subtitle">受理厂家上门取件</view>
+      <view class="tip">联系人：{{selected.handover.method_payload.contact_name}} {{selected.handover.method_payload.contact_phone}}；地址：{{selected.handover.method_payload.pickup_address}}</view>
+      <picker mode="date" bindchange="pickDate"><view class="picker">{{pickupDate || '实际预约日期'}}</view></picker>
+      <picker mode="time" bindchange="pickTime"><view class="picker">{{pickupTime || '实际预约时间'}}</view></picker>
+      <input class="input" data-key="provider" bindinput="input" value="{{provider}}" placeholder="拟安排物流公司（可稍后补充）" />
+      <button class="primary" bindtap="acceptFactoryPickup">受理并锁定取件方式</button>
+    </block>
 
     <block wx:if="{{selected.canSchedule}}">
       <view class="field"><text class="label">取回日期</text><picker mode="date" bindchange="pickDate"><view class="picker">{{pickupDate || '请选择日期'}}</view></picker></view>
@@ -43,19 +110,21 @@
     <button class="primary" wx:if="{{selected.canCreateTransport}}" bindtap="createTransport">建立下一程逐级退回</button>
 
     <block wx:if="{{selected.canDispatch}}">
-      <view class="field"><text class="label">物流承运方</text><input class="input" data-key="provider" bindinput="input" value="{{provider}}" /></view>
-      <view class="field"><text class="label">物流单号</text><input class="input" data-key="trackingNo" bindinput="input" value="{{trackingNo}}" /></view>
+      <input class="input" data-key="provider" bindinput="input" value="{{provider}}" placeholder="物流承运方" />
+      <input class="input" data-key="trackingNo" bindinput="input" value="{{trackingNo}}" placeholder="物流单号" />
       <button class="primary" bindtap="dispatch">确认发出</button>
     </block>
     <button class="primary" wx:if="{{selected.canReceive}}" bindtap="receive">验收本程设备</button>
     <block wx:if="{{selected.canIsolate}}">
-      <view class="field"><text class="label">厂家隔离位置</text><input class="input" data-key="isolationLocation" bindinput="input" value="{{isolationLocation}}" /></view>
+      <input class="input" data-key="isolationLocation" bindinput="input" value="{{isolationLocation}}" placeholder="厂家召回隔离位置" />
       <button class="danger-btn" bindtap="isolate">完成厂家隔离</button>
     </block>
+
+    <view class="muted" wx:if="{{!selected.canSelectDelivery && !selected.canSubmitDirect && !selected.canSubmitFactoryPickupShipment && !selected.canAcceptFactoryPickup && !selected.canSchedule && !selected.canMerchantReceive && !selected.canCreateTransport && !selected.canDispatch && !selected.canReceive && !selected.canIsolate && selected.status !== 'UNREACHABLE'}}">当前节点无需您操作，请关注流程进度。</view>
   </view>
 
   <view class="card" wx:if="{{selected && selected.transport_legs.length}}">
-    <view class="card-title">逐级退回记录</view>
+    <view class="card-title">召回返厂记录</view>
     <view wx:for="{{selected.transport_legs}}" wx:key="id">
       <view class="divider"></view><view>{{item.sequence_no}}. {{item.from_organization.name}} → {{item.to_organization.name}}</view><view class="muted">{{item.status}} {{item.logistics_provider}} {{item.tracking_no}}</view>
     </view>

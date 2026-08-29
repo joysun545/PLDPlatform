@@ -47,7 +47,9 @@
     "pages/quality_trace/case_list/case_list",
     "pages/quality_trace/case_detail/case_detail",
     "pages/quality_trace/recall_list/recall_list",
-    "pages/quality_trace/recall_detail/recall_detail"
+    "pages/quality_trace/recall_detail/recall_detail",
+    "pages/quality_trace/recall_handover_accept/recall_handover_accept",
+    "pages/quality_trace/recall_task_detail/recall_task_detail"
   ],
   "window": {
     "backgroundTextStyle": "light",

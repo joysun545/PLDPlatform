@@ -17,6 +17,12 @@ Page({
       item.has_active_temporary = item.control_actions.some(action => action.action_type === 'TEMPORARY_HOLD' && action.status === 'ACTIVE');
       item.has_active_formal = item.control_actions.some(action => action.action_type === 'FORMAL_HOLD' && action.status === 'ACTIVE');
       item.has_active_recall = item.control_actions.some(action => action.action_type === 'RECALL' && action.status === 'ACTIVE');
+      const actions = item.available_actions || {};
+      item.has_reason_action = Boolean(
+        actions.temporary_hold || actions.formal_hold ||
+        actions.start_recall || actions.revoke_temporary_action_id ||
+        actions.release_formal_action_id
+      );
       this.setData({ item });
     }
     catch (e) { this.setData({ error: e.message }); }
@@ -26,8 +32,41 @@ Page({
   inputDuration(e) { this.setData({ durationHours: Number(e.detail.value) || 0 }); },
   temporaryHold() { this.caseAction(`/cases/${this.data.id}/temporary-hold/`, { reason: this.data.reason, duration_hours: this.data.durationHours }, '执行临时拦截'); },
   formalHold() { this.caseAction(`/cases/${this.data.id}/formal-hold/`, { reason: this.data.reason }, this.data.item.has_active_temporary ? '升级为正式拦截' : '执行正式拦截'); },
-  startRecall() { this.caseAction(`/cases/${this.data.id}/recall/`, { reason: this.data.reason }, this.data.item.has_active_temporary || this.data.item.has_active_formal ? '在拦截生效期间追加召回' : '启动召回行动'); },
-  goRecalls() { wx.navigateTo({ url: '/pages/quality_trace/recall_list/recall_list' }); },
+  async startRecall() {
+    const reason = this.data.reason.trim();
+    if (!reason) return wx.showToast({ title: '请填写启动召回理由', icon: 'none' });
+    const confirmed = await new Promise(resolve => wx.showModal({
+      title: '启动召回',
+      content: '系统将自动建立召回批次、冻结本案设备范围并启动召回，是否继续？',
+      success: result => resolve(result.confirm)
+    }));
+    if (!confirmed) return;
+    await this.ensureAndOpenRecall({ reason });
+  },
+  async ensureAndOpenRecall(payload = {}) {
+    if (this.data.submitting) return;
+    this.setData({ submitting: true });
+    try {
+      const campaign = await qt.request(`/cases/${this.data.id}/recall/`, 'POST', payload);
+      this.setData({ reason: '' });
+      wx.navigateTo({
+        url: `/pages/quality_trace/recall_detail/recall_detail?campaign_id=${campaign.id}`
+      });
+    } catch (error) {
+      wx.showModal({ title: '操作失败', content: error.message, showCancel: false });
+    }
+    this.setData({ submitting: false });
+  },
+  goRecallDetail() {
+    const campaign = this.data.item.recall_campaign;
+    if (campaign && campaign.id) {
+      wx.navigateTo({ url: `/pages/quality_trace/recall_detail/recall_detail?campaign_id=${campaign.id}` });
+      return;
+    }
+    // A legacy active recall action may not yet have a campaign.  The backend
+    // repairs that binding idempotently before opening the same detail page.
+    this.ensureAndOpenRecall();
+  },
   revokeTemporary() { this.caseAction(`/control-actions/${this.data.item.available_actions.revoke_temporary_action_id}/revoke/`, { reason: this.data.reason }, '解除临时拦截'); },
   releaseFormal() { this.caseAction(`/control-actions/${this.data.item.available_actions.release_formal_action_id}/release/`, { reason: this.data.reason }, '解除正式拦截'); },
   completeRecall() { this.caseAction(`/control-actions/${this.data.item.available_actions.complete_recall_action_id}/complete-recall/`, { reason: this.data.reason }, '完成召回控制动作'); },

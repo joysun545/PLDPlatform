@@ -5,6 +5,6 @@
   <view class="card" wx:for="{{items}}" wx:key="id" data-id="{{item.id}}" bindtap="open">
     <view class="row"><text class="card-title">{{item.recall_no}}</text><text class="tag">{{item.statusText}}</text></view>
     <view>{{item.title}}</view><view class="muted">{{item.reason}}</view>
-    <view class="row"><text>{{item.device_count}} 台</text><text>期限 {{item.deadline}}</text></view>
+    <view class="row"><text>{{item.device_count}} 台{{item.scope_label ? ' · ' + item.scope_label : ''}}</text><text>期限 {{item.deadline}}</text></view>
   </view>
 </view>

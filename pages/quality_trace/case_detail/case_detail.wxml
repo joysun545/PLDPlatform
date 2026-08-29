@@ -10,17 +10,17 @@
     <view class="card">
       <view class="card-title">案件操作</view>
       <view wx:if="{{item.has_active_recall}}" class="status-line">召回进行中，临时或正式拦截均已锁定，召回完成前不可解除。</view>
-      <textarea class="textarea field" placeholder="必须填写操作理由" value="{{reason}}" bindinput="inputReason"></textarea>
+      <textarea wx:if="{{item.has_reason_action}}" class="textarea field" placeholder="请填写本次控制操作的具体理由" value="{{reason}}" bindinput="inputReason"></textarea>
       <view class="field" wx:if="{{item.available_actions.temporary_hold}}"><text class="label">临时拦截小时数（1–168）</text><input class="input" type="number" value="{{durationHours}}" bindinput="inputDuration" /></view>
       <view class="action-bar">
         <button wx:if="{{item.available_actions.temporary_hold}}" class="secondary" bindtap="temporaryHold">临时拦截</button>
         <button wx:if="{{item.available_actions.formal_hold}}" class="danger-btn" bindtap="formalHold">{{item.has_active_temporary ? '升级正式拦截' : '正式拦截'}}</button>
-        <button wx:if="{{item.available_actions.start_recall}}" class="danger-btn" bindtap="startRecall">{{item.has_active_temporary || item.has_active_formal ? '追加启动召回' : '启动召回'}}</button>
+        <button wx:if="{{item.available_actions.start_recall}}" class="danger-btn" bindtap="startRecall" loading="{{submitting}}">启动召回</button>
         <button wx:if="{{item.available_actions.revoke_temporary_action_id}}" class="secondary" bindtap="revokeTemporary">解除临时拦截</button>
         <button wx:if="{{item.available_actions.release_formal_action_id}}" class="secondary" bindtap="releaseFormal">解除正式拦截</button>
         <button wx:if="{{item.available_actions.complete_recall_action_id}}" class="primary" bindtap="completeRecall">完成召回动作</button>
       </view>
-      <button wx:if="{{item.has_active_recall}}" class="primary" bindtap="goRecalls">进入召回管理</button>
+      <button wx:if="{{item.recall_campaign || item.recall_binding.has_orphan_active_action}}" class="primary" bindtap="goRecallDetail" loading="{{submitting}}">召回详情</button>
     </view>
     <view class="section-title">审计事件</view>
     <view class="card" wx:for="{{item.events}}" wx:key="id"><view class="row"><text>{{item.event_type}}</text><text class="tag">{{item.actor_role || 'SYSTEM'}}</text></view><view class="muted">{{item.created_at}}</view></view>
