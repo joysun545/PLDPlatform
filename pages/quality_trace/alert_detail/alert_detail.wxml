@@ -1,0 +1,27 @@
+<view class="page">
+  <view class="error" wx:if="{{error}}">{{error}}</view>
+  <view wx:if="{{item.id}}">
+    <view class="hero"><view class="hero-title">{{item.rule_name}}</view><view class="hero-sub">{{item.status}} · {{item.severity}} · 触发 {{item.trigger_count}} 次</view></view>
+    <view class="card">
+      <view class="card-title">指标结果</view>
+      <view class="kv"><text class="kv-label">指标值</text><text>{{item.metric_value}}</text></view>
+      <view class="kv"><text class="kv-label">故障设备</text><text>{{item.fault_device_count}} / {{item.exposure_device_count}}</text></view>
+      <view class="kv"><text class="kv-label">目标</text><text>{{item.target.name || item.target.code || item.target_id}}</text></view>
+      <view class="kv"><text class="kv-label">规则版本</text><text>v{{item.rule_version}}</text></view>
+    </view>
+    <view class="section-title">设备证据（{{item.device_evidence_complete_count}}）</view>
+    <view class="card">
+      <view class="device-row" wx:for="{{item.device_evidence}}" wx:key="device_id"><view class="row"><text>设备 ID {{item.device_id}}</text><text class="tag {{item.is_fault ? 'danger' : ''}}">{{item.is_fault ? '故障' : '暴露'}}</text></view><view class="muted">故障次数：{{item.fault_occurrence_count}}</view></view>
+    </view>
+    <view class="section-title">研判记录</view>
+    <view class="card" wx:for="{{item.assessments}}" wx:key="id"><view class="row"><text>{{item.conclusion}}</text><text class="tag">{{item.assessed_role}}</text></view><view>{{item.reason}}</view><view class="muted">{{item.assessed_at}}</view></view>
+    <view wx:if="{{item.quality_case}}" class="card" bindtap="goCase"><view class="card-title">已立案：{{item.quality_case.case_no}}</view><view class="link-hint">进入质量案件 ›</view></view>
+    <view class="card" wx:if="{{item.available_actions.assess || item.available_actions.open_case}}">
+      <view class="card-title">人工处置</view>
+      <picker wx:if="{{item.available_actions.assess}}" range="{{conclusions}}" range-key="label" value="{{conclusionIndex}}" bindchange="chooseConclusion"><view class="picker">研判结论：{{conclusions[conclusionIndex].label}}</view></picker>
+      <textarea class="textarea field" placeholder="填写研判或立案理由" value="{{reason}}" bindinput="inputReason"></textarea>
+      <button wx:if="{{item.available_actions.assess}}" class="primary" loading="{{submitting}}" bindtap="assess">提交人工研判</button>
+      <button wx:if="{{item.available_actions.open_case}}" class="danger-btn" loading="{{submitting}}" bindtap="openCase">建立质量案件并冻结设备</button>
+    </view>
+  </view>
+</view>

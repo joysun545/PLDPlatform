@@ -230,7 +230,12 @@ App({
       'pages/supply_chain/warranty_list/warranty_list',
       'pages/supply_chain/warranty_notice/warranty_notice',
       'pages/supply_chain/aftersale_quality_notice/aftersale_quality_notice',
-      'pages/supply_chain/aftersale_quality_list/aftersale_quality_list'
+      'pages/supply_chain/aftersale_quality_list/aftersale_quality_list',
+      'pages/quality_trace/dashboard/dashboard',
+      'pages/quality_trace/alert_list/alert_list',
+      'pages/quality_trace/case_list/case_list',
+      'pages/quality_trace/recall_list/recall_list',
+      'pages/quality_trace/recall_detail/recall_detail'
     ];
     if (protectedRoutes.includes(currentRoute)) return;
 

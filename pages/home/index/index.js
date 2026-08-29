@@ -20,7 +20,8 @@ Page({
     showFactoryReturnInventory: false,
     showStats: false,
     showAftersale: false,
-    showMyDevice: false
+    showMyDevice: false,
+    showQualityTrace: false
   },
 
   onLoad() {
@@ -122,7 +123,11 @@ Page({
         'customer_owner',
         'driver'
       ].includes(role),
-      showMyDevice: ['customer_owner', 'driver'].includes(role)
+      showMyDevice: ['customer_owner', 'driver'].includes(role),
+      showQualityTrace: [
+        'factory_admin',
+        'factory_chief_engineer'
+      ].includes(role)
     });
   },
 
@@ -205,6 +210,13 @@ Page({
     wx.navigateTo({
       url: '/pages/supply_chain/aftersale_quality_list/aftersale_quality_list',
       fail: () => wx.showToast({ title: '售后质量通知打开失败', icon: 'none' })
+    });
+  },
+
+  goQualityTrace() {
+    wx.navigateTo({
+      url: '/pages/quality_trace/dashboard/dashboard',
+      fail: () => wx.showToast({ title: '质量追溯页面打开失败', icon: 'none' })
     });
   },
 

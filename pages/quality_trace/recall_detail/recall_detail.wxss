@@ -1,0 +1,5 @@
+@import "../common.wxss";
+.device { border-left: 8rpx solid #08aa64; }
+.selected { box-shadow: 0 0 0 4rpx rgba(7,193,96,.24); }
+.action-panel { border: 2rpx solid #bdebd3; }
+.small { font-size: 24rpx; }

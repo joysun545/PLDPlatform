@@ -1,0 +1,23 @@
+<view class="page">
+  <view wx:if="{{error}}" class="error">{{error}}</view>
+  <view wx:if="{{item.id}}">
+    <view class="hero"><view class="hero-title">{{item.name}}</view><view class="hero-sub">{{item.code}} · {{item.status}}</view></view>
+    <view class="card">
+      <view class="card-title">当前版本 v{{item.current_version}}</view>
+      <view class="kv"><text class="kv-label">指标类型</text><text>{{item.version.metric_type}}</text></view>
+      <view class="kv"><text class="kv-label">目标类型</text><text>{{item.version.scope.target_type}}</text></view>
+      <view class="kv"><text class="kv-label">目标 ID</text><text>{{item.version.scope.target_ids}}</text></view>
+      <view class="kv"><text class="kv-label">分母口径</text><text>{{item.version.denominator_policy.basis}}</text></view>
+      <view class="kv"><text class="kv-label">统计窗口</text><text>{{item.version.window_days}} 天</text></view>
+      <view class="kv"><text class="kv-label">最小暴露</text><text>{{item.version.minimum_exposure}} 台</text></view>
+      <view class="kv"><text class="kv-label">最小故障</text><text>{{item.version.minimum_fault_devices}} 台</text></view>
+      <view class="divider"></view>
+      <view class="kv"><text class="kv-label">预警阈值</text><text>{{item.version.thresholds.warning}}</text></view>
+      <view class="kv"><text class="kv-label">紧急阈值</text><text>{{item.version.thresholds.urgent || '-'}}</text></view>
+      <view class="kv"><text class="kv-label">重大阈值</text><text>{{item.version.thresholds.critical || '-'}}</text></view>
+      <button wx:if="{{item.can_manage}}" class="primary" loading="{{submitting}}" bindtap="evaluate">立即重新计算</button>
+    </view>
+    <view class="section-title">版本历史</view>
+    <view class="card" wx:for="{{item.versions}}" wx:key="id"><view class="row"><text>版本 v{{item.version}}</text><text class="tag">{{item.metric_type}}</text></view><view class="muted">生效：{{item.effective_from}}</view></view>
+  </view>
+</view>

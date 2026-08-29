@@ -1,0 +1,17 @@
+<view class="page">
+  <view class="hero"><view class="hero-title">质量预警</view><view class="hero-sub">按规则实时与定时计算形成的观察和处置入口</view></view>
+  <scroll-view class="filter-scroll" scroll-x="true" enable-flex="true">
+    <view class="filter-tabs">
+      <view wx:for="{{filters}}" wx:key="key" data-key="{{item.key}}" bindtap="switchFilter" class="filter-tab {{activeFilter === item.key ? 'active' : ''}}">{{item.label}} {{item.count}}</view>
+    </view>
+  </scroll-view>
+  <view class="error" wx:if="{{error}}">{{error}}</view>
+  <view class="empty" wx:if="{{!loading && !error && !items.length}}">当前分类暂无质量预警</view>
+  <view class="card" wx:for="{{items}}" wx:key="id" data-id="{{item.id}}" bindtap="openDetail">
+    <view class="row"><text class="card-title">{{item.rule_name}}</text><text class="tag {{item.severity === 'CRITICAL' ? 'danger' : 'warn'}}">{{item.severity}}</text></view>
+    <view class="muted">状态：{{item.status}} · 触发 {{item.trigger_count}} 次</view>
+    <view class="row"><text>故障设备 {{item.fault_device_count}} / {{item.exposure_device_count}}</text><text>{{item.metric_value}}</text></view>
+    <view class="muted">{{item.time}}</view>
+    <view class="link-hint">查看证据与研判 ›</view>
+  </view>
+</view>

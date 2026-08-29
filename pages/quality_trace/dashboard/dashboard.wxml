@@ -1,0 +1,11 @@
+<view class="page">
+  <view class="hero"><view class="hero-title">质量追溯控制台</view><view class="hero-sub">预警、人工研判、质量案件、召回执行与隔离处置</view></view>
+  <view wx:if="{{error}}" class="error">{{error}}</view>
+  <view class="grid" wx:if="{{!loading}}">
+    <view class="card menu-card" bindtap="goAlerts"><view class="card-title">待研判预警</view><view class="card-value">{{overview.open_alert_count || 0}}</view></view>
+    <view class="card menu-card" bindtap="goCases"><view class="card-title">进行中案件</view><view class="card-value">{{overview.open_case_count || 0}}</view></view>
+    <view class="card menu-card" bindtap="goRecalls"><view class="card-title">召回批次</view><view class="card-value">{{recallCount}}</view></view>
+    <view class="card menu-card" bindtap="goRules"><view class="card-title">预警规则</view><view class="card-value">{{overview.rule_count || 0}}</view></view>
+  </view>
+  <view wx:if="{{loading}}" class="empty">正在加载质量数据…</view>
+</view>

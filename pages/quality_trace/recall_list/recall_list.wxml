@@ -1,0 +1,10 @@
+<view class="page">
+  <view class="hero"><view class="hero-title">召回管理</view><view class="hero-sub">按当前组织和职责展示可见召回批次</view></view>
+  <view class="error" wx:if="{{error}}">{{error}}</view>
+  <view class="empty" wx:if="{{!loading && !error && !items.length}}">暂无召回批次</view>
+  <view class="card" wx:for="{{items}}" wx:key="id" data-id="{{item.id}}" bindtap="open">
+    <view class="row"><text class="card-title">{{item.recall_no}}</text><text class="tag">{{item.statusText}}</text></view>
+    <view>{{item.title}}</view><view class="muted">{{item.reason}}</view>
+    <view class="row"><text>{{item.device_count}} 台</text><text>期限 {{item.deadline}}</text></view>
+  </view>
+</view>

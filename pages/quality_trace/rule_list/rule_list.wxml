@@ -1,0 +1,11 @@
+<view class="page">
+  <view class="hero"><view class="hero-title">预警规则</view><view class="hero-sub">查看指标口径、当前版本、阈值和计算范围</view></view>
+  <view class="error" wx:if="{{error}}">{{error}}</view>
+  <view class="empty" wx:if="{{!loading && !error && !items.length}}">暂无预警规则</view>
+  <view class="card" wx:for="{{items}}" wx:key="id" data-id="{{item.id}}" bindtap="openDetail">
+    <view class="row"><text class="card-title">{{item.name}}</text><text class="tag">v{{item.current_version}}</text></view>
+    <view class="muted">{{item.code}}</view>
+    <view class="status-line">{{item.version.metric_type}} · {{item.version.window_days}} 天 · {{item.status}}</view>
+    <view class="link-hint">查看规则与手动计算 ›</view>
+  </view>
+</view>

@@ -1,0 +1,28 @@
+<view class="page">
+  <view class="error" wx:if="{{error}}">{{error}}</view>
+  <view wx:if="{{item.id}}">
+    <view class="hero"><view class="hero-title">{{item.case_no}}</view><view class="hero-sub">{{item.status}} · 冻结设备 {{item.affected_device_count}} 台</view></view>
+    <view class="card"><view class="card-title">立案信息</view><view>{{item.reason}}</view><view class="kv"><text class="kv-label">范围</text><text>{{item.scope_key}}</text></view><view class="kv"><text class="kv-label">来源预警</text><text>{{item.source_alert_id}}</text></view><view class="kv"><text class="kv-label">立案时间</text><text>{{item.opened_at}}</text></view></view>
+    <view class="section-title">冻结设备</view>
+    <view class="card"><view class="device-row" wx:for="{{item.affected_devices}}" wx:key="device_id"><view class="row"><text>{{item.sn}}</text><text class="tag {{item.trace_evidence.is_fault ? 'danger' : ''}}">{{item.trace_evidence.is_fault ? '故障设备' : '暴露设备'}}</text></view><view class="muted">{{item.product_model.name}} · {{item.production_batch}}</view><view class="muted">故障次数：{{item.trace_evidence.fault_occurrence_count || 0}}</view></view></view>
+    <view class="section-title">控制动作</view>
+    <view class="card" wx:for="{{item.control_actions}}" wx:key="id"><view class="row"><text>{{item.action_label}}</text><text class="tag">{{item.status_label}}</text></view><view>{{item.reason}}</view><view class="muted">生效：{{item.effective_at}}</view><view class="muted" wx:if="{{item.end_reason}}">结束：{{item.end_reason}}</view></view>
+    <view class="card">
+      <view class="card-title">案件操作</view>
+      <view wx:if="{{item.has_active_recall}}" class="status-line">召回进行中，临时或正式拦截均已锁定，召回完成前不可解除。</view>
+      <textarea class="textarea field" placeholder="必须填写操作理由" value="{{reason}}" bindinput="inputReason"></textarea>
+      <view class="field" wx:if="{{item.available_actions.temporary_hold}}"><text class="label">临时拦截小时数（1–168）</text><input class="input" type="number" value="{{durationHours}}" bindinput="inputDuration" /></view>
+      <view class="action-bar">
+        <button wx:if="{{item.available_actions.temporary_hold}}" class="secondary" bindtap="temporaryHold">临时拦截</button>
+        <button wx:if="{{item.available_actions.formal_hold}}" class="danger-btn" bindtap="formalHold">{{item.has_active_temporary ? '升级正式拦截' : '正式拦截'}}</button>
+        <button wx:if="{{item.available_actions.start_recall}}" class="danger-btn" bindtap="startRecall">{{item.has_active_temporary || item.has_active_formal ? '追加启动召回' : '启动召回'}}</button>
+        <button wx:if="{{item.available_actions.revoke_temporary_action_id}}" class="secondary" bindtap="revokeTemporary">解除临时拦截</button>
+        <button wx:if="{{item.available_actions.release_formal_action_id}}" class="secondary" bindtap="releaseFormal">解除正式拦截</button>
+        <button wx:if="{{item.available_actions.complete_recall_action_id}}" class="primary" bindtap="completeRecall">完成召回动作</button>
+      </view>
+      <button wx:if="{{item.has_active_recall}}" class="primary" bindtap="goRecalls">进入召回管理</button>
+    </view>
+    <view class="section-title">审计事件</view>
+    <view class="card" wx:for="{{item.events}}" wx:key="id"><view class="row"><text>{{item.event_type}}</text><text class="tag">{{item.actor_role || 'SYSTEM'}}</text></view><view class="muted">{{item.created_at}}</view></view>
+  </view>
+</view>
