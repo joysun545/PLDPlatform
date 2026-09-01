@@ -59,7 +59,8 @@ Page({
       domainName: task.grouped
         ? (task.group_label || (task.domain === 'AFTERSALE' ? '售后工单' : '业务协同'))
         : (DOMAIN_NAMES[task.domain] || '任务'),
-      isWorkorder: !!task.is_workorder
+      isWorkorder: !!task.is_workorder,
+      isRecallGroup: task.group_kind === 'QUALITY_RECALL'
     }));
 
     this.setData({

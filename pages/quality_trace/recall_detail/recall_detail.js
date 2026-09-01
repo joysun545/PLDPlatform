@@ -2,15 +2,26 @@ const app = getApp();
 const qt = require('../../../utils/quality_trace');
 
 const QUALITY_FACTORY = ['factory_admin', 'factory_chief_engineer'];
-const FACTORY_OPERATIONS = ['factory_admin', 'factory_sales', 'factory_logistics', 'factory_sales_assistant'];
+const FACTORY_VIEW = ['factory_admin', 'factory_chief_engineer', 'factory_sales', 'factory_logistics', 'factory_sales_assistant'];
+const FACTORY_OPERATIONS = ['factory_logistics', 'factory_sales_assistant'];
 const MERCHANT = ['merchant_owner', 'merchant_manager', 'merchant_senior_manager', 'merchant_sales', 'merchant_stock'];
 const CUSTOMER = ['customer_owner', 'driver'];
+const FOCUS_STAGE_LABELS = {
+  BATCH_TRACKING: '召回批次全局跟踪',
+  RETURN_LEG_CREATED: '已建立下一程返厂运输',
+  RETURN_IN_TRANSIT: '召回设备正在返厂运输',
+  FACTORY_PENDING_RECEIPT: '等待厂家物流经理确认收货',
+  FACTORY_RECEIVED_PENDING_POSTING: '厂家已收货，等待销售助理入库记账',
+  FACTORY_INVENTORY_POSTED: '该设备已完成入库记账',
+  BATCH_POSTING_PENDING_CONFIRMATION: '等待销售助理确认整批入库记账',
+  POST_RECALL_DISPOSITION_READY: '整批已入库，等待总工程师启动召回后处置'
+};
 
 Page({
   data: {
-    campaignId: 0, recallDeviceId: 0, campaign: null, devices: [], selected: null,
+    campaignId: 0, recallDeviceId: 0, taskFocusDeviceId: 0, focusStage: '', focusStageText: '', campaign: null, devices: [], selected: null,
     role: '', organizationId: 0, loading: true, busy: false, error: '',
-    isFactory: false, isFactoryOperations: false, isMerchant: false, isCustomer: false,
+    isFactory: false, isQualityFactory: false, isFactoryOperations: false, isMerchant: false, isCustomer: false,
     changingMethod: false,
     provider: '', trackingNo: '', pickupAddress: '', pickupDate: '', pickupTime: '',
     contactName: '', contactPhone: '', note: '',
@@ -20,6 +31,9 @@ Page({
     this.setData({
       campaignId: Number(options.campaign_id || 0),
       recallDeviceId: Number(options.recall_device_id || 0),
+      taskFocusDeviceId: Number(options.recall_device_id || 0),
+      focusStage: options.focus_stage || '',
+      focusStageText: FOCUS_STAGE_LABELS[options.focus_stage] || '',
       role: app.globalData.role || '',
       organizationId: Number(app.globalData.organization_id || 0)
     });
@@ -49,8 +63,8 @@ Page({
       canMerchantReceive: MERCHANT.includes(role) && handover && handover.status === 'PICKUP_SCHEDULED',
       canCreateTransport: MERCHANT.includes(role) && handover && handover.status === 'MERCHANT_RECEIVED' && (!latestLeg || latestLeg.status === 'RECEIVED'),
       canDispatch: MERCHANT.includes(role) && latestLeg && latestLeg.status === 'PREPARING' && latestLeg.from_organization.id === orgId,
-      canReceive: latestLeg && latestLeg.status === 'IN_TRANSIT' && latestLeg.to_organization.id === orgId,
-      canIsolate: FACTORY_OPERATIONS.includes(role) && latestLeg && latestLeg.status === 'RECEIVED' && latestLeg.is_factory_destination && !row.isolation
+      canReceive: latestLeg && latestLeg.status === 'IN_TRANSIT' && latestLeg.to_organization.id === orgId && (!latestLeg.is_factory_destination || role === 'factory_logistics'),
+      canIsolate: role === 'factory_sales_assistant' && latestLeg && latestLeg.status === 'RECEIVED' && latestLeg.is_factory_destination && !row.isolation
     };
   },
   async load() {
@@ -71,13 +85,24 @@ Page({
       this.setData({
         campaign, devices, selected,
         recallDeviceId: selected ? selected.id : this.data.recallDeviceId,
-        isFactory: QUALITY_FACTORY.includes(role),
+        isFactory: FACTORY_VIEW.includes(role),
+        isQualityFactory: QUALITY_FACTORY.includes(role),
         isFactoryOperations: FACTORY_OPERATIONS.includes(role),
         isMerchant: MERCHANT.includes(role),
         isCustomer: CUSTOMER.includes(role)
-      });
+      }, () => this.scrollToFocusedDevice());
     } catch (e) { this.setData({ error: e.message }); }
     this.setData({ loading: false });
+  },
+  scrollToFocusedDevice() {
+    if (!this.data.taskFocusDeviceId) return;
+    setTimeout(() => {
+      wx.pageScrollTo({
+        selector: `#recall-device-${this.data.taskFocusDeviceId}`,
+        duration: 300,
+        offsetTop: 120
+      });
+    }, 80);
   },
   selectDevice(e) {
     const selected = this.data.devices.find(row => row.id === Number(e.currentTarget.dataset.id));
@@ -206,7 +231,12 @@ Page({
   isolate() {
     const leg = this.data.selected.latestLeg;
     if (!leg || !this.data.isolationLocation || !this.data.evidence) return wx.showToast({ title: '请填写隔离位置并上传凭证', icon: 'none' });
-    this.post(`/recall-transport-legs/${leg.id}/isolate/`, { disposition: this.data.disposition, isolation_location: this.data.isolationLocation, evidence: this.data.evidence }, '厂家隔离完成');
+    this.post(`/recall-transport-legs/${leg.id}/isolate/`, { disposition: this.data.disposition, isolation_location: this.data.isolationLocation, evidence: this.data.evidence }, '入库记账完成');
+  },
+  confirmBatchPosting() {
+    wx.showModal({ title: '确认整批入库记账', editable: true, placeholderText: '可填写核对说明', success: res => {
+      if (res.confirm) this.post(`/recalls/${this.data.campaignId}/inventory-confirm/`, { note: res.content || '' }, '整批入库记账已确认');
+    }});
   },
   decideUnreachable(e) {
     const decision = e.currentTarget.dataset.decision;
