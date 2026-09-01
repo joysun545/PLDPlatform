@@ -1,0 +1,46 @@
+<view class="page">
+  <view class="hero"><view class="hero-title">{{title}}</view><view class="hero-sub">当前岗位授权范围 · 实时业务口径</view></view>
+  <view class="state" wx:if="{{loading}}">正在加载统计数据…</view>
+  <view class="state error" wx:elif="{{error}}">{{error}}</view>
+  <block wx:else>
+    <view class="metric-grid">
+      <view class="metric" wx:for="{{metrics}}" wx:key="code"><view class="value">{{item.value}}<text>{{item.unit}}</text></view><view class="name">{{item.name}}</view></view>
+    </view>
+    <view class="note" wx:if="{{note}}">口径说明：{{note}}</view>
+    <view class="tree-panel" wx:if="{{hasResponsibilityTree}}">
+      <view class="tree-title">产品流转链路</view>
+      <view class="tree-subtitle">默认显示当前链路总数；点击卡片逐级查看各级商家</view>
+      <view
+        class="tree-row {{item.nodeType === 'RESPONSIBILITY_ACCOUNT' ? 'actor-node' : 'organization-node'}}"
+        wx:for="{{treeNodes}}"
+        wx:key="id"
+        data-id="{{item.id}}"
+        bindtap="toggleTreeNode"
+        style="margin-left:{{item.indent}}rpx"
+      >
+        <view class="tree-node-head">
+          <view class="tree-node-name-wrap">
+            <text class="tree-toggle">{{item.hasChildren ? (item.expanded ? '▾' : '▸') : '•'}}</text>
+            <view class="tree-node-text">
+              <view class="tree-node-name">{{item.name}}</view>
+              <view class="tree-node-type">{{item.nodeType === 'RESPONSIBILITY_ACCOUNT' ? '责任账号' : '组织节点'}}<text wx:if="{{item.roleCode}}"> · {{item.roleCode}}</text></view>
+            </view>
+          </view>
+          <view class="tree-level">{{item.hasChildren ? '可展开' : '末级'}}</view>
+        </view>
+        <view class="flow-total-cards">
+          <view class="flow-total-card inventory-card"><view class="flow-number">{{item.totalInventory}}</view><view class="flow-label">库存总数</view></view>
+          <view class="flow-total-card activated-card"><view class="flow-number">{{item.totalActivated}}</view><view class="flow-label">激活总数</view></view>
+        </view>
+      </view>
+    </view>
+    <view class="chart" wx:for="{{charts}}" wx:key="code">
+      <view class="chart-title">{{item.title}}</view>
+      <view class="empty" wx:if="{{!item.rows.length}}">暂无可展示的数据</view>
+      <view class="bar-row" wx:for="{{item.rows}}" wx:for-item="row" wx:key="label">
+        <view class="bar-head"><text>{{row.label}}</text><text>{{row.value}}</text></view>
+        <view class="track"><view class="bar" style="width:{{row.width}}%"></view></view>
+      </view>
+    </view>
+  </block>
+</view>
