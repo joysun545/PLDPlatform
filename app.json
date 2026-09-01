@@ -50,6 +50,8 @@
     "pages/quality_trace/recall_detail/recall_detail",
     "pages/quality_trace/recall_handover_accept/recall_handover_accept",
     "pages/quality_trace/recall_task_detail/recall_task_detail"
+    ,"pages/data_statistics/dashboard/dashboard"
+    ,"pages/data_statistics/domain/domain"
   ],
   "window": {
     "backgroundTextStyle": "light",

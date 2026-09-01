@@ -107,12 +107,28 @@ Page({
 
       showStats: [
         'factory_admin',
+        'factory_chief_engineer',
         'factory_sales',
         'factory_sales_assistant',
         'factory_matching',
+        'factory_production',
+        'factory_purchase',
+        'factory_stock',
+        'factory_logistics',
+        'factory_aftersales',
         'merchant_owner',
         'merchant_senior_manager',
-        'merchant_sales'
+        'merchant_manager',
+        'merchant_sales',
+        'merchant_stock',
+        'merchant_assistant',
+        'merchant_electrician',
+        'supplier_owner',
+        'supplier_manager',
+        'supplier_sales',
+        'supplier_technical',
+        'service_owner',
+        'service_electrician'
       ].includes(role),
 
       // 终端用户需要从首页持续查看自己发起的服务单；不应只能依靠
@@ -245,7 +261,10 @@ Page({
   },
 
   goStats() {
-    wx.navigateTo({ url: '/pages/stats/dealer_stats/index' });
+    wx.navigateTo({
+      url: '/pages/data_statistics/dashboard/dashboard',
+      fail: () => wx.showToast({ title: '数据统计页面打开失败', icon: 'none' })
+    });
   },
 
   goAftersaleList() {
