@@ -21,6 +21,7 @@ page { background: #f4f7f5; color: #203129; font-size: 28rpx; }
 .field { margin-top: 20rpx; }
 .label { display: block; margin-bottom: 10rpx; color: #65736c; }
 .input,.textarea,.picker { box-sizing: border-box; width: 100%; padding: 22rpx; border-radius: 16rpx; background: #f3f7f5; }
+.input { height: 96rpx; min-height: 96rpx; padding: 0 24rpx; margin: 18rpx 0; font-size: 30rpx; line-height: 44rpx; color: #203129; border: 2rpx solid #dce8e1; }
 .textarea { min-height: 150rpx; }
 .section-title { margin-top: 34rpx; font-size: 34rpx; font-weight: 700; }
 .divider { height: 1rpx; background: #edf0ee; margin: 22rpx 0; }

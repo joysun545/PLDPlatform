@@ -11,7 +11,10 @@ Page({
   },
   onLoad(options) {
     this.setData({ campaignId: Number(options.campaign_id || 0) });
-    this.load();
+    wx.redirectTo({
+      url: `/pages/quality_trace/recall_detail/recall_detail?campaign_id=${this.data.campaignId}`,
+      fail: () => this.load()
+    });
   },
   onShow() {
     if (this.data.task) this.load();

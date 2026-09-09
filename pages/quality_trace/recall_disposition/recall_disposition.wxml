@@ -1,0 +1,45 @@
+<view class="page">
+  <view class="hero" wx:if="{{campaign}}">
+    <view class="hero-title">召回后风险与处置</view>
+    <view class="hero-sub">{{campaign.recall_no}} · {{campaign.device_count}}台</view>
+  </view>
+
+  <view class="error" wx:if="{{error}}">{{error}}</view>
+  <view class="tip">点击卡片查看关注设备；点击右侧圆点可多选设备并批量分配处置方式。</view>
+
+  <view class="section-title">处置设备清单</view>
+  <view
+    class="device-card {{focusId === item.id ? 'focused' : ''}}"
+    wx:for="{{devices}}"
+    wx:key="id"
+    data-id="{{item.id}}"
+    bindtap="focusDevice"
+  >
+    <view class="device-main">
+      <view class="device-sn">{{item.sn}}</view>
+      <view class="muted">{{item.product_model.name || item.product_model.product_model_name}}</view>
+      <view class="device-line source-state">设备属性：{{item.source_state.label}}</view>
+      <view class="device-line" wx:if="{{item.source_state.organization_name}}">原责任节点：{{item.source_state.organization_name}}</view>
+      <view class="device-line" wx:if="{{item.handover}}">交付方式：{{item.handover.delivery_method_label || '待用户选择'}}</view>
+      <view class="device-line current-stage" wx:if="{{item.current_stage_label}}">当前节点：{{item.current_stage_label}}</view>
+      <view class="device-line">运输节点：{{item.transport_legs.length}} · {{item.isolation ? '已隔离' : '未隔离'}}</view>
+      <view class="method {{item.assigned ? 'assigned' : ''}}">{{item.methodText}}</view>
+    </view>
+    <view
+      class="selector {{item.selected ? 'checked' : ''}} {{item.assigned ? 'disabled' : ''}}"
+      data-id="{{item.id}}"
+      catchtap="toggleSelect"
+    >
+      <view class="selector-dot"></view>
+    </view>
+  </view>
+
+  <view class="action-bar" wx:if="{{campaign}}">
+    <view class="selected-count">已选择 {{selectedIds.length}} 台</view>
+    <view class="action-row">
+      <button class="method-btn danger" data-method="DISASSEMBLE" bindtap="assignMethod" loading="{{busy}}" disabled="{{busy || loading || !selectedIds.length}}">拆机</button>
+      <button class="method-btn" data-method="REPAIR_NO_PARTS" bindtap="assignMethod" loading="{{busy}}" disabled="{{busy || loading || !selectedIds.length}}">不换件维修</button>
+      <button class="method-btn primary" data-method="REPAIR_WITH_PARTS" bindtap="assignMethod" loading="{{busy}}" disabled="{{busy || loading || !selectedIds.length}}">换件维修</button>
+    </view>
+  </view>
+</view>

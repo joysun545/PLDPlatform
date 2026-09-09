@@ -46,13 +46,13 @@ Page({
   syncTasks() {
     const taskList = (app.globalData.taskList || []).map(task => ({
       ...task,
-      stateText: task.grouped
+      stateText: task.display_state || (task.grouped
         ? (task.unread_count > 0
           ? `${task.unread_count}项未读`
           : (task.action_pending_count > 0 ? '待处理' : '已完成'))
         : (task.state === 'DONE'
           ? '已完成'
-          : (task.state === 'READ' ? '已读' : '未读')),
+          : (task.state === 'READ' ? '已读' : '未读'))),
       stateClass: task.state === 'DONE'
         ? 'done'
         : (task.state === 'READ' ? 'read' : 'new'),

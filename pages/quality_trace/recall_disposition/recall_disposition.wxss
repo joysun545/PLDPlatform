@@ -1,0 +1,27 @@
+.page { min-height: 100vh; padding: 28rpx 28rpx 190rpx; box-sizing: border-box; background: #f5f8f7; }
+.hero { padding: 34rpx; border-radius: 30rpx; color: #fff; background: linear-gradient(135deg, #08c46d, #049d78); }
+.hero-title { font-size: 38rpx; font-weight: 700; }
+.hero-sub { margin-top: 14rpx; font-size: 27rpx; opacity: .9; }
+.tip { margin: 24rpx 4rpx; padding: 22rpx; border-radius: 18rpx; color: #537068; background: #eaf8f2; line-height: 1.6; }
+.section-title { margin: 30rpx 4rpx 20rpx; font-size: 34rpx; font-weight: 700; color: #173e34; }
+.device-card { display: flex; align-items: center; margin-bottom: 22rpx; padding: 28rpx; border: 3rpx solid transparent; border-left: 10rpx solid #12b978; border-radius: 26rpx; background: #fff; box-shadow: 0 10rpx 28rpx rgba(18, 73, 57, .07); }
+.device-card.focused { border-color: #9ee5c8; border-left-color: #08b66f; background: #fbfffd; }
+.device-main { flex: 1; min-width: 0; }
+.device-sn { font-size: 34rpx; font-weight: 700; color: #163f34; }
+.muted { margin-top: 8rpx; color: #8b9793; }
+.device-line { margin-top: 8rpx; color: #334c45; font-size: 26rpx; line-height: 1.45; }
+.source-state, .current-stage { color: #087d5c; }
+.method { margin-top: 14rpx; color: #9a7652; }
+.method.assigned { color: #079666; font-weight: 600; }
+.selector { width: 52rpx; height: 52rpx; margin-left: 22rpx; border: 4rpx solid #a9bbb5; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-sizing: border-box; }
+.selector-dot { width: 26rpx; height: 26rpx; border-radius: 50%; background: transparent; }
+.selector.checked { border-color: #08b66f; }
+.selector.checked .selector-dot { background: #08b66f; }
+.selector.disabled { border-color: #d9e3df; background: #eef3f1; }
+.action-bar { position: fixed; left: 0; right: 0; bottom: 0; padding: 20rpx 24rpx 30rpx; background: rgba(255,255,255,.97); box-shadow: 0 -8rpx 26rpx rgba(0,0,0,.08); }
+.selected-count { margin-bottom: 14rpx; text-align: center; color: #48655d; }
+.action-row { display: flex; gap: 12rpx; }
+.method-btn { flex: 1; height: 88rpx; min-height: 88rpx; margin: 0; padding: 0 8rpx; display: flex; align-items: center; justify-content: center; border-radius: 16rpx; font-size: 28rpx; font-weight: 600; line-height: 1.2; color: #17664f; background: #e8f7f1; }
+.method-btn.primary { color: #fff; background: #08b66f; }
+.method-btn.danger { color: #ad513f; background: #fff0ec; }
+.error { margin: 20rpx 0; color: #b94f4f; }

@@ -1,43 +1,107 @@
 <view class="page">
   <view class="hero" wx:if="{{campaign}}">
     <view class="row"><text class="hero-title">{{campaign.recall_no}}</text><text>{{campaign.statusText || campaign.status}}</text></view>
-    <view class="hero-sub">{{campaign.title}} · {{campaign.device_count}} 台{{campaign.scope_label ? ' · ' + campaign.scope_label : ''}} · 截止 {{campaign.deadline}}</view>
+    <view class="hero-sub"><text wx:if="{{!isObserver}}">{{campaign.device_count}} 台 · </text>{{campaign.view_context.scope_label || campaign.scope_label}} · 截止 {{campaign.deadline}}</view>
+  </view>
+  <view class="card" wx:if="{{campaign.view_context}}">
+    <view class="card-title">{{campaign.viewer.organization_name}} · {{campaign.viewer.role_name}}</view>
+    <view>{{campaign.view_context.scope_summary}}</view>
+    <view class="tip" wx:for="{{campaign.view_context.stages}}" wx:key="text">{{item.count}} 台：{{item.text}}</view>
+    <view class="muted" wx:if="{{isFactory}}">召回说明：{{campaign.title}}</view>
   </view>
   <view class="error" wx:if="{{error}}">{{error}}</view>
 
   <view class="card focus-banner" wx:if="{{selected && taskFocusDeviceId}}">
     <view class="card-title">当前任务关注设备：{{selected.sn}}</view>
     <view class="tip">{{focusStageText || '请查看该设备当前召回节点'}}</view>
-    <view class="muted">下方已自动选中该设备；当前操作和返厂记录均以该设备为准。</view>
+    <view class="muted">{{batchEnabled ? '批量流转请使用下方设备清单；单台记录仍可逐台查看。' : '下方已自动选中该设备；当前操作和返厂记录均以该设备为准。'}}</view>
   </view>
 
   <view class="card action-panel" wx:if="{{campaign && isFactory}}">
     <view class="card-title">厂家召回控制台</view>
     <view class="muted">召回原因：{{campaign.reason}}</view>
     <view class="tip">已激活设备的用户交接由系统在发布召回时自动建立，无需逐台创建。</view>
-    <button class="primary" wx:if="{{isQualityFactory && campaign.status === 'DRAFT'}}" bindtap="launch" loading="{{busy}}">发布召回</button>
-    <button class="secondary" wx:if="{{isQualityFactory && campaign.status === 'ACTIVE'}}" bindtap="refreshProgress" loading="{{busy}}">刷新召回进度</button>
-    <button class="primary" wx:if="{{role === 'factory_chief_engineer' && campaign.status === 'ACTIVE' && campaign.inventory_posting && campaign.inventory_posting.batch_confirmed}}" bindtap="completeCampaign" loading="{{busy}}">完成召回</button>
+    <button class="primary" wx:if="{{isQualityFactory && campaign.status === 'DRAFT'}}" bindtap="launch" loading="{{busy}}" disabled="{{busy || loading}}">发布召回</button>
+    <button class="secondary" wx:if="{{isQualityFactory && campaign.status === 'ACTIVE'}}" bindtap="refreshProgress" loading="{{busy}}" disabled="{{busy || loading}}">刷新召回进度</button>
+    <button class="primary" wx:if="{{role === 'factory_chief_engineer' && campaign.status === 'ACTIVE' && campaign.post_disposition.can_start}}" bindtap="startPostDisposition" loading="{{busy}}" disabled="{{busy || loading}}">启动召回后的风险与处置流程</button>
+    <view class="tip" wx:if="{{campaign.post_disposition.started}}">召回后处置：已完成 {{campaign.post_disposition.completed_device_count}} / {{campaign.post_disposition.device_count}} 台</view>
+    <button class="primary" wx:if="{{role === 'factory_chief_engineer' && campaign.status === 'ACTIVE' && campaign.post_disposition.can_complete_campaign}}" bindtap="completeCampaign" loading="{{busy}}" disabled="{{busy || loading}}">全部处置完成，确认完成召回</button>
     <view class="tip" wx:if="{{campaign.inventory_posting}}">入库记账：{{campaign.inventory_posting.accounted_device_count}} / {{campaign.inventory_posting.campaign_device_count}} 台</view>
-    <button class="primary" wx:if="{{role === 'factory_sales_assistant' && campaign.inventory_posting.all_accounted && !campaign.inventory_posting.batch_confirmed}}" bindtap="confirmBatchPosting" loading="{{busy}}">确认本批设备全部入库记账</button>
+    <button class="primary" wx:if="{{campaign.status === 'ACTIVE' && role === 'factory_sales_assistant' && campaign.inventory_posting.all_accounted && !campaign.inventory_posting.batch_confirmed}}" bindtap="confirmBatchPosting" loading="{{busy}}" disabled="{{busy || loading}}">确认本批设备全部入库记账</button>
     <view class="tip" wx:if="{{campaign.inventory_posting.batch_confirmed}}">本批已完成入库记账确认，厂家总工程师可启动召回后处置。</view>
   </view>
 
-  <view class="section-title" wx:if="{{devices.length}}">召回设备</view>
+  <view class="card batch-panel" wx:if="{{batchEnabled}}">
+    <view class="row"><text class="card-title">召回设备批量流转</text><button class="refresh-btn" size="mini" bindtap="load" disabled="{{busy || loading}}">刷新清单</button></view>
+    <view class="tip">{{batchGuidance}}</view>
+    <block wx:if="{{batchGroup}}">
+      <picker range="{{batchGroups}}" range-key="pickerLabel" value="{{batchGroupIndex}}" bindchange="changeBatchGroup" disabled="{{busy}}">
+        <view class="picker batch-picker">{{batchGroup.pickerLabel}}{{batchGroups.length > 1 ? ' · 切换批次' : ''}}</view>
+      </picker>
+      <view class="batch-route" wx:if="{{batchGroup.from_organization}}">{{batchGroup.from_organization.name}} → {{batchGroup.to_organization.name}}</view>
+      <view class="muted" wx:if="{{batchGroup.action === 'RECEIVE'}}">物流：{{batchGroup.logistics_provider || '待核对'}} · {{batchGroup.tracking_no || '无单号'}}</view>
+      <view class="batch-selection">
+        <text>已选 {{batchSelectedCount}} / {{batchGroup.device_count}} 台</text>
+        <button size="mini" bindtap="toggleBatchAll" disabled="{{busy}}">{{batchAllSelected ? '取消全选' : '全选'}}</button>
+        <button size="mini" bindtap="toggleBatchList" disabled="{{busy || loading}}">{{batchExpanded ? '收起清单' : '核对清单'}}</button>
+      </view>
+      <view class="muted">默认全选当前可办理设备；部分到货或分批发出时，可展开清单取消未办理的设备。</view>
+      <checkbox-group bindchange="selectBatchDevices" wx:if="{{batchExpanded}}">
+        <scroll-view scroll-y class="batch-device-list" style="height: {{batchGroup.device_count > 6 ? 480 : batchGroup.device_count * 80}}rpx;">
+          <label class="batch-device" wx:for="{{batchGroup.devices}}" wx:key="recall_device_id">
+            <checkbox value="{{item.recall_device_id}}" checked="{{item.checked}}" disabled="{{busy}}" color="#08aa64" />
+            <text>{{item.sn}}</text>
+          </label>
+        </scroll-view>
+      </checkbox-group>
+      <block wx:if="{{batchGroup.action === 'DISPATCH'}}">
+        <input class="input" data-key="batchProvider" bindinput="batchInput" value="{{batchProvider}}" placeholder="请输入物流公司" maxlength="128" disabled="{{busy}}" />
+        <input class="input" data-key="batchTrackingNo" bindinput="batchInput" value="{{batchTrackingNo}}" placeholder="请输入物流单号" maxlength="128" disabled="{{busy}}" />
+      </block>
+      <input wx:if="{{batchGroup.action === 'ISOLATE'}}" class="input" data-key="batchLocation" bindinput="batchInput" value="{{batchLocation}}" placeholder="本批召回隔离库位" maxlength="255" disabled="{{busy}}" />
+      <button class="secondary" bindtap="chooseBatchEvidence" disabled="{{busy}}">{{batchEvidence ? '本批凭证已上传：' + batchEvidence.original_name : '上传本批交接凭证'}}</button>
+      <button class="primary" bindtap="submitBatch" loading="{{busy}}" disabled="{{busy || loading || !batchSelectedCount}}">{{batchGroup.action_label}}（{{batchSelectedCount}}台）</button>
+    </block>
+    <view class="muted batch-empty" wx:else>{{batchEmptyMessage}}</view>
+    <view class="batch-blocked" wx:if="{{batchBlocked.length}}">
+      <view>以下设备需先核对，未加入本次清单：</view>
+      <view wx:for="{{batchBlocked}}" wx:key="recall_device_id">{{item.sn}}：{{item.reason}}</view>
+    </view>
+  </view>
+
+  <view class="section-title" wx:if="{{devices.length}}">召回设备与逐台记录</view>
   <view id="recall-device-{{item.id}}" class="card device {{selected.id === item.id ? 'selected' : ''}}" wx:for="{{devices}}" wx:key="id" data-id="{{item.id}}" bindtap="selectDevice">
     <view class="row"><text class="card-title">{{item.sn}}</text><text class="tag">{{item.statusText}}</text></view>
     <view class="muted">{{item.product_model.name || item.product_model.product_model_name}}</view>
+    <view class="small source-state">召回发起时属性：{{item.source_state.label}}</view>
+    <view class="small" wx:if="{{item.source_state.organization_name}}">原责任节点：{{item.source_state.organization_name}}</view>
     <view class="small" wx:if="{{item.handover}}">交付方式：{{item.handover.delivery_method_label || '待用户选择'}}</view>
     <view class="small current-stage" wx:if="{{item.current_stage_label}}">当前节点：{{item.current_stage_label}}</view>
-    <view class="small">运输节点：{{item.transport_legs.length}} · {{item.isolation ? '已隔离' : '未隔离'}}</view>
+    <view class="small" wx:if="{{campaign.viewer.organization_type !== 'SUPPLIER'}}">运输节点：{{item.transport_legs.length}} · {{item.isolation ? '已隔离' : '未隔离'}}</view>
+    <view class="small current-stage" wx:if="{{item.post_disposition}}">处置：{{item.post_disposition.method_label}} · {{item.post_disposition.execution_stage_label}}</view>
   </view>
 
   <view class="card action-panel" wx:if="{{selected}}">
-    <view class="card-title">当前节点操作</view>
+    <view class="card-title">{{selected.sn}} · 当前节点</view>
+    <view class="tip" wx:if="{{selected.next_step}}">{{selected.next_step}}</view>
+    <view class="tip" wx:if="{{selected.hasBatchAction}}">本台设备已列入上方批量流转清单，可与同批设备一起办理。</view>
 
-    <block wx:if="{{isQualityFactory && selected.status === 'UNREACHABLE'}}">
-      <button class="primary" data-decision="APPROVED" bindtap="decideUnreachable">批准无法联系例外</button>
-      <button class="danger-btn" data-decision="REJECTED" bindtap="decideUnreachable">驳回并继续联系</button>
+    <block wx:if="{{selected.post_disposition}}">
+      <view class="tip">当前处置：{{selected.post_disposition.method_label}} · {{selected.post_disposition.execution_stage_label}}</view>
+      <view class="supplier-progress" wx:if="{{selected.post_disposition.supplier_confirmations.length}}">
+        <view wx:for="{{selected.post_disposition.supplier_confirmations}}" wx:key="id">
+          {{item.supplier_name}}：{{item.confirmed ? '已确认' : '待负责人确认'}}
+        </view>
+      </view>
+      <button class="primary" wx:if="{{selected.post_disposition.available_actions.supplier_confirm}}" bindtap="confirmDispositionSupplier" disabled="{{busy || loading}}">供应商负责人确认换件协同</button>
+      <button class="primary" wx:if="{{selected.post_disposition.available_actions.matching_confirm}}" bindtap="confirmDispositionMatching" disabled="{{busy || loading}}">确认换件配套方案</button>
+      <button class="primary" wx:if="{{selected.post_disposition.available_actions.production_complete}}" bindtap="completeDispositionProduction" disabled="{{busy || loading}}">{{selected.post_disposition.method === 'DISASSEMBLE' ? '确认拆机完成' : '确认维修完成'}}</button>
+      <button class="primary" wx:if="{{selected.post_disposition.available_actions.chief_confirm}}" bindtap="completeDeviceDisposition" disabled="{{busy || loading}}">确认本台设备处置完成</button>
+    </block>
+
+    <block wx:if="{{campaign.status === 'ACTIVE' && isQualityFactory && selected.status === 'UNREACHABLE'}}">
+      <button class="primary" data-decision="APPROVED" bindtap="decideUnreachable" disabled="{{busy || loading}}">批准无法联系例外</button>
+      <button class="danger-btn" data-decision="REJECTED" bindtap="decideUnreachable" disabled="{{busy || loading}}">驳回并继续联系</button>
     </block>
 
     <block wx:if="{{isCustomer && selected.handover}}">
@@ -46,13 +110,13 @@
       <view class="tip" wx:if="{{selected.handover.delivery_method}}">当前节点：{{selected.handover.status_label}}</view>
       <view class="muted" wx:if="{{selected.handover.method_locked}}">交付已经开始，方式已锁定。</view>
 
-      <button class="secondary compact" wx:if="{{selected.canSelectDelivery && selected.handover.delivery_method && !changingMethod}}" bindtap="changeDelivery">交付尚未执行，可更换方式</button>
+      <button class="secondary compact" wx:if="{{selected.canSelectDelivery && selected.handover.delivery_method && !changingMethod}}" bindtap="changeDelivery" disabled="{{busy || loading}}">交付尚未执行，可更换方式</button>
 
       <block wx:if="{{selected.canSelectDelivery && (!selected.handover.delivery_method || changingMethod)}}">
         <view class="section-subtitle">请选择本台设备的交付方式</view>
-        <button class="method-btn" data-method="MERCHANT_HANDOVER" bindtap="selectDelivery">交给来源商家</button>
+        <button class="method-btn" data-method="MERCHANT_HANDOVER" bindtap="selectDelivery" disabled="{{busy || loading}}">交给来源商家</button>
         <view class="muted method-help">无需设备原二维码；选择后向商家出示临时召回流转码。</view>
-        <button class="method-btn" data-method="CUSTOMER_DIRECT_SHIP" bindtap="selectDelivery">自己直接发货回厂</button>
+        <button class="method-btn" data-method="CUSTOMER_DIRECT_SHIP" bindtap="selectDelivery" disabled="{{busy || loading}}">自己直接发货回厂</button>
         <view class="muted method-help">选择后填写物流单号，并上传包装或物流单据照片。</view>
 
         <view class="pickup-box">
@@ -64,7 +128,7 @@
             <picker mode="date" bindchange="pickDate"><view class="picker">{{pickupDate || '可取件日期'}}</view></picker>
             <picker mode="time" bindchange="pickTime"><view class="picker">{{pickupTime || '可取件时间'}}</view></picker>
           </view>
-          <button class="method-btn" data-method="FACTORY_PICKUP" bindtap="selectDelivery">申请厂家上门取件</button>
+          <button class="method-btn" data-method="FACTORY_PICKUP" bindtap="selectDelivery" disabled="{{busy || loading}}">申请厂家上门取件</button>
         </view>
       </block>
 
@@ -79,8 +143,8 @@
         <view class="tip">确认后，厂家总工程师、销售经理、销售助理和物流经理将收到“用户已寄回，待收货”任务。</view>
         <input class="input" data-key="provider" bindinput="input" value="{{provider}}" placeholder="物流承运方" />
         <input class="input" data-key="trackingNo" bindinput="input" value="{{trackingNo}}" placeholder="物流单号" />
-        <button class="secondary" bindtap="chooseEvidence">{{evidence ? '已上传：' + evidence.original_name : '上传包装或物流单据照片'}}</button>
-        <button class="primary" bindtap="submitDirectShipment">确认已发货回厂</button>
+        <button class="secondary" bindtap="chooseEvidence" disabled="{{busy || loading}}">{{evidence ? '已上传：' + evidence.original_name : '上传包装或物流单据照片'}}</button>
+        <button class="primary" bindtap="submitDirectShipment" disabled="{{busy || loading}}">确认已发货回厂</button>
       </block>
 
       <view class="tip" wx:if="{{selected.handover.status === 'PICKUP_REQUESTED'}}">取件申请已推送厂家总工程师和厂家物流经理，请等待厂家安排物流。</view>
@@ -90,8 +154,8 @@
         <view class="tip">厂家已受理取件。设备交给物流后，请上传物流单据、取件或包装照片。</view>
         <input class="input" data-key="provider" bindinput="input" value="{{provider}}" placeholder="物流承运方" />
         <input class="input" data-key="trackingNo" bindinput="input" value="{{trackingNo}}" placeholder="物流单号（如有）" />
-        <button class="secondary" bindtap="chooseEvidence">{{evidence ? '已上传：' + evidence.original_name : '上传物流单据或取件凭证'}}</button>
-        <button class="primary" bindtap="submitFactoryPickupShipment">确认设备已发出</button>
+        <button class="secondary" bindtap="chooseEvidence" disabled="{{busy || loading}}">{{evidence ? '已上传：' + evidence.original_name : '上传物流单据或取件凭证'}}</button>
+        <button class="primary" bindtap="submitFactoryPickupShipment" disabled="{{busy || loading}}">确认设备已发出</button>
       </block>
 
       <view class="tip" wx:if="{{selected.handover.status === 'PICKUP_SHIPPED'}}">设备已交付取件物流，厂家相关岗位已收到待收货任务。</view>
@@ -105,33 +169,33 @@
       <picker mode="date" bindchange="pickDate"><view class="picker">{{pickupDate || '实际预约日期'}}</view></picker>
       <picker mode="time" bindchange="pickTime"><view class="picker">{{pickupTime || '实际预约时间'}}</view></picker>
       <input class="input" data-key="provider" bindinput="input" value="{{provider}}" placeholder="拟安排物流公司（可稍后补充）" />
-      <button class="primary" bindtap="acceptFactoryPickup">受理并锁定取件方式</button>
+      <button class="primary" bindtap="acceptFactoryPickup" disabled="{{busy || loading}}">受理并锁定取件方式</button>
     </block>
 
     <block wx:if="{{selected.canSchedule}}">
       <view class="field"><text class="label">取回日期</text><picker mode="date" bindchange="pickDate"><view class="picker">{{pickupDate || '请选择日期'}}</view></picker></view>
       <view class="field"><text class="label">取回时间</text><picker mode="time" bindchange="pickTime"><view class="picker">{{pickupTime || '请选择时间'}}</view></picker></view>
       <view class="field"><text class="label">取回地址</text><input class="input" data-key="pickupAddress" bindinput="input" value="{{pickupAddress}}" /></view>
-      <button class="primary" bindtap="schedulePickup">确认预约取回</button>
+      <button class="primary" bindtap="schedulePickup" disabled="{{busy || loading}}">确认预约取回</button>
     </block>
 
-    <button class="secondary" wx:if="{{selected.canMerchantReceive || selected.canDispatch || selected.canReceive || selected.canIsolate}}" bindtap="chooseEvidence">{{evidence ? '凭证已上传：' + evidence.original_name : '拍摄/选择并上传凭证'}}</button>
-    <button class="primary" wx:if="{{selected.canMerchantReceive}}" bindtap="merchantReceive">验收并接管设备</button>
-    <button class="primary" wx:if="{{selected.canCreateTransport}}" bindtap="createTransport">建立下一程逐级退回</button>
+    <button class="secondary" wx:if="{{selected.canMerchantReceive || selected.canDispatch || selected.canReceive || selected.canIsolate}}" bindtap="chooseEvidence" disabled="{{busy || loading}}">{{evidence ? '凭证已上传：' + evidence.original_name : '拍摄/选择并上传凭证'}}</button>
+    <button class="primary" wx:if="{{selected.canMerchantReceive}}" bindtap="merchantReceive" disabled="{{busy || loading}}">验收并接管设备</button>
+    <button class="primary" wx:if="{{selected.canCreateTransport}}" bindtap="createTransport" disabled="{{busy || loading}}">建立下一程逐级退回</button>
 
     <block wx:if="{{selected.canDispatch}}">
       <input class="input" data-key="provider" bindinput="input" value="{{provider}}" placeholder="物流承运方" />
       <input class="input" data-key="trackingNo" bindinput="input" value="{{trackingNo}}" placeholder="物流单号" />
-      <button class="primary" bindtap="dispatch">确认发出</button>
+      <button class="primary" bindtap="dispatch" disabled="{{busy || loading}}">确认发出</button>
     </block>
-    <button class="primary" wx:if="{{selected.canReceive}}" bindtap="receive">{{selected.latestLeg.is_factory_destination ? '确认厂家已收货' : '验收本程设备'}}</button>
+    <button class="primary" wx:if="{{selected.canReceive}}" bindtap="receive" disabled="{{busy || loading}}">{{selected.latestLeg.is_factory_destination ? '确认厂家已收货' : '验收本程设备'}}</button>
     <block wx:if="{{selected.canIsolate}}">
       <view class="tip">厂家物流经理已确认收货，请销售助理完成召回专用入库记账。</view>
       <input class="input" data-key="isolationLocation" bindinput="input" value="{{isolationLocation}}" placeholder="召回隔离库位/记账位置" />
-      <button class="danger-btn" bindtap="isolate">确认已入库记账</button>
+      <button class="danger-btn" bindtap="isolate" disabled="{{busy || loading}}">确认已入库记账</button>
     </block>
 
-    <view class="muted" wx:if="{{!selected.canSelectDelivery && !selected.canSubmitDirect && !selected.canSubmitFactoryPickupShipment && !selected.canAcceptFactoryPickup && !selected.canSchedule && !selected.canMerchantReceive && !selected.canCreateTransport && !selected.canDispatch && !selected.canReceive && !selected.canIsolate && selected.status !== 'UNREACHABLE'}}">当前节点无需您操作，请关注流程进度。</view>
+
   </view>
 
   <view class="card" wx:if="{{selected && selected.transport_legs.length}}">

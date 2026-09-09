@@ -1,13 +1,8 @@
 <!-- pages/personal/center/center.wxml -->
 <view class="container">
   <view class="header">
-    <image
-      wx:if="{{avatar_url}}"
-      class="avatar"
-      src="{{avatar_url}}"
-      mode="aspectFill"
-    />
-    <view wx:else class="avatar avatar-placeholder">{{avatar_initial}}</view>
+    <!-- <image wx:if="{{avatar_url}}" class="avatar" src="{{avatar_url}}" mode="aspectFill"/>
+    <view wx:else class="avatar avatar-placeholder">{{avatar_initial}}</view> -->
     <text class="title">产品生命周期\n数字平台</text>
     <text class="role">{{role_name || '游客'}}</text>
     <text class="welcome">欢迎，{{nickname || '用户'}}</text>

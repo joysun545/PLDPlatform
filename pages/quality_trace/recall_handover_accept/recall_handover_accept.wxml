@@ -4,10 +4,16 @@
     <view class="hero-sub">该流转码只用于已激活设备交给来源商家，不依赖产品原二维码。</view>
   </view>
   <view class="error" wx:if="{{error}}">{{error}}</view>
-  <view class="card">
+  <view class="card" wx:if="{{preview}}">
     <view class="card-title">商家接管确认</view>
+    <view>召回：{{preview.recall_no}}</view>
+    <view>设备：{{preview.sn}}</view>
+    <view>型号：{{preview.product_model.name || preview.product_model.product_model_name}}</view>
+    <view>接管组织：{{preview.merchant_name}}</view>
+    <view class="tip" wx:if="{{preview.already_received}}">本组织已接管该设备，可进入详情继续批量退回。</view>
     <view class="tip">请当面核对设备 SN 或生命周期编码、实物状态及召回批次。确认后设备进入召回专用保管，不能转入普通可售库存。</view>
-    <textarea class="textarea" value="{{receiptNote}}" bindinput="input" placeholder="填写核对结果和接管说明" />
-    <button class="primary" bindtap="accept" loading="{{busy}}">确认接管召回设备</button>
+    <textarea wx:if="{{preview.can_accept}}" class="textarea" value="{{receiptNote}}" bindinput="input" placeholder="填写核对结果和接管说明" />
+    <button wx:if="{{preview.can_accept}}" class="primary" bindtap="accept" loading="{{busy}}" disabled="{{busy || loading}}">确认接管召回设备</button>
+    <button class="primary" wx:if="{{preview.already_received}}" bindtap="openDetail">进入召回详情</button>
   </view>
 </view>
