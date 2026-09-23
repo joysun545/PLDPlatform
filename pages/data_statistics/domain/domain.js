@@ -52,18 +52,29 @@ function flattenResponsibilityTree(sourceRoot) {
   function visit(node, depth, parentIds) {
     if (!node) return;
     const children = node.children || [];
+    const own = node.own || {};
+    const total = node.total || {};
+    const displayScope = node.display_scope === 'OWN' ? 'OWN' : 'TOTAL';
+    const ownInventory = own.market_inventory_device_count || 0;
+    const ownActivated = own.activated_device_count || 0;
+    const totalInventory = total.market_inventory_device_count || 0;
+    const totalActivated = total.activated_device_count || 0;
+    const isResponsibility = node.node_type === 'RESPONSIBILITY_ACCOUNT';
     rows.push({
       id: node.node_id, nodeType: node.node_type,
       name: node.name || '未命名节点', roleCode: node.role_code || '',
       depth, indent: Math.min(depth, 7) * 24, parentIds, expanded: false,
       hasChildren: children.length > 0,
-      ownInventory: (node.own || {}).market_inventory_device_count || 0,
-      ownActivated: (node.own || {}).activated_device_count || 0,
-      totalInventory: (node.total || {}).market_inventory_device_count || 0,
-      totalActivated: (node.total || {}).activated_device_count || 0,
-      totalTransit: (node.total || {}).in_transit_device_count || 0,
-      totalReturn: (node.total || {}).return_or_recall_device_count || 0,
-      totalDevices: (node.total || {}).market_device_count || 0
+      displayScope,
+      showOrganizationInventory: node.show_organization_inventory === true,
+      ownInventory, ownActivated, totalInventory, totalActivated,
+      primaryInventory: totalInventory,
+      primaryActivated: totalActivated,
+      inventoryLabel: isResponsibility ? '负责链路库存' : '链路库存',
+      activatedLabel: isResponsibility ? '负责链路激活' : '链路激活',
+      totalTransit: total.in_transit_device_count || 0,
+      totalReturn: total.return_or_recall_device_count || 0,
+      totalDevices: total.market_device_count || 0
     });
     children.forEach(child => visit(child, depth + 1, parentIds.concat([node.node_id])));
   }
@@ -80,7 +91,8 @@ function visibleTreeRows(rows) {
 Page({
   data: {
     domain:'', title:'统计专题', loading:true, error:'', metrics:[], charts:[], note:'',
-    hasResponsibilityTree:false, treeNodes:[], treeSemantics:null
+    hasResponsibilityTree:false, treeNodes:[], treeSemantics:null,
+    showWarehouseLots:false, warehouseLots:[], warehouseQuery:'', warehouseNextCursor:null, warehouseLoading:false, warehouseError:''
   },
   onLoad(options) {
     const domain = String(options.domain || '').toUpperCase();
@@ -88,18 +100,21 @@ Page({
     if (!meta) { this.setData({ loading:false, error:'统计专题参数无效。' }); return; }
     this.setData({ domain, title:meta.title });
     wx.setNavigationBarTitle({ title:meta.title });
-    this.load();
   },
+  onShow() { if (META[this.data.domain]) this.load(); },
   onPullDownRefresh() { this.load(() => wx.stopPullDownRefresh()); },
   load(done) {
     const meta = META[this.data.domain];
+    if (!meta || this._domainLoading) { done && done(); return; }
+    this._domainLoading = true;
     this.setData({ loading:true, error:'' });
     app.ensureLogin(ok => {
-      if (!ok) { this.setData({ loading:false, error:'登录状态无效。' }); done && done(); return; }
+      if (!ok) { this._domainLoading=false; this.setData({ loading:false, error:'登录状态无效。' }); done && done(); return; }
       wx.request({
         url:`${app.globalData.apiBase}/data-statistics/${meta.path}/`, method:'GET', header:app.authHeader(),
         success:res => {
           const body=res.data||{};
+          if(res.statusCode===401){app.reauthenticate();this.setData({loading:false,error:'登录已失效，请重新进入。'});return;}
           if(body.code!==0||!body.data){this.setData({loading:false,error:body.msg||'数据加载失败。'});return;}
           const data=body.data;
           const metrics=this.data.domain==='FLOW'?[]:Object.keys(data.metrics||{}).map(code=>({code,name:LABELS[code]||code,value:data.metrics[code],unit:code.indexOf('rate')>=0?'%':''}));
@@ -109,6 +124,8 @@ Page({
             return {code,title:CHART_NAMES[code]||code,rows:source.map(row=>({label:rowLabel(row),value:rowValue(row),width:Math.max(4,Math.round(rowValue(row)/max*100))}))};
           });
           const allTreeNodes=flattenResponsibilityTree(data.responsibility_tree);
+          const expandedIds = new Set((this._allTreeNodes || []).filter(row => row.expanded).map(row => row.id));
+          allTreeNodes.forEach(row => { row.expanded = expandedIds.has(row.id); });
           this._allTreeNodes=allTreeNodes;
           this.setData({
             loading:false, metrics, charts, note:data.metric_note||'',
@@ -116,9 +133,15 @@ Page({
             treeNodes:visibleTreeRows(allTreeNodes),
             treeSemantics:data.tree_semantics||null
           });
+          if (this.data.domain === 'MATERIAL' && (data.identity || {}).role_code === 'factory_material_stock') {
+            this.setData({ showWarehouseLots: true });
+            this.loadWarehouseLots(false);
+          } else {
+            this.setData({ showWarehouseLots: false, warehouseLots: [], warehouseNextCursor: null });
+          }
         },
         fail:()=>this.setData({loading:false,error:'网络连接失败，请下拉刷新。'}),
-        complete:()=>{done&&done();}
+        complete:()=>{this._domainLoading=false;done&&done();}
       });
     });
   },
@@ -129,5 +152,36 @@ Page({
     if(!target||!target.hasChildren)return;
     target.expanded=!target.expanded;
     this.setData({treeNodes:visibleTreeRows(rows)});
+  },
+  inputWarehouseQuery(event) {
+    this.setData({ warehouseQuery: event.detail.value });
+    clearTimeout(this._warehouseSearchTimer);
+    this._warehouseSearchTimer = setTimeout(() => this.loadWarehouseLots(false), 250);
+  },
+  searchWarehouseLots() { this.loadWarehouseLots(false); },
+  moreWarehouseLots() { if (this.data.warehouseNextCursor) this.loadWarehouseLots(true); },
+  loadWarehouseLots(append) {
+    if (append && this.data.warehouseLoading) return;
+    const run = (this._warehouseRun || 0) + 1;
+    this._warehouseRun = run;
+    this.setData({ warehouseLoading:true, warehouseError:'' });
+    app.ensureLogin(ok => {
+      if (!ok) {
+        if (run === this._warehouseRun) this.setData({ warehouseLoading:false, warehouseError:'登录状态无效。' });
+        return;
+      }
+      wx.request({
+        url:`${app.globalData.apiBase}/data-statistics/material-warehouse-lots/`, method:'GET',
+        data:{q:this.data.warehouseQuery,cursor:append?this.data.warehouseNextCursor:''}, header:app.authHeader(),
+        success:res => {
+          const body=res.data||{};
+          if (run !== this._warehouseRun) return;
+          if (body.code !== 0 || !body.data) { this.setData({warehouseLoading:false,warehouseError:body.msg||'批次清单加载失败。'}); return; }
+          const data=body.data;
+          this.setData({warehouseLoading:false, warehouseLots:append?this.data.warehouseLots.concat(data.items||[]):(data.items||[]), warehouseNextCursor:data.next_cursor||null});
+        },
+        fail:() => { if(run===this._warehouseRun)this.setData({warehouseLoading:false,warehouseError:'网络连接失败，请重试。'}); }
+      });
+    });
   }
 });

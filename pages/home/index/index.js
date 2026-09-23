@@ -11,6 +11,7 @@ Page({
     showCreateOrderPlan: false,
     showOrderPlanList: false,
     showSupplierResponsibility: false,
+    showMaterialInventory: false,
     showSupplierWarranty: false,
     showSupplierQualityNotices: false,
     showMatching: false,
@@ -52,11 +53,18 @@ Page({
     this.setData({
       showCreateOrderPlan: role === 'factory_sales',
       showOrderPlanList: [
+        // These are V2 awareness roles.  The server decides which plans they
+        // can read and returns no action button unless a real task belongs to
+        // them; the home entry must not hide the dynamic order card first.
+        'factory_admin',
+        'factory_manager',
+        'factory_chief_engineer',
         'factory_sales',
         'factory_sales_assistant',
         'factory_matching',
         'factory_production',
         'factory_stock',
+        'factory_material_stock',
         'factory_logistics',
         'supplier_owner',
         'supplier_sales',
@@ -66,6 +74,7 @@ Page({
         'merchant_stock'
       ].includes(role),
       showSupplierResponsibility: role === 'supplier_owner',
+      showMaterialInventory: ['factory_material_stock', 'supplier_owner', 'supplier_sales'].includes(role),
       showSupplierWarranty: [
         'supplier_owner',
         'supplier_sales'
@@ -114,6 +123,7 @@ Page({
         'factory_production',
         'factory_purchase',
         'factory_stock',
+        'factory_material_stock',
         'factory_logistics',
         'factory_aftersales',
         'merchant_owner',
@@ -149,6 +159,8 @@ Page({
 
   updateInviteCapability() {
     app.ensureLogin(ok => {
+      this.updateUserInfo();
+      this.updateButtons();
       if (!ok || app.globalData.role === 'tourist') {
         this.setData({
           showInvite: false,
@@ -213,6 +225,10 @@ Page({
       url: '/pages/supply_chain/responsibility/responsibility',
       fail: () => wx.showToast({ title: '责任分配页面打开失败', icon: 'none' })
     });
+  },
+
+  goMaterialInventory() {
+    wx.navigateTo({ url: '/pages/material_inventory/list/list' });
   },
 
   goSupplierWarranty() {

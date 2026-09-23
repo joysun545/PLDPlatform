@@ -17,6 +17,7 @@
     </view>
 
     <view class="rule-tip">实物与物权已经完成流转。本页金额必须人工填写并由对方确认；调货只形成上下级账务，不形成平级商家结算。</view>
+    <button class="secondary-button" bindtap="openTransferDetail">查看商品流转</button>
 
     <view class="empty-card" wx:if="{{detail.cases.length === 0}}">当前组织没有可查看的往来账明细</view>
 

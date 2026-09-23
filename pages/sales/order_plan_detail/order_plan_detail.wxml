@@ -1,0 +1,500 @@
+<view class="page">
+  <view class="state-card" wx:if="{{loading}}">正在加载订单计划…</view>
+  <view class="state-card error" wx:elif="{{errorMessage && !plan}}">
+    <text>{{errorMessage}}</text>
+    <button class="secondary-button" bindtap="reload">重新加载</button>
+  </view>
+
+  <block wx:elif="{{plan}}">
+    <view class="hero-card">
+      <view class="hero-top">
+        <text class="eyebrow">订单计划协同</text>
+        <text class="status-pill">{{plan.status_name}}</text>
+      </view>
+      <text class="plan-code">{{plan.plan_code}}</text>
+      <text class="hero-subtitle">{{plan.merchant.name}} · {{plan.brand.name}}</text>
+      <text class="hero-note" wx:if="{{refreshing}}">正在刷新最新进度…</text>
+    </view>
+
+    <view class="summary-card">
+      <view class="summary-row"><text>厂家</text><text>{{plan.factory.name}}</text></view>
+      <view class="summary-row"><text>直接商家</text><text>{{plan.merchant.name}}</text></view>
+      <view class="summary-row"><text>厂家销售经理</text><text>{{plan.sales_manager.name}}</text></view>
+      <view class="summary-row"><text>负责区域</text><text>{{plan.region}}</text></view>
+      <view class="summary-row"><text>计划总数</text><text>{{plan.total_quantity}} 台</text></view>
+      <view class="summary-row" wx:if="{{plan.submittedText}}"><text>创建时间</text><text>{{plan.submittedText}}</text></view>
+      <view class="summary-row note-row" wx:if="{{plan.remark}}"><text>备注</text><text>{{plan.remark}}</text></view>
+    </view>
+
+    <view class="warning-card" wx:if="{{errorMessage}}">
+      <text>{{errorMessage}}</text>
+      <button class="text-button" bindtap="reload">重试</button>
+    </view>
+
+    <view class="section-card" wx:if="{{timeline.length}}">
+      <view class="section-head">
+        <text class="section-title">订单计划动态</text>
+        <text class="section-subtitle">所有角色可见；当前操作或知晓节点由系统点亮</text>
+      </view>
+      <view class="timeline-row" wx:for="{{timeline}}" wx:key="key">
+        <view class="timeline-rail">
+          <view class="timeline-dot {{item.dotClass}}">
+            <text wx:if="{{item.completed}}">✓</text>
+          </view>
+          <view class="timeline-line" wx:if="{{index + 1 < timeline.length}}"></view>
+        </view>
+        <view class="timeline-content">
+          <view class="timeline-title-row">
+            <text class="timeline-title">{{item.title}}</text>
+            <text class="timeline-state {{item.stateClass}}" wx:if="{{item.stateText}}">{{item.stateText}}</text>
+          </view>
+          <text class="timeline-description" wx:if="{{item.description}}">{{item.description}}</text>
+          <text class="timeline-time" wx:if="{{item.timeText}}">{{item.timeText}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="section-card" wx:if="{{finishedInventory.length}}">
+      <view class="section-head">
+        <text class="section-title">成品库存调用</text>
+        <text class="section-subtitle">已调用的退货转库存、召回转库存或备货库存保留原始追溯</text>
+      </view>
+      <view class="inventory-row" wx:for="{{finishedInventory}}" wx:key="key">
+        <view>
+          <text class="row-title">{{item.productName}}</text>
+          <text class="row-note" wx:if="{{item.sourceText}}">{{item.sourceText}}</text>
+        </view>
+        <view class="inventory-counts">
+          <text>计划 {{item.totalText}}</text>
+          <text>调用 {{item.usedText}}</text>
+          <text>新生产 {{item.productionText}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="section-card" wx:if="{{bomSelections.length}}">
+      <view class="section-head">
+        <text class="section-title">销售确认的 BOM</text>
+        <text class="section-subtitle">BOM 在创建订单时选定并冻结</text>
+      </view>
+      <view class="bom-card" wx:for="{{bomSelections}}" wx:key="key">
+        <view class="bom-head">
+          <view>
+            <text class="row-title">{{item.productName}}</text>
+            <text class="row-note" wx:if="{{item.productCode}}">{{item.productCode}}</text>
+          </view>
+          <view class="bom-version-wrap">
+            <text class="bom-version">{{item.version}}</text>
+            <text class="bom-change" wx:if="{{item.changedText}}">{{item.changedText}}</text>
+          </view>
+        </view>
+        <text class="row-note" wx:if="{{item.sourceText}}">{{item.sourceText}}</text>
+        <view class="bom-material" wx:for="{{item.materials}}" wx:key="key">
+          <view>
+            <text class="material-name {{item.deleted ? 'deleted' : ''}}">{{item.name}}</text>
+            <text class="material-meta">{{item.specName}} · {{item.supplierName}}</text>
+          </view>
+          <text class="material-quantity">单台 {{item.quantityText}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="section-card" wx:if="{{materialRequirements.length}}">
+      <view class="section-head">
+        <text class="section-title">物料预占与到料</text>
+        <text class="section-subtitle">物料库操作独立完成；此处只显示订单实时占用</text>
+      </view>
+      <view class="material-requirement" wx:for="{{materialRequirements}}" wx:key="key">
+        <view class="requirement-head">
+          <view>
+            <text class="row-title">{{item.materialName}}</text>
+            <text class="row-note">{{item.specName}} · {{item.supplierName}}</text>
+          </view>
+          <text class="state-badge {{item.stateClass}}">{{item.stateText}}</text>
+        </view>
+        <view class="quantity-grid">
+          <view><text>所需</text><text>{{item.requiredText}}</text></view>
+          <view><text>已预占</text><text>{{item.reservedText}}</text></view>
+          <view><text>待到料</text><text>{{item.shortageText}}</text></view>
+        </view>
+        <view class="lot-row" wx:for="{{item.allocations}}" wx:key="key">
+          <text>{{item.lotCode}}</text>
+          <text>{{item.quantityText}} {{item.stateText}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="section-card" wx:if="{{supplyDeliveries.length}}">
+      <view class="section-head">
+        <text class="section-title">供应配送计划</text>
+        <text class="section-subtitle">供应商确认配送，厂家物料库管在独立入库页确认实物入库</text>
+      </view>
+      <view class="delivery-card" wx:for="{{supplyDeliveries}}" wx:key="key">
+        <view class="delivery-head">
+          <view>
+            <text class="row-title">{{item.supplierName}}</text>
+            <text class="row-note" wx:if="{{item.scheduledText}}">计划推送 {{item.scheduledText}}</text>
+          </view>
+          <text class="state-badge {{item.stateClass}}">{{item.stateText}}</text>
+        </view>
+        <text class="row-note" wx:if="{{item.confirmedByText}}">{{item.confirmedByText}}</text>
+        <view class="delivery-line" wx:for="{{item.lines}}" wx:key="key">
+          <view><text>{{item.materialName}}</text><text>{{item.specName}}</text></view>
+          <view><text>配送 {{item.requestedText}}</text><text wx:if="{{item.receivedText !== '--'}}">已入 {{item.receivedText}}</text></view>
+        </view>
+      </view>
+    </view>
+
+    <view class="section-card" wx:if="{{productionSubplans.length}}">
+      <view class="section-head">
+        <text class="section-title">型号生产计划</text>
+        <text class="section-subtitle">按型号生产、打码与发货；仅消解物料尾货时拆分为子计划</text>
+      </view>
+      <view class="subplan-card" wx:for="{{productionSubplans}}" wx:key="key">
+        <view class="delivery-head">
+          <view><text class="row-title">{{item.title}}</text><text class="row-note">{{item.planLabel}} · {{item.quantityText}}</text></view>
+          <text class="state-badge {{item.stateClass}}">{{item.stateText}}</text>
+        </view>
+        <view class="subplan-item" wx:for="{{item.items}}" wx:key="key">
+          <view>
+            <text>{{item.productName}}</text>
+            <text class="subplan-meta" wx:if="{{item.productionBatchCode}}">生产批次：{{item.productionBatchCode}}</text>
+            <text class="subplan-meta" wx:if="{{item.qrcodeGeneratedText}}">二维码已生成：{{item.qrcodeGeneratedText}}</text>
+            <text class="subplan-meta" wx:if="{{item.qrcodePrintedText}}">二维码已打印：{{item.qrcodePrintedText}}</text>
+          </view>
+          <text>{{item.quantityText}} {{item.stateText}}</text>
+        </view>
+        <view class="subplan-time-row" wx:if="{{item.productionReleasedText || item.productionCompletedText}}">
+          <text wx:if="{{item.productionReleasedText}}">已推送生产：{{item.productionReleasedText}}</text>
+          <text wx:if="{{item.productionCompletedText}}">生产完成：{{item.productionCompletedText}}</text>
+        </view>
+        <view class="nested-batch-card" wx:for="{{item.qrcodeBatches}}" wx:for-item="qrBatch" wx:key="key">
+          <view class="delivery-head">
+            <view><text class="nested-title">{{qrBatch.title}}</text><text class="row-note" wx:if="{{qrBatch.subplanText}}">{{qrBatch.subplanText}}</text></view>
+            <text class="state-badge {{qrBatch.stateClass}}">{{qrBatch.stateText}}</text>
+          </view>
+          <text class="row-note">数量 {{qrBatch.quantityText}}</text>
+          <text class="row-note" wx:if="{{qrBatch.generatedText}}">生成：{{qrBatch.generatedText}}</text>
+          <text class="row-note" wx:if="{{qrBatch.printedText}}">打印：{{qrBatch.printedText}}</text>
+          <view class="code-row" wx:for="{{qrBatch.codes}}" wx:for-item="codeRow" wx:key="key">
+            <text>{{codeRow.deviceSn || '设备二维码'}}</text>
+            <text>{{codeRow.code}}</text>
+          </view>
+          <view class="inline-action-area" wx:if="{{qrBatch.actions.length}}">
+            <button
+              wx:for="{{qrBatch.actions}}"
+              wx:for-item="batchAction"
+              wx:key="key"
+              class="inline-action-button {{batchAction.danger ? 'danger' : ''}}"
+              loading="{{submittingActionKey === batchAction.key}}"
+              disabled="{{submittingActionKey !== '' || uploadingLogisticsDocument || refreshing}}"
+              data-action-key="{{batchAction.key}}"
+              bindtap="confirmAction"
+            >{{batchAction.label}}</button>
+          </view>
+        </view>
+        <view class="nested-batch-card" wx:for="{{item.shipments}}" wx:for-item="subShipment" wx:key="key">
+          <view class="delivery-head">
+            <view><text class="nested-title">{{subShipment.title}}</text><text class="row-note" wx:if="{{subShipment.subplanText}}">{{subShipment.subplanText}}</text></view>
+            <text class="state-badge {{subShipment.stateClass}}">{{subShipment.stateText}}</text>
+          </view>
+          <text class="row-note">数量 {{subShipment.quantityText}}</text>
+          <text class="row-note" wx:if="{{subShipment.logisticsCompanyText}}">物流公司：{{subShipment.logisticsCompanyText}}</text>
+          <text class="row-note" wx:if="{{subShipment.trackingNoText}}">物流单号：{{subShipment.trackingNoText}}</text>
+          <text class="row-note" wx:if="{{subShipment.outboundText}}">物流确认出库：{{subShipment.outboundText}}</text>
+          <text class="row-note" wx:if="{{subShipment.shippedText}}">成品库管确认发货：{{subShipment.shippedText}}</text>
+          <button wx:if="{{subShipment.logisticsDocument}}" class="document-link" data-shipment-id="{{subShipment.id}}" bindtap="previewShipmentDocument" disabled="{{downloadingDocumentId}}">查看物流凭证</button>
+          <view class="shipment-item-row" wx:for="{{subShipment.items}}" wx:for-item="shipmentItem" wx:key="key">
+            <text>{{shipmentItem.productName}}</text><text>{{shipmentItem.quantityText}} {{shipmentItem.stateText}}</text>
+          </view>
+          <view class="inline-action-area" wx:if="{{subShipment.actions.length}}">
+            <button
+              wx:for="{{subShipment.actions}}"
+              wx:for-item="shipmentAction"
+              wx:key="key"
+              class="inline-action-button {{shipmentAction.danger ? 'danger' : ''}}"
+              loading="{{submittingActionKey === shipmentAction.key}}"
+              disabled="{{submittingActionKey !== '' || uploadingLogisticsDocument || refreshing}}"
+              data-action-key="{{shipmentAction.key}}"
+              bindtap="confirmAction"
+            >{{shipmentAction.label}}</button>
+          </view>
+        </view>
+        <view class="inline-action-area" wx:if="{{item.actions.length}}">
+          <button
+            wx:for="{{item.actions}}"
+            wx:for-item="subplanAction"
+            wx:key="key"
+            class="inline-action-button {{subplanAction.danger ? 'danger' : ''}}"
+            loading="{{submittingActionKey === subplanAction.key}}"
+            disabled="{{submittingActionKey !== '' || uploadingLogisticsDocument || refreshing}}"
+            data-action-key="{{subplanAction.key}}"
+            bindtap="confirmAction"
+          >{{subplanAction.label}}</button>
+        </view>
+      </view>
+    </view>
+
+    <view class="section-card" wx:if="{{qrcodeBatches.length}}">
+      <view class="section-head">
+        <text class="section-title">二维码与打印批次</text>
+        <text class="section-subtitle">服务端返回的二维码编码和打印进度按批次展示</text>
+      </view>
+      <view class="qrcode-card" wx:for="{{qrcodeBatches}}" wx:for-item="qrBatch" wx:key="key">
+        <view class="delivery-head">
+          <view>
+            <text class="row-title">{{qrBatch.title}}</text>
+            <text class="row-note" wx:if="{{qrBatch.subplanText}}">{{qrBatch.subplanText}}</text>
+          </view>
+          <text class="state-badge {{qrBatch.stateClass}}">{{qrBatch.stateText}}</text>
+        </view>
+        <view class="batch-info-row"><text>本批数量</text><text>{{qrBatch.quantityText}}</text></view>
+        <view class="batch-info-row" wx:if="{{qrBatch.generatedText}}"><text>生成时间</text><text>{{qrBatch.generatedText}}</text></view>
+        <view class="batch-info-row" wx:if="{{qrBatch.printedText}}"><text>打印完成</text><text>{{qrBatch.printedText}}</text></view>
+        <view class="code-row" wx:for="{{qrBatch.codes}}" wx:for-item="codeRow" wx:key="key">
+          <view><text>{{codeRow.deviceSn || '设备二维码'}}</text><text class="code-state" wx:if="{{codeRow.stateText}}">{{codeRow.stateText}}</text></view>
+          <text>{{codeRow.code}}</text>
+        </view>
+        <view class="inline-action-area" wx:if="{{qrBatch.actions.length}}">
+          <button
+            wx:for="{{qrBatch.actions}}"
+            wx:for-item="batchAction"
+            wx:key="key"
+            class="inline-action-button {{batchAction.danger ? 'danger' : ''}}"
+            loading="{{submittingActionKey === batchAction.key}}"
+            disabled="{{submittingActionKey !== '' || uploadingLogisticsDocument || refreshing}}"
+            data-action-key="{{batchAction.key}}"
+            bindtap="confirmAction"
+          >{{batchAction.label}}</button>
+        </view>
+      </view>
+    </view>
+
+    <view class="section-card" wx:if="{{logisticsCandidates.length}}">
+      <view class="section-head">
+        <text class="section-title">物流经理确认线下出库</text>
+        <text class="section-subtitle">以下批次已贴包。不同单据可逐批填写；同车同单据可多选一次提交。</text>
+      </view>
+      <checkbox-group bindchange="onLogisticsSelectionChange">
+        <label class="logistics-batch-option" wx:for="{{logisticsCandidates}}" wx:key="id">
+          <checkbox value="{{item.value}}" checked="{{item.selected}}" color="#07a85a" disabled="{{submittingActionKey !== '' || uploadingLogisticsDocument || refreshing || logisticsDraft}}" />
+          <view class="logistics-option-copy"><text class="row-title">{{item.title}}</text><text class="row-note">{{item.subplanText}} · {{item.quantityText}}</text></view>
+        </label>
+      </checkbox-group>
+      <view class="selection-footer">
+        <button class="text-button" bindtap="selectAllLogistics" disabled="{{submittingActionKey !== '' || uploadingLogisticsDocument || refreshing || logisticsDraft}}">{{selectedLogisticsCount === logisticsCandidates.length ? '取消全选' : '全选'}}</button>
+        <text>已选 {{selectedLogisticsCount}} 批</text>
+      </view>
+      <button class="primary-inline-button full-width" bindtap="openSelectedShipmentLogistics" disabled="{{!selectedLogisticsCount || submittingActionKey !== '' || uploadingLogisticsDocument || refreshing || logisticsDraft}}">填写所选批次物流信息</button>
+    </view>
+
+    <view class="section-card" wx:if="{{shipments.length}}">
+      <view class="section-head">
+        <text class="section-title">分批发货</text>
+        <text class="section-subtitle">每个批次独立记录销售授权、物流出库、库管发货和商家入库</text>
+      </view>
+      <view class="shipment-card" wx:for="{{shipments}}" wx:for-item="shipment" wx:key="key">
+        <view class="delivery-head">
+          <view>
+            <text class="row-title">{{shipment.title}}</text>
+            <text class="row-note" wx:if="{{shipment.subplanText}}">{{shipment.subplanText}}</text>
+          </view>
+          <text class="state-badge {{shipment.stateClass}}">{{shipment.stateText}}</text>
+        </view>
+        <view class="batch-info-row"><text>本批数量</text><text>{{shipment.quantityText}}</text></view>
+        <view class="batch-info-row" wx:if="{{shipment.authorizedText}}"><text>销售授权</text><text>{{shipment.authorizedText}}</text></view>
+        <view class="batch-info-row" wx:if="{{shipment.outboundText}}"><text>物流确认出库</text><text>{{shipment.outboundText}}</text></view>
+        <view class="batch-info-row" wx:if="{{shipment.shippedText}}"><text>成品库管确认发货</text><text>{{shipment.shippedText}}</text></view>
+        <view class="batch-info-row" wx:if="{{shipment.receivedText}}"><text>商家签收</text><text>{{shipment.receivedText}}</text></view>
+        <view class="batch-info-row" wx:if="{{shipment.logisticsCompanyText}}"><text>物流公司</text><text>{{shipment.logisticsCompanyText}}</text></view>
+        <view class="batch-info-row" wx:if="{{shipment.trackingNoText}}"><text>物流单号</text><text>{{shipment.trackingNoText}}</text></view>
+        <button wx:if="{{shipment.logisticsDocument}}" class="document-link" data-shipment-id="{{shipment.id}}" bindtap="previewShipmentDocument" disabled="{{downloadingDocumentId}}">查看物流凭证</button>
+        <view class="shipment-item-row" wx:for="{{shipment.items}}" wx:for-item="shipmentItem" wx:key="key">
+          <text>{{shipmentItem.productName}}</text><text>{{shipmentItem.quantityText}} {{shipmentItem.stateText}}</text>
+        </view>
+        <view class="inline-action-area" wx:if="{{shipment.actions.length}}">
+          <button
+            wx:for="{{shipment.actions}}"
+            wx:for-item="shipmentAction"
+            wx:key="key"
+            class="inline-action-button {{shipmentAction.danger ? 'danger' : ''}}"
+            loading="{{submittingActionKey === shipmentAction.key}}"
+            disabled="{{submittingActionKey !== '' || uploadingLogisticsDocument || refreshing}}"
+            data-action-key="{{shipmentAction.key}}"
+            bindtap="confirmAction"
+          >{{shipmentAction.label}}</button>
+        </view>
+      </view>
+    </view>
+
+    <view class="section-card shipment-form-card" wx:if="{{splitDraft}}">
+      <view class="section-head">
+        <text class="section-title">拆分本批发货</text>
+        <text class="state-badge current">待销售确认</text>
+      </view>
+      <text class="form-note">{{splitDraft.title}}：填写首批实际发货数量。未填写或填 0 的产品会保留在剩余批次；本次不改变订单总数量。</text>
+      <view class="split-item" wx:for="{{splitDraft.items}}" wx:key="key">
+        <view class="split-item-head">
+          <text class="row-title">{{item.productName}}</text>
+          <text class="row-note">本批最多 {{item.maximum}} 台</text>
+        </view>
+        <view class="split-input-row">
+          <text>首批发货</text>
+          <input
+            class="split-input"
+            type="number"
+            maxlength="6"
+            value="{{item.inputValue}}"
+            placeholder="0"
+            disabled="{{submittingActionKey !== '' || uploadingLogisticsDocument || refreshing}}"
+            data-index="{{index}}"
+            bindinput="onSplitQuantityInput"
+          />
+          <text>台</text>
+        </view>
+      </view>
+      <text class="form-error" wx:if="{{splitDraft.errorMessage}}">{{splitDraft.errorMessage}}</text>
+      <view class="form-button-row">
+        <button class="secondary-button form-half" disabled="{{submittingActionKey !== '' || uploadingLogisticsDocument || refreshing}}" bindtap="cancelShipmentSplit">取消</button>
+        <button class="primary-inline-button form-half" loading="{{submittingActionKey === splitDraft.actionKey}}" disabled="{{submittingActionKey !== '' || uploadingLogisticsDocument || refreshing}}" bindtap="submitShipmentSplit">确认拆分</button>
+      </view>
+    </view>
+
+    <view id="logistics-form" class="section-card shipment-form-card" wx:if="{{logisticsDraft}}">
+      <view class="section-head">
+        <text class="section-title">确认线下出库 · {{logisticsDraft.shipmentIds.length}} 批</text>
+        <text class="state-badge current">待提交</text>
+      </view>
+      <text class="form-note">{{logisticsDraft.title}}：本次填写的物流公司、单号和凭证将分别保存到以上每个批次；提交后等待成品库管确认发货。</text>
+      <view class="logistics-field" wx:for="{{logisticsDraft.fields}}" wx:key="name">
+        <text class="field-label">{{item.label}}</text>
+        <input
+          class="logistics-input"
+          value="{{item.inputValue}}"
+          placeholder="{{item.placeholder}}"
+          maxlength="{{item.maxlength}}"
+          disabled="{{submittingActionKey !== '' || uploadingLogisticsDocument || refreshing}}"
+          data-index="{{index}}"
+          bindinput="onLogisticsInput"
+        />
+      </view>
+      <view class="logistics-field">
+        <text class="field-label">物流凭证（选填）</text>
+        <text class="row-note">支持一张 JPG、PNG 或 WebP 图片，最大 10MB。</text>
+        <view class="form-button-row">
+          <button class="secondary-button form-half" data-source="camera" bindtap="chooseLogisticsDocument" disabled="{{submittingActionKey !== '' || uploadingLogisticsDocument || refreshing}}">拍照</button>
+          <button class="secondary-button form-half" data-source="album" bindtap="chooseLogisticsDocument" disabled="{{submittingActionKey !== '' || uploadingLogisticsDocument || refreshing}}">从相册选择</button>
+        </view>
+        <view class="document-preview" wx:if="{{logisticsDraft.documentLocalPath}}">
+          <image class="evidence-thumbnail" src="{{logisticsDraft.documentLocalPath}}" mode="aspectFill" bindtap="previewLogisticsDraftDocument" />
+          <view class="document-preview-copy">
+            <text class="row-note">{{uploadingLogisticsDocument ? '正在上传…' : logisticsDraft.document ? '凭证已上传' : '凭证尚未上传成功'}}</text>
+            <button class="text-button" bindtap="removeLogisticsDocument" disabled="{{submittingActionKey !== '' || uploadingLogisticsDocument || refreshing}}">移除图片</button>
+          </view>
+        </view>
+        <text class="form-error" wx:if="{{logisticsDraft.documentError}}">{{logisticsDraft.documentError}}</text>
+        <button class="secondary-button" wx:if="{{logisticsDraft.documentError}}" bindtap="uploadLogisticsDocument" loading="{{uploadingLogisticsDocument}}" disabled="{{submittingActionKey !== '' || uploadingLogisticsDocument || refreshing}}">重试上传</button>
+      </view>
+      <text class="form-error" wx:if="{{logisticsDraft.errorMessage}}">{{logisticsDraft.errorMessage}}</text>
+      <view class="form-button-row">
+        <button class="secondary-button form-half" disabled="{{submittingActionKey !== '' || uploadingLogisticsDocument || refreshing}}" bindtap="cancelShipmentLogistics">取消</button>
+        <button class="primary-inline-button form-half" loading="{{submittingActionKey === logisticsDraft.actionKey}}" disabled="{{submittingActionKey !== '' || uploadingLogisticsDocument || refreshing}}" bindtap="submitShipmentLogistics">确认已出库</button>
+      </view>
+    </view>
+
+    <view class="section-card finance-card" wx:if="{{finance}}">
+      <view class="section-head">
+        <text class="section-title">订单财务</text>
+        <text class="section-subtitle">清单、付款和收款可在发货前办理；全部批次到货入库后，再由销售助理确认整单入账。</text>
+      </view>
+      <view class="finance-rollover" wx:if="{{finance.showCurrentFinanceLink}}">
+        <text class="row-title">{{finance.receivable_amount === null || finance.excluded_from_rolling ? '当前付款与收款入口' : '付款与收款已归并至最新订单'}}</text>
+        <text class="row-note">{{finance.rolling_receivables.active_plan_code}}</text>
+        <text class="row-note" wx:if="{{finance.receivable_amount === null && !finance.excluded_from_rolling}}">本订单尚未提交订单清单，已有账款仍在上述订单办理。</text>
+        <text class="row-note" wx:elif="{{!finance.excluded_from_rolling}}">历史未付货款在最新订单继续办理，各订单的发货、收货及整单入账仍独立保留。</text>
+        <button class="primary-inline-button full-width finance-operation" bindtap="openCurrentOrderFinance" disabled="{{submittingActionKey !== '' || uploadingLogisticsDocument || refreshing}}">前往最新订单办理货款</button>
+      </view>
+      <view class="finance-rolling-summary" wx:if="{{finance.rolling_receivables}}">
+        <text class="row-title">厂家与本商家的累计账款</text>
+        <view class="batch-info-row"><text>累计订单应收</text><text>¥{{finance.rolling_receivables.receivable_amount}}</text></view>
+        <view class="batch-info-row"><text>累计实际收款</text><text>¥{{finance.rolling_receivables.received_amount}}</text></view>
+        <view class="batch-info-row finance-balance"><text>累计未收余额</text><text>¥{{finance.rolling_receivables.outstanding_amount}}</text></view>
+        <view class="batch-info-row"><text>预收余额（超收）</text><text>¥{{finance.rolling_receivables.overpaid_amount}}</text></view>
+        <view class="batch-info-row"><text>前期订单未收余额</text><text>¥{{finance.rolling_receivables.carry_forward_amount}}</text></view>
+        <text class="row-note">各订单清单金额独立保留；实际收款优先冲抵较早订单的欠款。</text>
+        <button class="document-link" wx:if="{{finance.rolling_receivables.orders.length}}" bindtap="toggleFinanceOrders">{{financeOrdersExpanded ? '收起' : '展开'}}订单账款明细（{{finance.rolling_receivables.orders.length}}单）</button>
+        <view wx:if="{{financeOrdersExpanded}}">
+          <view class="finance-order-row" wx:for="{{finance.rolling_receivables.orders}}" wx:for-item="invoice" wx:key="order_plan_id">
+            <text class="finance-order-code">{{invoice.plan_code}}</text>
+            <text class="row-note" wx:if="{{invoice.is_current}}">当前付款与收款入口</text>
+            <view class="batch-info-row"><text>本单应收</text><text>¥{{invoice.receivable_amount}}</text></view>
+            <view class="batch-info-row"><text>已分配收款</text><text>¥{{invoice.allocated_received_amount != null ? invoice.allocated_received_amount : invoice.received_amount}}</text></view>
+            <view class="batch-info-row"><text>本单未收</text><text>¥{{invoice.outstanding_amount}}</text></view>
+          </view>
+        </view>
+      </view>
+      <text class="row-title finance-invoice-title" wx:if="{{finance.rolling_receivables}}">本订单明细</text>
+      <text class="row-note" wx:if="{{finance.excluded_from_rolling}}">本订单当前不参与累计账款，以下本单金额作为历史记录保留。</text>
+      <view class="batch-info-row"><text>本单应收总额</text><text>{{finance.receivable_amount === null ? '待制作订单清单' : '¥' + finance.receivable_amount}}</text></view>
+      <view class="batch-info-row"><text>{{finance.allocated_received_amount != null ? '本单已分配收款' : '本单累计收款'}}</text><text>¥{{finance.allocated_received_amount != null ? finance.allocated_received_amount : finance.received_amount}}</text></view>
+      <view class="batch-info-row"><text>本单未收余额</text><text>¥{{finance.outstanding_amount}}</text></view>
+      <view class="batch-info-row"><text>本单超收金额</text><text>¥{{finance.overpaid_amount}}</text></view>
+      <text class="row-note" wx:if="{{finance.statementSubmittedText}}">清单提交：{{finance.statementSubmittedText}}</text>
+      <button wx:if="{{finance.statement_url}}" class="document-link" bindtap="previewFinanceImage" disabled="{{downloadingDocumentId}}">查看订单清单</button>
+      <button wx:if="{{finance.can_submit_statement}}" class="primary-inline-button full-width finance-operation" data-finance-action="statement" bindtap="openFinanceAction" disabled="{{submittingActionKey !== '' || uploadingLogisticsDocument || refreshing}}">上传订单清单并填写本单应收</button>
+      <view class="finance-payment" wx:for="{{finance.payments}}" wx:key="id">
+        <view class="delivery-head"><text class="row-title">第 {{item.sequence_no}} 笔付款</text><text class="row-note">{{item.status_name}}</text></view>
+        <text class="row-note" wx:if="{{item.source_plan_code}}">凭证来源订单：{{item.source_plan_code}}</text>
+        <text class="row-note" wx:if="{{item.uploadedText}}">凭证上传：{{item.uploadedText}}</text>
+        <view class="batch-info-row" wx:if="{{item.confirmed_at}}"><text>本笔实际到账</text><text>¥{{item.confirmed_amount}}</text></view>
+        <text class="row-note" wx:if="{{item.confirmedText}}">到账确认：{{item.confirmedText}}</text>
+        <view class="finance-allocation" wx:if="{{item.allocations.length}}">
+          <text class="row-note">本笔收款冲抵明细</text>
+          <view class="batch-info-row" wx:for="{{item.allocations}}" wx:for-item="allocation" wx:key="order_plan_id"><text class="finance-order-code">{{allocation.plan_code}}</text><text>¥{{allocation.amount}}</text></view>
+        </view>
+        <button wx:if="{{item.voucher_url}}" class="document-link" data-payment-id="{{item.id}}" bindtap="previewFinanceImage" disabled="{{downloadingDocumentId}}">查看本笔付款凭证</button>
+        <button wx:if="{{item.can_confirm}}" class="primary-inline-button full-width finance-operation" data-finance-action="confirm" data-payment-id="{{item.id}}" bindtap="openFinanceAction" disabled="{{submittingActionKey !== '' || uploadingLogisticsDocument || refreshing}}">填写并确认本笔实际到账</button>
+      </view>
+      <button wx:if="{{finance.can_upload_payment}}" class="primary-inline-button full-width finance-operation" data-finance-action="payment" bindtap="openFinanceAction" disabled="{{submittingActionKey !== '' || uploadingLogisticsDocument || refreshing}}">上传第 {{finance.next_sequence_no}} 笔付款凭证</button>
+      <view id="finance-form" class="finance-form" wx:if="{{financeDraft}}">
+        <text class="row-title">{{financeDraft.title}}</text>
+        <view class="logistics-field" wx:if="{{financeDraft.action !== 'payment'}}">
+          <text class="field-label">{{financeDraft.action === 'statement' ? '本单应收总额（元）' : '本笔实际到账金额（元）'}}</text>
+          <input class="logistics-input" type="digit" maxlength="15" value="{{financeDraft.amountInput}}" placeholder="请输入金额，最多2位小数" bindinput="onFinanceAmountInput" disabled="{{submittingActionKey !== '' || uploadingLogisticsDocument || refreshing}}" />
+        </view>
+        <text class="row-note" wx:if="{{financeDraft.action === 'statement'}}">只填写本订单金额，历史未付货款由系统自动累计。</text>
+        <view wx:if="{{financeDraft.action !== 'confirm'}}">
+          <text class="row-note">请添加{{financeDraft.action === 'statement' ? '订单清单截图' : '付款凭证'}}，支持 JPG、PNG 或 WebP 图片，最大 10MB。</text>
+          <view class="form-button-row">
+            <button class="secondary-button form-half" data-source="camera" bindtap="chooseFinanceImage" disabled="{{submittingActionKey !== '' || uploadingLogisticsDocument || refreshing}}">拍照</button>
+            <button class="secondary-button form-half" data-source="album" bindtap="chooseFinanceImage" disabled="{{submittingActionKey !== '' || uploadingLogisticsDocument || refreshing}}">从相册选择</button>
+          </view>
+          <view class="document-preview" wx:if="{{financeDraft.filePath}}">
+            <image class="evidence-thumbnail" src="{{financeDraft.filePath}}" mode="aspectFill" bindtap="previewFinanceDraftImage" />
+            <button class="text-button" bindtap="removeFinanceImage" disabled="{{submittingActionKey !== '' || uploadingLogisticsDocument || refreshing}}">移除图片</button>
+          </view>
+        </view>
+        <text class="form-error" wx:if="{{financeDraft.errorMessage}}">{{financeDraft.errorMessage}}</text>
+        <view class="form-button-row">
+          <button class="secondary-button form-half" bindtap="cancelFinanceAction" disabled="{{submittingActionKey !== '' || uploadingLogisticsDocument || refreshing}}">取消</button>
+          <button class="primary-inline-button form-half" bindtap="submitFinanceAction" loading="{{submittingActionKey === 'finance-' + financeDraft.action}}" disabled="{{submittingActionKey !== '' || uploadingLogisticsDocument || refreshing}}">确认提交</button>
+        </view>
+      </view>
+    </view>
+
+    <view class="action-area" wx:if="{{actionButtons.length}}">
+      <text class="action-title">当前可操作任务</text>
+      <text class="action-tip">按钮由服务端按当前角色与流程状态返回；没有按钮时仅可查看进度。</text>
+      <button
+        wx:for="{{actionButtons}}"
+        wx:key="key"
+        class="action-button {{item.danger ? 'danger' : ''}}"
+        loading="{{submittingActionKey === item.key}}"
+        disabled="{{submittingActionKey !== '' || uploadingLogisticsDocument || refreshing}}"
+        data-index="{{index}}"
+        data-action-key="{{item.key}}"
+        bindtap="confirmAction"
+      >{{item.label}}</button>
+    </view>
+  </block>
+</view>

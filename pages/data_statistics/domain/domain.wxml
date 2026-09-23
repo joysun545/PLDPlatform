@@ -7,9 +7,28 @@
       <view class="metric" wx:for="{{metrics}}" wx:key="code"><view class="value">{{item.value}}<text>{{item.unit}}</text></view><view class="name">{{item.name}}</view></view>
     </view>
     <view class="note" wx:if="{{note}}">口径说明：{{note}}</view>
+    <view class="warehouse-panel" wx:if="{{showWarehouseLots}}">
+      <view class="warehouse-title">物料批次历史清单</view>
+      <view class="warehouse-subtitle">按入库时间倒序保留全部批次，包括已用完或已退完的历史批次；本页只读。</view>
+      <view class="search warehouse-search">
+        <input class="input" placeholder="输入供应商、物料、规格或批次筛选" value="{{warehouseQuery}}" bindinput="inputWarehouseQuery" bindconfirm="searchWarehouseLots" confirm-type="search" />
+        <button class="secondary" bindtap="searchWarehouseLots">查询</button>
+      </view>
+      <view class="warehouse-error" wx:if="{{warehouseError}}">{{warehouseError}}</view>
+      <view class="warehouse-lot" wx:for="{{warehouseLots}}" wx:key="id">
+        <view class="warehouse-lot-head"><view>{{item.material_name}} · {{item.spec_name}}</view><view class="lot-status">{{item.status}}</view></view>
+        <view class="warehouse-code">{{item.batch_code}}</view>
+        <view class="warehouse-subtitle">供应商：{{item.supplier_name}} · {{item.received_at}}</view>
+        <view class="warehouse-numbers">入库 {{item.received}} {{item.unit}}　当前 {{item.on_hand}}　可用 {{item.available}}　预占 {{item.reserved}}</view>
+        <view class="warehouse-subtitle" wx:if="{{item.supplier_batch_code}}">供应商原始批号：{{item.supplier_batch_code}}</view>
+      </view>
+      <view class="empty" wx:if="{{!warehouseLoading && !warehouseError && !warehouseLots.length}}">暂无符合条件的物料批次</view>
+      <view class="empty" wx:if="{{warehouseLoading}}">正在加载批次清单…</view>
+      <button wx:if="{{warehouseNextCursor && !warehouseLoading}}" class="secondary wide" bindtap="moreWarehouseLots">加载更多</button>
+    </view>
     <view class="tree-panel" wx:if="{{hasResponsibilityTree}}">
       <view class="tree-title">产品流转链路</view>
-      <view class="tree-subtitle">默认显示当前链路总数；点击卡片逐级查看各级商家</view>
+      <view class="tree-subtitle">链路库存包含本组织及全部下级；组织库存只计算本组织。点击卡片逐级查看。</view>
       <view
         class="tree-row {{item.nodeType === 'RESPONSIBILITY_ACCOUNT' ? 'actor-node' : 'organization-node'}}"
         wx:for="{{treeNodes}}"
@@ -29,8 +48,12 @@
           <view class="tree-level">{{item.hasChildren ? '可展开' : '末级'}}</view>
         </view>
         <view class="flow-total-cards">
-          <view class="flow-total-card inventory-card"><view class="flow-number">{{item.totalInventory}}</view><view class="flow-label">库存总数</view></view>
-          <view class="flow-total-card activated-card"><view class="flow-number">{{item.totalActivated}}</view><view class="flow-label">激活总数</view></view>
+          <view class="flow-total-card inventory-card"><view class="flow-number">{{item.primaryInventory}}</view><view class="flow-label">{{item.inventoryLabel}}</view></view>
+          <view class="flow-total-card organization-card" wx:if="{{item.showOrganizationInventory}}"><view class="flow-number">{{item.ownInventory}}</view><view class="flow-label">组织库存</view></view>
+          <view class="flow-total-card activated-card"><view class="flow-number">{{item.primaryActivated}}</view><view class="flow-label">{{item.activatedLabel}}</view></view>
+        </view>
+        <view class="tree-node-scope" wx:if="{{item.totalTransit}}">
+          <text>当前链路在途 {{item.totalTransit}} 台</text>
         </view>
       </view>
     </view>

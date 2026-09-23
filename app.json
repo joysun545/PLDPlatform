@@ -23,10 +23,7 @@
     "pages/logs/logs",
     "pages/sales/create_plan/create_plan",
     "pages/sales/order_plan_list/order_plan_list",
-    "pages/sales/order_logistics/order_logistics",
-    "pages/sales/order_finance/order_finance",
-    "pages/sales/matching_confirm/matching_confirm",
-    "pages/stock/order_outbound/order_outbound",
+    "pages/sales/order_plan_detail/order_plan_detail",
     "pages/stock/goods_transfer/goods_transfer",
     "pages/stock/goods_transfer_list/goods_transfer_list",
     "pages/stock/goods_transfer_detail/goods_transfer_detail",
@@ -53,6 +50,11 @@
     "pages/quality_trace/recall_task_detail/recall_task_detail"
     ,"pages/data_statistics/dashboard/dashboard"
     ,"pages/data_statistics/domain/domain"
+    ,"pages/material_inventory/list/list"
+    ,"pages/material_inventory/order_delivery_receipt/order_delivery_receipt"
+    ,"pages/material_inventory/detail/detail"
+    ,"pages/material_inventory/form/form"
+    ,"pages/material_inventory/warranty_list/warranty_list"
   ],
   "window": {
     "backgroundTextStyle": "light",

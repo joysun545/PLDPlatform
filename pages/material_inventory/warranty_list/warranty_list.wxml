@@ -1,0 +1,20 @@
+<view class="page">
+  <view class="notice">三包故障件由售后、拆机或召回流程自动归集。这里只查看故障件，并在实际线下交付后登记退回供应商数量。</view>
+  <view class="search">
+    <input class="input" placeholder="输入供应商、物料、批次或三包编号筛选" value="{{query}}" bindinput="inputQuery" bindconfirm="search" confirm-type="search" />
+    <button class="secondary" bindtap="search">查询</button>
+  </view>
+  <view wx:if="{{error}}" class="notice error">{{error}}<button class="wide secondary" bindtap="search">重新查询</button></view>
+  <view class="card" wx:for="{{items}}" wx:key="id" data-stock-id="{{item.stock_id}}" data-case-id="{{item.id}}" bindtap="open">
+    <view class="title">{{item.material_name}} · {{item.spec_name}}</view>
+    <view class="code">三包编号：{{item.case_no}}</view>
+    <view class="subtitle">供应商：{{item.supplier_name}} · {{item.created_at}}</view>
+    <view class="row"><view>故障件在库 <text class="number">{{item.fault_on_hand}}</text> {{item.unit}}</view><view>{{item.can_send ? '可退回' : '已全部退回'}}</view></view>
+    <view class="muted">已退 {{item.sent}} · 待换回 {{item.awaiting_replacement}} · 已换回 {{item.replaced}}</view>
+    <view class="muted">查看三包退货详情 ›</view>
+  </view>
+  <view class="empty" wx:if="{{!loading && !error && !searched}}">输入关键字筛选三包退货记录</view>
+  <view class="empty" wx:if="{{!loading && !error && searched && !items.length}}">没有符合条件的三包退货记录</view>
+  <view class="empty" wx:if="{{loading}}">正在查询…</view>
+  <button wx:if="{{nextCursor && !loading}}" class="secondary wide" bindtap="onReachBottom">加载更多</button>
+</view>

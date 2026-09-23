@@ -133,3 +133,28 @@ page {
 }
 
 .top-tip { margin-bottom: 0; }
+
+.carry-notice {
+  margin-top: 22rpx;
+  padding: 24rpx;
+  border: 1rpx solid #99f6e4;
+  border-radius: 18rpx;
+  background: #f0fdfa;
+}
+
+.carry-title, .carry-description { display: block; }
+.carry-title { font-size: 28rpx; font-weight: 700; color: #0f766e; }
+.carry-description { margin-top: 12rpx; font-size: 24rpx; line-height: 1.7; color: #475569; overflow-wrap: anywhere; }
+.rolling-money-grid { box-shadow: none; border: 1rpx solid #e5e7eb; }
+.balance-details { margin-top: 18rpx; }
+.balance-row { display: flex; justify-content: space-between; gap: 16rpx; padding: 12rpx 0; color: #64748b; font-size: 24rpx; }
+.balance-row text:last-child { color: #334155; font-weight: 600; text-align: right; }
+.balance-total { margin-top: 6rpx; padding-top: 16rpx; border-top: 1rpx solid #e5e7eb; }
+.balance-total text:last-child { color: #b45309; }
+.invoice-card { margin-top: 20rpx; padding-top: 20rpx; border-top: 1rpx solid #e5e7eb; }
+.invoice-flow { flex: 1; min-width: 0; padding-right: 16rpx; font-size: 25rpx; font-weight: 600; overflow-wrap: anywhere; }
+.allocation-list { margin-top: 10rpx; padding-top: 12rpx; border-top: 1rpx solid #a7f3d0; }
+.allocation-title { font-weight: 600; }
+.allocation-row { display: flex; justify-content: space-between; gap: 16rpx; margin-top: 10rpx; }
+.allocation-row text:first-child { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.allocation-row text:last-child { white-space: nowrap; }

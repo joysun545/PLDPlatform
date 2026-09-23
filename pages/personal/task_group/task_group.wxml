@@ -1,5 +1,5 @@
 <view class="page">
-  <view wx:if="{{group}}" class="group-summary">
+  <view wx:if="{{group && !isGoodsTransfer}}" class="group-summary">
     <view class="group-top">
       <text class="group-title">{{group.group_label || '同一业务任务'}}</text>
       <text class="group-count">共 {{group.child_count}} 项</text>
@@ -16,6 +16,11 @@
   </view>
 
   <view wx:if="{{loading}}" class="empty">正在加载任务详情...</view>
+  <view wx:elif="{{isGoodsTransfer}}" class="group-summary">
+    <text class="group-title">{{group.group_label || '商品流转'}}</text>
+    <text class="group-headline">{{group.title}}</text>
+    <button loading="{{!!openingId}}" disabled="{{!!openingId}}" bindtap="openGoodsTransfer">查看并处理本次流转</button>
+  </view>
   <view wx:elif="{{tasks.length === 0}}" class="empty">暂无子任务</view>
 
   <view wx:else class="task-list">

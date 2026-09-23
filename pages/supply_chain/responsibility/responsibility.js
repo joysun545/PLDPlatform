@@ -1,25 +1,20 @@
 const app = getApp();
 
-const SCOPE_TYPES = {
-  CATEGORY: '按产品品类',
-  MATERIAL: '按物料名称'
-};
-
 Page({
   data: {
     loading: true,
     saving: false,
     errorMessage: '',
     supplier: null,
-    precedenceRule: '',
+    ruleMessage: '',
+    assignmentMode: '',
     managers: [],
     managerIndex: -1,
     selectedManager: null,
-    scopeType: 'CATEGORY',
-    scopeLabel: SCOPE_TYPES.CATEGORY,
     targetOptions: [],
     selectedTargetIds: [],
-    hasManagers: false
+    hasManagers: false,
+    needsAssignment: false
   },
 
   onLoad() {
@@ -31,7 +26,7 @@ Page({
       if (app.globalData.role !== 'supplier_owner') {
         wx.showModal({
           title: '无法进入',
-          content: '只有供应商负责人账号可以分配销售责任范围',
+          content: '只有供应商负责人账号可以配置销售物料责任',
           showCancel: false,
           success: () => wx.navigateBack()
         });
@@ -76,21 +71,18 @@ Page({
       managerIndex = managers.length ? 0 : -1;
     }
     const selectedManager = managerIndex >= 0 ? managers[managerIndex] : null;
-    const scopeType = selectedManager && selectedManager.scope_type
-      ? selectedManager.scope_type
-      : 'CATEGORY';
-    this._categories = payload.categories || [];
+    const assignmentMode = payload.assignment_mode || 'OWNER_ONLY';
     this._materials = payload.materials || [];
     this.setData({
       loading: false,
       supplier: payload.supplier || null,
-      precedenceRule: payload.precedence_rule || '',
+      ruleMessage: payload.rule_message || '',
+      assignmentMode,
       managers,
       hasManagers: managers.length > 0,
+      needsAssignment: assignmentMode === 'MULTI_SALES_BY_MATERIAL',
       managerIndex,
       selectedManager,
-      scopeType,
-      scopeLabel: SCOPE_TYPES[scopeType],
       selectedTargetIds: selectedManager ? (selectedManager.target_ids || []).map(Number) : []
     });
     this.refreshTargetOptions();
@@ -99,43 +91,26 @@ Page({
   onManagerChange(e) {
     const managerIndex = Number(e.detail.value);
     const selectedManager = this.data.managers[managerIndex];
-    const scopeType = selectedManager.scope_type || 'CATEGORY';
     this.setData({
       managerIndex,
       selectedManager,
-      scopeType,
-      scopeLabel: SCOPE_TYPES[scopeType],
       selectedTargetIds: (selectedManager.target_ids || []).map(Number)
     });
     this.refreshTargetOptions();
   },
 
-  onScopeChange(e) {
-    const scopeType = e.detail.value;
-    this.setData({
-      scopeType,
-      scopeLabel: SCOPE_TYPES[scopeType],
-      selectedTargetIds: []
-    });
-    this.refreshTargetOptions();
-  },
-
   onTargetsChange(e) {
-    const selectedTargetIds = (e.detail.value || []).map(Number);
-    this.setData({ selectedTargetIds });
+    this.setData({ selectedTargetIds: (e.detail.value || []).map(Number) });
     this.refreshTargetOptions();
   },
 
   refreshTargetOptions() {
-    const source = this.data.scopeType === 'MATERIAL'
-      ? (this._materials || [])
-      : (this._categories || []);
     const selected = new Set(this.data.selectedTargetIds.map(Number));
     const currentIdentityId = this.data.selectedManager
       ? this.data.selectedManager.identity_id
       : null;
     this.setData({
-      targetOptions: source.map(item => ({
+      targetOptions: (this._materials || []).map(item => ({
         ...item,
         checked: selected.has(Number(item.id)),
         occupiedByOther: !!(
@@ -148,15 +123,15 @@ Page({
   },
 
   saveResponsibilities() {
-    if (!this.data.selectedManager || this.data.saving) return;
+    if (!this.data.needsAssignment || !this.data.selectedManager || this.data.saving) return;
     const selected = new Set(this.data.selectedTargetIds.map(Number));
     const reassigned = this.data.targetOptions.filter(
       item => selected.has(Number(item.id)) && item.occupiedByOther
     );
     if (reassigned.length) {
       wx.showModal({
-        title: '确认改派责任范围',
-        content: `有 ${reassigned.length} 项当前由其他销售经理负责，保存后将改派给 ${this.data.selectedManager.name}。`,
+        title: '确认改派物料责任',
+        content: `有 ${reassigned.length} 类物料当前由其他销售经理负责，保存后将改派给 ${this.data.selectedManager.name}。`,
         confirmText: '确认改派',
         success: result => {
           if (result.confirm) this.submitResponsibilities();
@@ -175,7 +150,7 @@ Page({
       header: app.authHeader('application/json'),
       data: {
         sales_identity_id: this.data.selectedManager.identity_id,
-        scope_type: this.data.scopeType,
+        scope_type: 'MATERIAL',
         target_ids: this.data.selectedTargetIds
       },
       success: res => {
@@ -189,7 +164,7 @@ Page({
           wx.showToast({ title: body.msg || '保存失败', icon: 'none' });
           return;
         }
-        wx.showToast({ title: '责任范围已保存', icon: 'success' });
+        wx.showToast({ title: '物料责任已保存', icon: 'success' });
         this.applyPayload(body.data);
       },
       fail: () => wx.showToast({ title: '网络连接失败', icon: 'none' }),

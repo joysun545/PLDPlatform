@@ -1,21 +1,13 @@
 <view class="page">
   <view class="page-header">
-    <text class="eyebrow">订单协同</text>
+    <text class="eyebrow">物料库存订单协同</text>
     <text class="title">订单计划列表</text>
     <text class="subtitle" wx:if="{{viewer}}">{{viewer.organization_name}} · {{viewer.role_name}}</text>
   </view>
 
-  <view class="scope-tip" wx:if="{{visibilityText}}">{{visibilityText}}</view>
-
   <scroll-view class="filter-scroll" scroll-x="true" enhanced="true">
     <view class="filter-row">
-      <view
-        wx:for="{{filters}}"
-        wx:key="key"
-        class="filter-item {{activeStatus === item.key ? 'active' : ''}}"
-        data-status="{{item.key}}"
-        bindtap="selectStatus"
-      >{{item.label}}</view>
+      <view wx:for="{{filters}}" wx:key="key" class="filter-item {{activeStatus === item.key ? 'active' : ''}}" data-status="{{item.key}}" bindtap="selectStatus">{{item.label}}</view>
     </view>
   </scroll-view>
 
@@ -27,331 +19,22 @@
   <view class="state-card" wx:elif="{{plans.length === 0}}">当前筛选下暂无订单计划</view>
 
   <block wx:else>
-    <view
-      class="plan-card {{plan.canOpen ? 'clickable' : ''}}"
-      wx:for="{{plans}}"
-      wx:for-item="plan"
-      wx:for-index="planIndex"
-      wx:key="id"
-      data-id="{{plan.id}}"
-      bindtap="openPlan"
-    >
-    <view class="plan-head">
-      <view>
-        <text class="plan-code">{{plan.plan_code}}</text>
-        <text class="plan-time">{{plan.submittedText}}</text>
-      </view>
-      <text class="status-pill {{plan.statusClass}}">{{plan.status_name}}</text>
-    </view>
-
-    <view class="summary-grid">
-      <view class="summary-cell" wx:if="{{plan.scope === 'supplier'}}">
-        <text class="label">厂家</text>
-        <text class="value">{{plan.factory.name}}</text>
-      </view>
-      <view class="summary-cell">
-        <text class="label">商家</text>
-        <text class="value">{{plan.merchant.name}}</text>
-      </view>
-      <view class="summary-cell">
-        <text class="label">厂家销售经理</text>
-        <text class="value">{{plan.sales_manager.name}}</text>
-      </view>
-      <view class="summary-cell">
-        <text class="label">品牌</text>
-        <text class="value">{{plan.brand.name}}</text>
-      </view>
-      <view class="summary-cell">
-        <text class="label">负责区域</text>
-        <text class="value">{{plan.region}}</text>
-      </view>
-      <view class="summary-cell">
-        <text class="label">可见计划数量</text>
-        <text class="value">{{plan.total_quantity}} 台</text>
-      </view>
-    </view>
-
-    <view class="fulfillment-flow" wx:if="{{plan.scope === 'factory' || plan.scope === 'merchant'}}">
-      <view
-        class="flow-stage {{stage.state === 'DONE' ? 'done' : (stage.state === 'CURRENT' ? 'current' : '')}}"
-        wx:for="{{plan.fulfillmentStages}}"
-        wx:for-item="stage"
-        wx:key="code"
-      >
-        <view class="flow-dot">{{stage.state === 'DONE' ? '✓' : ''}}</view>
-        <text>{{stage.name}}</text>
-      </view>
-    </view>
-
-    <view class="item-block" wx:for="{{plan.items}}" wx:for-item="planItem" wx:for-index="itemIndex" wx:key="id">
-      <view class="item-head">
-        <view class="item-title-wrap">
-          <text class="item-category">{{planItem.category.name}}</text>
-          <text class="item-name">{{planItem.product_model.name}}</text>
-          <text class="item-code">{{planItem.product_model.code}}</text>
-        </view>
-        <text class="quantity">{{planItem.quantity}} 台</text>
-      </view>
-      <view
-        class="meta-row"
-        wx:if="{{plan.scope !== 'supplier' && planItem.return_inventory_quantity > 0}}"
-      >
-        <text>数量拆分</text>
-        <text>退货库存 {{planItem.return_inventory_quantity}} 台 · 新生产 {{planItem.production_quantity}} 台</text>
-      </view>
-      <view class="meta-row"><text>订单批次</text><text>{{planItem.order_batch_code}}</text></view>
-      <view class="meta-row"><text>BOM版本</text><text>{{planItem.bomVersion}}</text></view>
-
-      <view class="supplier-materials" wx:if="{{plan.scope === 'supplier'}}">
-        <view
-          class="material-row"
-          wx:for="{{planItem.materials}}"
-          wx:for-item="material"
-          wx:for-index="materialIndex"
-          wx:key="bom_item_id"
-        >
-          <view>
-            <text class="material-name">{{material.material_name}}</text>
-            <text class="material-spec">{{material.material_spec_name}}</text>
-          </view>
-          <view class="material-quantity">
-            <text>单台 {{material.quantity_per_device}}</text>
-            <text>合计 {{material.required_quantity}}</text>
-          </view>
-          <view class="batch-editor" wx:if="{{plan.canConfirmDelivery}}" catchtap="noop">
-            <text class="batch-label">供应商生产批次（必填）</text>
-            <input
-              class="batch-input"
-              value="{{material.batchCode}}"
-              placeholder="填写产品标注的供应商原生产批次"
-              data-plan-index="{{planIndex}}"
-              data-item-index="{{itemIndex}}"
-              data-material-index="{{materialIndex}}"
-              bindinput="onBatchCodeInput"
-              catchtap="noop"
-            />
-            <picker
-              wx:if="{{material.batchChoices.length}}"
-              mode="selector"
-              range="{{material.batchChoiceLabels}}"
-              data-plan-index="{{planIndex}}"
-              data-item-index="{{itemIndex}}"
-              data-material-index="{{materialIndex}}"
-              bindchange="onBatchChoiceChange"
-              catchtap="noop"
-            >
-              <view class="batch-picker">从历史批次选择 ›</view>
-            </picker>
-            <picker
-              mode="date"
-              value="{{material.productionDate}}"
-              data-plan-index="{{planIndex}}"
-              data-item-index="{{itemIndex}}"
-              data-material-index="{{materialIndex}}"
-              bindchange="onBatchDateChange"
-              catchtap="noop"
-            >
-              <view class="batch-date">生产日期（选填）：{{material.productionDate || '请选择'}}</view>
-            </picker>
-          </view>
-          <view class="batch-readonly" wx:elif="{{material.batchCode}}">
-            <text>供应商生产批次：{{material.batchCode}}</text>
-            <text wx:if="{{material.productionDate}}">生产日期：{{material.productionDate}}</text>
-          </view>
-        </view>
-      </view>
-    </view>
-
-    <view class="open-tip" wx:if="{{plan.canOpen}}">点击查看并确认BOM配套 ›</view>
-    <view class="finance-panel" wx:if="{{plan.financeSummary}}">
-      <view class="delivery-state-row">
-        <text class="delivery-label">订单资金</text>
-        <text class="delivery-state">{{plan.financeSummary.state_name}}</text>
-      </view>
-      <view class="finance-summary-grid">
+    <view class="plan-card" wx:for="{{plans}}" wx:key="id" data-id="{{item.id}}" bindtap="openPlan">
+      <view class="plan-head">
         <view>
-          <text class="finance-label">应收</text>
-          <text class="finance-value">{{plan.financeSummary.receivable_amount ? '¥' + plan.financeSummary.receivable_amount : '--'}}</text>
+          <text class="plan-code">{{item.plan_code}}</text>
+          <text class="plan-time">{{item.submittedText}}</text>
         </view>
-        <view>
-          <text class="finance-label">累计已收</text>
-          <text class="finance-value">¥{{plan.financeSummary.confirmed_received_amount}}</text>
-        </view>
-        <view>
-          <text class="finance-label">未收余额</text>
-          <text class="finance-value">{{plan.financeSummary.outstanding_amount !== null ? '¥' + plan.financeSummary.outstanding_amount : '--'}}</text>
-        </view>
+        <text class="status-pill {{item.statusClass}}">{{item.status_name}}</text>
       </view>
-      <button
-        class="finance-detail-button"
-        data-id="{{plan.id}}"
-        catchtap="openFinance"
-      >查看或处理资金明细</button>
-    </view>
-    <view class="delivery-panel" wx:if="{{plan.scope === 'supplier' && plan.confirmation}}">
-      <view class="delivery-state-row">
-        <text class="delivery-label">配送协同</text>
-        <text class="delivery-state">{{plan.confirmation.state_name}}</text>
+      <view class="summary-grid">
+        <view class="summary-cell"><text class="label">商家</text><text class="value">{{item.merchant.name}}</text></view>
+        <view class="summary-cell"><text class="label">计划数量</text><text class="value">{{item.total_quantity}} 台</text></view>
+        <view class="summary-cell"><text class="label">厂家销售经理</text><text class="value">{{item.sales_manager.name}}</text></view>
+        <view class="summary-cell"><text class="label">品牌</text><text class="value">{{item.brand.name}}</text></view>
       </view>
-      <text class="delivery-progress" wx:if="{{plan.confirmation.processed_by_text}}">
-        {{plan.confirmation.processed_by_text}}
-      </text>
-      <text class="delivery-progress warning" wx:if="{{plan.confirmation.waiting_for_owner}}">
-        尚有未分配给销售经理的物料，需供应商负责人确认。
-      </text>
-      <button
-        wx:if="{{plan.canConfirmDelivery}}"
-        class="delivery-confirm-button"
-        loading="{{confirmingPlanId === plan.id}}"
-        disabled="{{confirmingPlanId !== 0}}"
-        data-id="{{plan.id}}"
-        catchtap="confirmDelivery"
-      >
-        {{viewer.role === 'supplier_owner' ? '确认全部物料已完成配送' : '确认责任物料已完成配送'}}
-      </button>
-    </view>
-    <view
-      class="production-panel"
-      wx:if="{{viewer.role === 'factory_production' && plan.productionConfirmation}}"
-    >
-      <view class="delivery-state-row">
-        <text class="delivery-label">生产交接</text>
-        <text class="delivery-state">
-          {{plan.productionConfirmation.state_name}}
-        </text>
-      </view>
-      <button
-        wx:if="{{plan.canConfirmProduction}}"
-        class="production-confirm-button"
-        loading="{{confirmingProductionPlanId === plan.id}}"
-        disabled="{{confirmingProductionPlanId !== 0}}"
-        data-id="{{plan.id}}"
-        catchtap="confirmProduction"
-      >确认生产完成</button>
-    </view>
-    <view
-      class="shipment-authorization-panel"
-      wx:if="{{(viewer.role === 'factory_sales' || viewer.role === 'factory_stock') && plan.shipmentAuthorization}}"
-    >
-      <view class="delivery-state-row">
-        <text class="delivery-label">发货确认</text>
-        <text class="delivery-state">{{plan.shipmentAuthorization.state_name}}</text>
-      </view>
-      <text
-        class="outbound-tip"
-        wx:if="{{plan.shipmentAuthorization.authorized_by_name}}"
-      >
-        已由 {{plan.shipmentAuthorization.authorized_by_name}} 确认发货。
-      </text>
-      <text
-        class="outbound-tip"
-        wx:if="{{viewer.role === 'factory_sales' && plan.canConfirmShipmentAuthorization}}"
-      >
-        生产已经完成。请根据实际履约安排确认是否通知库房打印二维码并发货。
-      </text>
-      <text
-        class="outbound-tip"
-        wx:if="{{viewer.role === 'factory_stock' && plan.shipmentAuthorization.state === 'AUTHORIZED'}}"
-      >
-        销售经理已经确认发货，请在网页打印中心完成二维码；全部打印后可一键出库。
-      </text>
-      <button
-        wx:if="{{viewer.role === 'factory_sales' && plan.canConfirmShipmentAuthorization}}"
-        class="shipment-authorization-button"
-        loading="{{confirmingShipmentAuthorizationPlanId === plan.id}}"
-        disabled="{{confirmingShipmentAuthorizationPlanId !== 0}}"
-        data-id="{{plan.id}}"
-        catchtap="confirmShipmentAuthorization"
-      >确认通知库房发货</button>
-    </view>
-    <view
-      class="outbound-panel"
-      wx:if="{{viewer.role === 'factory_stock' && plan.stockConfirmation}}"
-    >
-      <view class="delivery-state-row">
-        <text class="delivery-label">订单发货</text>
-        <text class="delivery-state">{{plan.stockConfirmation.state_name}}</text>
-      </view>
-      <text class="outbound-tip" wx:if="{{plan.canConfirmOutbound}}">
-        核对订单后可直接一键发货，无需逐台扫描。
-      </text>
-      <text
-        class="outbound-tip"
-        wx:if="{{plan.stockConfirmation.state === 'PENDING_PRINT'}}"
-      >
-        本订单全部调用退货待流转库存。请先在网页打印中心生成并确认新二维码，同一任务随后将更新为可发货。
-      </text>
-      <button
-        wx:if="{{plan.canConfirmOutbound}}"
-        class="outbound-confirm-button"
-        loading="{{confirmingOutboundPlanId === plan.id}}"
-        disabled="{{confirmingOutboundPlanId !== 0}}"
-        data-id="{{plan.id}}"
-        catchtap="confirmOutbound"
-      >确认一键发货</button>
-    </view>
-    <view class="logistics-panel" wx:if="{{plan.logisticsSummary}}">
-      <view class="delivery-state-row">
-        <text class="delivery-label">物流单据</text>
-        <text class="delivery-state">{{plan.logisticsSummary.state_name}}</text>
-      </view>
-      <text class="outbound-tip" wx:if="{{plan.logisticsSummary.latestUploadedText}}">
-        最近上传：{{plan.logisticsSummary.latest_uploaded_by_name}} · {{plan.logisticsSummary.latestUploadedText}}
-      </text>
-      <text
-        class="outbound-tip"
-        wx:if="{{plan.scope === 'merchant' && plan.logisticsSummary.state === 'PENDING_UPLOAD'}}"
-      >厂家物流经理尚未上传，商家实物入库无需等待。</text>
-      <button
-        wx:if="{{plan.logisticsSummary.can_upload || plan.logisticsSummary.can_view}}"
-        class="logistics-detail-button"
-        data-id="{{plan.id}}"
-        catchtap="openLogistics"
-      >{{plan.logisticsSummary.can_upload ? '上传或查看物流单据' : '查看物流单据'}}</button>
-    </view>
-    <view
-      class="receipt-panel"
-      wx:if="{{plan.scope === 'merchant' && plan.receiptConfirmation}}"
-    >
-      <view class="delivery-state-row">
-        <text class="delivery-label">商家入库</text>
-        <text class="delivery-state">{{plan.receiptConfirmation.state_name}}</text>
-      </view>
-      <text class="outbound-tip" wx:if="{{plan.canConfirmReceipt}}">
-        线下验收完成后，负责人、高级经理、销售经理或库管任意一人可一键入库，以首位操作人为准。
-      </text>
-      <text class="outbound-tip" wx:elif="{{plan.receiptConfirmation.completed_by_name}}">
-        已被 {{plan.receiptConfirmation.completed_by_name}} 入库。
-      </text>
-      <button
-        wx:if="{{plan.canConfirmReceipt}}"
-        class="receipt-confirm-button"
-        loading="{{confirmingReceiptPlanId === plan.id}}"
-        disabled="{{confirmingReceiptPlanId !== 0}}"
-        data-id="{{plan.id}}"
-        catchtap="confirmReceipt"
-      >确认一键入库</button>
-    </view>
-    <view
-      class="accounting-panel"
-      wx:if="{{viewer.role === 'factory_sales_assistant' && plan.accountingConfirmation}}"
-    >
-      <view class="delivery-state-row">
-        <text class="delivery-label">订单入账</text>
-        <text class="delivery-state">{{plan.accountingConfirmation.state_name}}</text>
-      </view>
-      <text class="outbound-tip" wx:if="{{plan.canConfirmAccounting}}">
-        商家已完成入库，请完成线下账务处理后确认入账。
-      </text>
-      <button
-        wx:if="{{plan.canConfirmAccounting}}"
-        class="accounting-confirm-button"
-        loading="{{confirmingAccountingPlanId === plan.id}}"
-        disabled="{{confirmingAccountingPlanId !== 0}}"
-        data-id="{{plan.id}}"
-        catchtap="confirmAccounting"
-      >确认已入账</button>
-    </view>
+      <view class="material-flow-tip">点击查看冻结 BOM、成品库存调用、物料预占、供应配送、型号生产计划及实时任务动态。</view>
+      <view class="open-tip">查看订单计划详情 ›</view>
     </view>
   </block>
 </view>

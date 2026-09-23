@@ -1,0 +1,55 @@
+<view class="page">
+  <view wx:if="{{error}}" class="notice error">{{error}}<button class="secondary wide" bindtap="retry">重新加载</button></view>
+  <view class="card" wx:if="{{stock}}">
+    <view class="title">{{stock.material_name}} · {{stock.spec_name}}</view>
+    <view class="code">{{stock.spec_code}}</view>
+    <view class="subtitle">厂家：{{stock.factory_name}}</view>
+    <view class="subtitle">供应商：{{stock.supplier_name}}</view>
+    <view class="row"><view>正常库存 <text class="number">{{stock.on_hand}}</text> {{stock.unit}}</view><view>{{stock.active_lot_count}} 个结余批次</view></view>
+    <view class="muted">可用 {{stock.available}} · 已预占 {{stock.reserved}}</view>
+    <view class="muted">故障件在库 {{stock.fault_on_hand}} · 待换回 {{stock.awaiting_replacement}}</view>
+    <view class="actions" wx:if="{{canManage}}">
+      <button class="primary" data-kind="RECEIPT" bindtap="action">物料入库</button>
+    </view>
+  </view>
+  <view class="tabs">
+    <button class="{{tab === 'lots' ? 'active' : ''}}" data-tab="lots" bindtap="tab">库存批次</button>
+    <button class="{{tab === 'warranty' ? 'active' : ''}}" data-tab="warranty" bindtap="tab">三包退换</button>
+    <button class="{{tab === 'documents' ? 'active' : ''}}" data-tab="documents" bindtap="tab">出入库流水</button>
+  </view>
+  <checkbox-group class="check" wx:if="{{tab === 'lots'}}" bindchange="toggleEmpty"><label><checkbox value="all" checked="{{includeEmpty}}" color="#08b374" />显示已用完或已退完的批次</label></checkbox-group>
+  <view wx:if="{{tab === 'lots'}}">
+    <view class="card" wx:for="{{items}}" wx:key="id">
+      <view class="code">{{item.batch_code}}</view><view class="muted">入库时间 {{item.received_at}}</view>
+      <view class="muted" wx:if="{{item.supplier_batch_code}}">供应商原始批号：{{item.supplier_batch_code}}</view>
+      <view class="row"><view>当前结余 <text class="number">{{item.on_hand}}</text> {{stock.unit}}</view><view>原入库 {{item.received}}</view></view>
+      <view class="muted">可用 {{item.available}} · 已预占 {{item.reserved}}</view>
+      <view class="actions" wx:if="{{canManage && item.can_return}}">
+        <button class="secondary" data-kind="SUPPLIER_RETURN" data-lot="{{item.id}}" bindtap="action">退给供应商</button>
+      </view>
+    </view>
+  </view>
+  <view wx:if="{{tab === 'warranty'}}">
+    <view class="card" wx:for="{{items}}" wx:key="id">
+      <view class="code">{{item.case_no}}</view><view class="muted">{{item.source}}</view>
+      <view class="code" wx:if="{{item.source_batch_code}}">来源批次 {{item.source_batch_code}}</view>
+      <view class="row"><view>故障件登记 {{item.registered}} {{stock.unit}}</view><view>已退供应商 {{item.sent}}</view></view>
+      <view class="muted">故障件在库 {{item.fault_on_hand}} · 待换回 {{item.awaiting_replacement}} · 已换回 {{item.replaced}}</view>
+      <view class="actions" wx:if="{{canManage && item.can_send}}">
+        <button class="primary" data-kind="WARRANTY_SEND" data-case="{{item.id}}" bindtap="action">三包件退回供应商</button>
+      </view>
+    </view>
+  </view>
+  <view wx:if="{{tab === 'documents'}}">
+    <view class="card" wx:for="{{items}}" wx:key="id">
+      <view class="row"><view class="title">{{item.kind_label}}</view><view class="number">{{item.quantity}} {{stock.unit}}</view></view>
+      <view class="code">{{item.document_no}}</view>
+      <view wx:if="{{item.batch_code}}" class="code">批次 {{item.batch_code}}</view>
+      <view wx:if="{{item.case_no}}" class="code">三包 {{item.case_no}}</view>
+      <view class="muted">{{item.created_at}}</view>
+    </view>
+  </view>
+  <view class="empty" wx:if="{{!loading && !error && !items.length}}">暂无记录</view>
+  <view class="empty" wx:if="{{loading}}">正在加载…</view>
+  <button wx:if="{{nextCursor && !loading}}" class="secondary wide" bindtap="onReachBottom">加载更多</button>
+</view>

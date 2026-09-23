@@ -123,6 +123,16 @@ button::after {
   background: #f7fbf9;
 }
 
+.material-flow-tip {
+  margin-top: 20rpx;
+  padding: 18rpx 20rpx;
+  border-radius: 16rpx;
+  color: #39705d;
+  background: #e8f8ef;
+  font-size: 23rpx;
+  line-height: 1.55;
+}
+
 .plan-head,
 .item-head,
 .meta-row,

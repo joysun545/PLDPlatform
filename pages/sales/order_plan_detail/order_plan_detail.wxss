@@ -1,0 +1,799 @@
+page {
+  background: #f4f7f5;
+  color: #1d3027;
+}
+
+.page {
+  min-height: 100vh;
+  padding: 0 24rpx 64rpx;
+  box-sizing: border-box;
+}
+
+.state-card,
+.summary-card,
+.section-card,
+.warning-card {
+  margin-bottom: 22rpx;
+  padding: 28rpx;
+  border: 1rpx solid #e0ebe5;
+  border-radius: 24rpx;
+  background: #fff;
+  box-shadow: 0 8rpx 26rpx rgba(29, 78, 55, 0.06);
+}
+
+.state-card {
+  margin-top: 32rpx;
+  color: #6d7c73;
+  text-align: center;
+}
+
+.state-card.error,
+.warning-card {
+  color: #a74a43;
+}
+
+.secondary-button,
+.text-button,
+.action-button::after {
+  border: none;
+}
+
+.secondary-button {
+  width: 220rpx;
+  margin: 20rpx auto 0;
+  border-radius: 14rpx;
+  background: #e8f7ef;
+  color: #087f48;
+  font-size: 25rpx;
+}
+
+.hero-card {
+  margin: 0 -24rpx 24rpx;
+  padding: 44rpx 40rpx 58rpx;
+  border-radius: 0 0 42rpx 42rpx;
+  color: #fff;
+  background: linear-gradient(140deg, #037d4b 0%, #08bf70 58%, #44d88e 100%);
+}
+
+.hero-top,
+.summary-row,
+.section-head,
+.timeline-title-row,
+.requirement-head,
+.delivery-head,
+.bom-head,
+.delivery-line,
+.subplan-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.eyebrow {
+  font-size: 23rpx;
+  letter-spacing: 3rpx;
+  opacity: .78;
+}
+
+.status-pill,
+.state-badge {
+  flex-shrink: 0;
+  padding: 8rpx 16rpx;
+  border-radius: 999rpx;
+  font-size: 22rpx;
+}
+
+.status-pill {
+  color: #fff;
+  background: rgba(255, 255, 255, .2);
+}
+
+.plan-code {
+  display: block;
+  margin-top: 22rpx;
+  font-size: 38rpx;
+  font-weight: 700;
+}
+
+.hero-subtitle,
+.hero-note {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 26rpx;
+  opacity: .9;
+}
+
+.hero-note {
+  color: #eafff2;
+  font-size: 22rpx;
+}
+
+.summary-card {
+  padding: 10rpx 28rpx;
+}
+
+.summary-row {
+  min-height: 78rpx;
+  gap: 32rpx;
+  border-bottom: 1rpx solid #eef3f0;
+  color: #75847b;
+  font-size: 24rpx;
+}
+
+.summary-row text:last-child {
+  max-width: 66%;
+  color: #21362b;
+  font-size: 27rpx;
+  text-align: right;
+}
+
+.summary-row:last-child {
+  border-bottom: none;
+}
+
+.summary-row.note-row {
+  align-items: flex-start;
+  padding: 20rpx 0;
+}
+
+.text-button {
+  display: inline;
+  margin-left: 18rpx;
+  padding: 0;
+  color: #07864a;
+  background: transparent;
+  font-size: 24rpx;
+}
+
+.section-card {
+  padding: 28rpx 26rpx;
+}
+
+.section-head {
+  gap: 16rpx;
+  margin-bottom: 20rpx;
+}
+
+.section-title,
+.action-title {
+  display: block;
+  color: #193b2c;
+  font-size: 31rpx;
+  font-weight: 700;
+}
+
+.section-subtitle,
+.action-tip,
+.row-note,
+.timeline-description,
+.timeline-time,
+.material-meta {
+  display: block;
+  color: #77877e;
+  font-size: 22rpx;
+  line-height: 1.55;
+}
+
+.section-subtitle {
+  margin-top: 8rpx;
+}
+
+.timeline-row {
+  display: flex;
+  min-height: 112rpx;
+}
+
+.timeline-rail {
+  display: flex;
+  width: 38rpx;
+  flex-direction: column;
+  align-items: center;
+}
+
+.timeline-dot {
+  display: flex;
+  width: 24rpx;
+  height: 24rpx;
+  align-items: center;
+  justify-content: center;
+  border: 4rpx solid #d5e2db;
+  border-radius: 50%;
+  color: #fff;
+  background: #fff;
+  font-size: 16rpx;
+  font-weight: 700;
+}
+
+.timeline-dot.active {
+  border-color: #07ae60;
+  background: #a8edc8;
+  box-shadow: 0 0 0 8rpx rgba(7, 174, 96, .12);
+}
+
+.timeline-dot.done {
+  border-color: #08a85d;
+  background: #08a85d;
+}
+
+.timeline-dot.cancelled {
+  border-color: #c5c9c7;
+  background: #c5c9c7;
+}
+
+.timeline-line {
+  width: 2rpx;
+  flex: 1;
+  margin: 6rpx 0;
+  background: #dce6e0;
+}
+
+.timeline-content {
+  min-width: 0;
+  flex: 1;
+  padding: 0 0 20rpx 16rpx;
+}
+
+.timeline-title {
+  color: #274337;
+  font-size: 27rpx;
+  font-weight: 650;
+}
+
+.timeline-state {
+  flex-shrink: 0;
+  margin-left: 16rpx;
+  font-size: 21rpx;
+}
+
+.timeline-state.done,
+.state-badge.done {
+  color: #087f47;
+  background: #e2f7ec;
+}
+
+.timeline-state.current,
+.state-badge.current {
+  color: #9a6815;
+  background: #fff3d9;
+}
+
+.timeline-state.waiting,
+.state-badge.waiting {
+  color: #66776d;
+  background: #eff3f0;
+}
+
+.timeline-state.cancelled,
+.state-badge.cancelled {
+  color: #8c5353;
+  background: #f7eaea;
+}
+
+.timeline-description {
+  margin-top: 8rpx;
+}
+
+.timeline-time {
+  margin-top: 5rpx;
+  color: #a0aaa4;
+  font-size: 20rpx;
+}
+
+.inventory-row,
+.bom-card,
+.material-requirement,
+.delivery-card,
+.subplan-card,
+.qrcode-card,
+.shipment-card {
+  margin-top: 18rpx;
+  padding: 22rpx;
+  border: 1rpx solid #e1ebe5;
+  border-radius: 18rpx;
+  background: #fbfdfc;
+}
+
+.inventory-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18rpx;
+}
+
+.row-title {
+  display: block;
+  color: #203c2e;
+  font-size: 27rpx;
+  font-weight: 650;
+}
+
+.row-note {
+  margin-top: 7rpx;
+}
+
+.inventory-counts {
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.inventory-counts text {
+  display: block;
+  margin-top: 4rpx;
+  color: #4e7160;
+  font-size: 21rpx;
+}
+
+.bom-version-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.bom-version {
+  padding: 8rpx 14rpx;
+  border-radius: 999rpx;
+  color: #087f47;
+  background: #e4f8ee;
+  font-size: 22rpx;
+}
+
+.bom-change {
+  margin-top: 7rpx;
+  color: #78877e;
+  font-size: 20rpx;
+}
+
+.bom-material,
+.lot-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  margin-top: 14rpx;
+  padding-top: 14rpx;
+  border-top: 1rpx dashed #dce7e0;
+}
+
+.material-name {
+  display: block;
+  color: #304d3e;
+  font-size: 25rpx;
+}
+
+.material-name.deleted {
+  color: #9aa39e;
+  text-decoration: line-through;
+}
+
+.material-quantity {
+  flex-shrink: 0;
+  color: #5a7064;
+  font-size: 22rpx;
+}
+
+.quantity-grid,
+.finance-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12rpx;
+  margin-top: 18rpx;
+}
+
+.quantity-grid view,
+.finance-grid view {
+  padding: 16rpx 10rpx;
+  border-radius: 14rpx;
+  background: #f0f7f3;
+  text-align: center;
+}
+
+.quantity-grid text,
+.finance-grid text {
+  display: block;
+}
+
+.quantity-grid text:first-child,
+.finance-grid text:first-child {
+  color: #7d8b83;
+  font-size: 20rpx;
+}
+
+.quantity-grid text:last-child,
+.finance-grid text:last-child {
+  margin-top: 7rpx;
+  color: #167450;
+  font-size: 24rpx;
+  font-weight: 650;
+}
+
+.lot-row {
+  color: #63766d;
+  font-size: 21rpx;
+}
+
+.delivery-line {
+  margin-top: 16rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx dashed #dce7e0;
+  color: #385447;
+  font-size: 23rpx;
+}
+
+.delivery-line view:last-child {
+  text-align: right;
+}
+
+.delivery-line text {
+  display: block;
+  margin-top: 4rpx;
+}
+
+.delivery-line text:nth-child(2) {
+  color: #839088;
+  font-size: 20rpx;
+}
+
+.subplan-item {
+  margin-top: 14rpx;
+  padding-top: 14rpx;
+  border-top: 1rpx dashed #dce7e0;
+  color: #3d584b;
+  font-size: 23rpx;
+}
+
+.subplan-item text:last-child {
+  color: #77867e;
+  font-size: 21rpx;
+}
+
+.subplan-item > view {
+  min-width: 0;
+  padding-right: 18rpx;
+}
+
+.subplan-meta,
+.subplan-time-row,
+.batch-info-row,
+.code-state {
+  display: block;
+  color: #7b8a82;
+  font-size: 20rpx;
+  line-height: 1.55;
+}
+
+.subplan-time-row {
+  margin-top: 14rpx;
+  padding: 14rpx 16rpx;
+  border-radius: 14rpx;
+  background: #eff8f3;
+}
+
+.subplan-time-row text {
+  display: block;
+  margin-top: 4rpx;
+}
+
+.nested-batch-card {
+  margin-top: 16rpx;
+  padding: 18rpx;
+  border: 1rpx solid #dce9e2;
+  border-radius: 16rpx;
+  background: #f7fbf9;
+}
+
+.nested-title {
+  display: block;
+  color: #315545;
+  font-size: 25rpx;
+  font-weight: 650;
+}
+
+.inline-action-area {
+  margin-top: 16rpx;
+}
+
+.inline-action-button {
+  margin-top: 12rpx;
+  border-radius: 14rpx;
+  color: #087e49;
+  background: #e3f7ed;
+  font-size: 25rpx;
+}
+
+.inline-action-button::after {
+  border: none;
+}
+
+.inline-action-button.danger {
+  color: #a64440;
+  background: #fdebe9;
+}
+
+.batch-info-row,
+.code-row,
+.shipment-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+  margin-top: 14rpx;
+  padding-top: 14rpx;
+  border-top: 1rpx dashed #dce7e0;
+}
+
+.batch-info-row {
+  color: #65776d;
+  font-size: 22rpx;
+}
+
+.batch-info-row text:last-child {
+  color: #354e42;
+  text-align: right;
+}
+
+.code-row {
+  align-items: flex-start;
+  color: #3e594b;
+  font-size: 22rpx;
+}
+
+.code-row > view,
+.code-row > text:last-child {
+  min-width: 0;
+}
+
+.code-row > text:last-child {
+  max-width: 62%;
+  color: #087d48;
+  font-family: monospace;
+  font-size: 21rpx;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+
+.shipment-item-row {
+  color: #486052;
+  font-size: 22rpx;
+}
+
+.shipment-item-row text:last-child {
+  color: #7b8b82;
+  text-align: right;
+}
+
+.shipment-form-card {
+  border-color: #a9dfc3;
+  background: #fbfefc;
+}
+
+.form-note {
+  display: block;
+  padding: 16rpx 18rpx;
+  border-radius: 14rpx;
+  color: #4f7061;
+  background: #eef9f2;
+  font-size: 22rpx;
+  line-height: 1.6;
+}
+
+.split-item,
+.logistics-field {
+  margin-top: 18rpx;
+  padding-top: 18rpx;
+  border-top: 1rpx dashed #d9e9df;
+}
+
+.split-item-head,
+.split-input-row,
+.form-button-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.split-item-head .row-note {
+  margin-top: 0;
+  white-space: nowrap;
+}
+
+.split-input-row {
+  margin-top: 14rpx;
+  color: #5e7167;
+  font-size: 23rpx;
+}
+
+.split-input,
+.logistics-input {
+  min-height: 66rpx;
+  box-sizing: border-box;
+  border: 1rpx solid #cfe4d8;
+  border-radius: 12rpx;
+  color: #203c2e;
+  background: #fff;
+  font-size: 26rpx;
+}
+
+.split-input {
+  width: 200rpx;
+  padding: 0 18rpx;
+  text-align: right;
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 10rpx;
+  color: #3e584b;
+  font-size: 24rpx;
+}
+
+.logistics-input {
+  width: 100%;
+  padding: 0 20rpx;
+}
+
+.form-error {
+  display: block;
+  margin-top: 16rpx;
+  color: #b34e46;
+  font-size: 22rpx;
+  line-height: 1.5;
+}
+
+.form-button-row {
+  margin-top: 24rpx;
+}
+
+.form-half {
+  width: 50%;
+  margin: 0;
+}
+
+.primary-inline-button {
+  width: 50%;
+  margin: 0;
+  border-radius: 14rpx;
+  color: #fff;
+  background: linear-gradient(135deg, #05ba70, #009c6b);
+  font-size: 25rpx;
+}
+
+.primary-inline-button::after {
+  border: none;
+}
+
+.finance-card {
+  background: #fbfdfc;
+}
+
+.action-area {
+  margin-top: 30rpx;
+  padding: 30rpx 8rpx 0;
+}
+
+.action-tip {
+  margin: 10rpx 10rpx 22rpx;
+}
+
+.action-button {
+  margin-top: 16rpx;
+  border-radius: 18rpx;
+  color: #fff;
+  background: linear-gradient(135deg, #05ba70, #009c6b);
+  font-size: 30rpx;
+  font-weight: 650;
+}
+
+.action-button.danger {
+  background: linear-gradient(135deg, #e36f62, #c9524d);
+}
+
+
+.logistics-batch-option,
+.selection-footer,
+.document-preview {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 20rpx 0;
+}
+
+.logistics-batch-option {
+  border-bottom: 1rpx solid #e4eee8;
+}
+
+.logistics-option-copy,
+.document-preview-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.selection-footer {
+  justify-content: space-between;
+  color: #587061;
+  font-size: 24rpx;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.document-link {
+  margin: 12rpx 0 0;
+  padding: 0 20rpx;
+  width: auto;
+  color: #087d48;
+  background: #eef8f2;
+  text-align: left;
+  font-size: 24rpx;
+}
+
+.document-link::after {
+  border: none;
+}
+
+.evidence-thumbnail {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 12rpx;
+  background: #eaf1ed;
+}
+
+
+.finance-payment,
+.finance-form {
+  margin-top: 24rpx;
+  padding-top: 24rpx;
+  border-top: 1rpx solid #deebe3;
+}
+
+.finance-operation {
+  margin-top: 20rpx;
+}
+
+.finance-form {
+  padding: 24rpx;
+  border: 1rpx solid #b5ddc6;
+  border-radius: 16rpx;
+  background: #f4fbf7;
+}
+
+.finance-rollover,
+.finance-rolling-summary {
+  margin-top: 22rpx;
+  padding: 24rpx;
+  border-radius: 16rpx;
+  background: #eef8f2;
+}
+
+.finance-rollover {
+  border: 1rpx solid #dddfbd;
+  background: #faf9ec;
+}
+
+.finance-balance {
+  color: #087d48;
+  font-weight: 650;
+}
+
+.finance-order-row,
+.finance-allocation {
+  margin-top: 18rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid #deebe3;
+}
+
+.finance-order-code {
+  display: block;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
+.finance-allocation .batch-info-row text:first-child {
+  max-width: 75%;
+}
+
+.finance-invoice-title {
+  display: block;
+  margin-top: 26rpx;
+}

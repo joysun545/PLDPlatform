@@ -202,6 +202,24 @@ App({
     const pages = getCurrentPages();
     const currentRoute = pages.length ? pages[pages.length - 1].route : '';
 
+    // Material pages are explicit destinations, never the default landing
+    // page. Keep an authorized reader here when the app returns to foreground.
+    const materialRoutes = [
+      'pages/material_inventory/list/list',
+      'pages/material_inventory/detail/detail',
+      'pages/material_inventory/form/form',
+      'pages/material_inventory/warranty_list/warranty_list'
+    ];
+    if (materialRoutes.includes(currentRoute)) {
+      const canManageMaterials = role === 'factory_material_stock';
+      const canReadMaterials = canManageMaterials || ['supplier_owner', 'supplier_sales'].includes(role);
+      const isMaterialForm = currentRoute === 'pages/material_inventory/form/form';
+      if (!(isMaterialForm ? canManageMaterials : canReadMaterials)) {
+        wx.switchTab({ url: role === 'tourist' ? '/pages/scan/scan/scan' : '/pages/home/index/index' });
+      }
+      return;
+    }
+
     const protectedRoutes = [
       'pages/stock/batch_scan/batch_scan',
       'pages/stock/goods_transfer/goods_transfer',
@@ -223,9 +241,7 @@ App({
       'pages/personal/task_group/task_group',
       'pages/sales/create_plan/create_plan',
       'pages/sales/order_plan_list/order_plan_list',
-      'pages/sales/order_logistics/order_logistics',
-      'pages/sales/order_finance/order_finance',
-      'pages/sales/matching_confirm/matching_confirm',
+      'pages/sales/order_plan_detail/order_plan_detail',
       'pages/supply_chain/responsibility/responsibility',
       'pages/supply_chain/warranty_list/warranty_list',
       'pages/supply_chain/warranty_notice/warranty_notice',
@@ -247,6 +263,7 @@ App({
       'factory_production',
       'factory_logistics',
       'factory_stock',
+      'factory_material_stock',
       'merchant_owner',
       'merchant_senior_manager',
       'merchant_sales',

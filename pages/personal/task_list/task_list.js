@@ -46,6 +46,8 @@ Page({
   syncTasks() {
     const taskList = (app.globalData.taskList || []).map(task => ({
       ...task,
+      cardKey: task.group_kind === 'GOODS_TRANSFER' && task.group_id
+        ? task.group_id : task.id,
       stateText: task.display_state || (task.grouped
         ? (task.unread_count > 0
           ? `${task.unread_count}项未读`
@@ -56,11 +58,12 @@ Page({
       stateClass: task.state === 'DONE'
         ? 'done'
         : (task.state === 'READ' ? 'read' : 'new'),
-      domainName: task.grouped
+      domainName: task.grouped || task.group_kind === 'GOODS_TRANSFER'
         ? (task.group_label || (task.domain === 'AFTERSALE' ? '售后工单' : '业务协同'))
         : (DOMAIN_NAMES[task.domain] || '任务'),
       isWorkorder: !!task.is_workorder,
-      isRecallGroup: task.group_kind === 'QUALITY_RECALL'
+      isRecallGroup: task.group_kind === 'QUALITY_RECALL',
+      isGoodsTransfer: task.group_kind === 'GOODS_TRANSFER'
     }));
 
     this.setData({
@@ -90,7 +93,7 @@ Page({
         return;
       }
 
-      const targetUrl = this.resolveTaskUrl(task);
+      const targetUrl = this.resolveTaskUrl(task, response.data);
       if (targetUrl) {
         this.navigateToTask(targetUrl);
       } else {
@@ -99,20 +102,14 @@ Page({
     });
   },
 
-  resolveTaskUrl(task) {
-    if (task.url) return task.url;
-
-    // 兼容部署物流功能前已经进入本地任务缓存、但尚未携带 link 的任务。
-    if (
-      task.type === 'ORDER_PLAN_LOGISTICS_DOCUMENT_UPLOAD' &&
-      Number(task.biz_id)
-    ) {
-      return (
-        '/pages/sales/order_logistics/order_logistics' +
-        `?order_plan_id=${Number(task.biz_id)}`
-      );
+  resolveTaskUrl(task, opened) {
+    // Opening a flow card acknowledges its notices and keeps domain actions
+    // pending. Use the server's current action link if another collaborator
+    // changed the receipt or payment state since this list was loaded.
+    if (task.group_kind === 'GOODS_TRANSFER' && opened && opened.link) {
+      return opened.link;
     }
-
+    if (task.url) return task.url;
     return '';
   },
 

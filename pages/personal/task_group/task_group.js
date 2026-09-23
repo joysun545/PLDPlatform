@@ -17,7 +17,8 @@ Page({
     group: null,
     tasks: [],
     loading: true,
-    openingId: null
+    openingId: null,
+    isGoodsTransfer: false
   },
 
   onLoad(options) {
@@ -53,6 +54,13 @@ Page({
       }
 
       const group = response.data || {};
+      if (group.group_kind === 'GOODS_TRANSFER') {
+        // Support previously saved task-group links while keeping one entry
+        // into the flow's business detail, including receipt and settlement.
+        this.setData({ group, tasks: [], loading: false, isGoodsTransfer: true });
+        this.openGoodsTransfer();
+        return;
+      }
       const tasks = (group.items || []).map(item => ({
         ...item,
         domainName: DOMAIN_NAMES[item.domain] || '任务',
@@ -69,7 +77,35 @@ Page({
           : (item.need_action ? '查看并处理' : '点击查看并知晓')
       }));
 
-      this.setData({ group, tasks, loading: false });
+      this.setData({ group, tasks, loading: false, isGoodsTransfer: false });
+    });
+  },
+
+  openGoodsTransfer() {
+    const group = this.data.group;
+    const taskId = Number(group && (group.entry_task_id || group.id));
+    if (!group || group.group_kind !== 'GOODS_TRANSFER' || this.data.openingId) return;
+    if (!taskId) {
+      wx.showToast({ title: '任务入口缺失，请返回任务列表刷新', icon: 'none' });
+      return;
+    }
+    this.setData({ openingId: taskId });
+    app.openUserTask(taskId, response => {
+      this.setData({ openingId: null });
+      if (!response || response.code !== 0) {
+        wx.showToast({ title: (response && response.msg) || '任务打开失败', icon: 'none' });
+        return;
+      }
+      const targetUrl = (response.data && response.data.link) || group.link;
+      if (!targetUrl) {
+        wx.showToast({ title: '任务目标地址缺失', icon: 'none' });
+        return;
+      }
+      const normalizedUrl = targetUrl.startsWith('/') ? targetUrl : `/${targetUrl}`;
+      wx.redirectTo({
+        url: normalizedUrl,
+        fail: () => wx.showToast({ title: '流转详情打开失败，请重试', icon: 'none' })
+      });
     });
   },
 

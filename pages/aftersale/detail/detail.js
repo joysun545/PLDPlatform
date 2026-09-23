@@ -70,6 +70,8 @@ Page({
       faultIndex: -1,
       solutionIndex: -1,
       materials: [],
+      causes: {},
+      causeRows: [],
       solutionNote: ''
     },
     thirdCompany: '',
@@ -279,6 +281,7 @@ Page({
     return {
       final_fault_type: fault.value,
       final_fault_materials: finalForm.materials || [],
+      final_fault_causes: finalForm.causes || {},
       final_solution_type: solution.value,
       final_solution_note: finalForm.solutionNote.trim()
     };
@@ -432,7 +435,35 @@ Page({
   },
 
   onFinalMaterials(e) {
-    this.setData({ 'finalForm.materials': e.detail.value || [] });
+    const materials = e.detail.value || [];
+    const selected = new Set(materials.map(String));
+    const causes = { ...(this.data.finalForm.causes || {}) };
+    const causeRows = (this.data.detail.final_material_options || [])
+      .filter(item => selected.has(String(item.bom_item_id || item.material_id)))
+      .map(item => ({
+        key: String(item.bom_item_id || item.material_id),
+        materialId: item.material_id,
+        materialName: item.material_name,
+        specificationName: item.specification_name || '',
+        causes: item.fault_causes || [],
+        causeIndex: (item.fault_causes || []).findIndex(row => String(row.id) === String(causes[item.material_id] || ''))
+      }));
+    Object.keys(causes).forEach(key => {
+      if (!causeRows.some(row => String(row.materialId) === String(key))) delete causes[key];
+    });
+    this.setData({ 'finalForm.materials': materials, 'finalForm.causes': causes, 'finalForm.causeRows': causeRows });
+  },
+
+  onFinalCause(e) {
+    const materialId = e.currentTarget.dataset.materialId;
+    const row = (this.data.finalForm.causeRows || []).find(item => String(item.materialId) === String(materialId));
+    const cause = row && row.causes[Number(e.detail.value)];
+    if (!cause) return;
+    const causes = { ...(this.data.finalForm.causes || {}), [materialId]: cause.id };
+    const causeRows = (this.data.finalForm.causeRows || []).map(item => (
+      String(item.materialId) === String(materialId) ? { ...item, causeIndex: Number(e.detail.value) } : item
+    ));
+    this.setData({ 'finalForm.causes': causes, 'finalForm.causeRows': causeRows });
   },
 
   onFinalNote(e) {

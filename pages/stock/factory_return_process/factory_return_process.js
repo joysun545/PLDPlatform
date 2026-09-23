@@ -354,7 +354,7 @@ Page({
         if (typeof app.refreshTasks === 'function') app.refreshTasks();
         wx.showModal({
           title: '分类入库完成',
-          content: '厂家库管已收到知晓任务；待拆机和待修复设备已分别向生产经理、配套经理推送后续操作任务。',
+          content: '厂家成品库管已收到知晓任务；待拆机和待修复设备已分别向生产经理、配套经理推送后续操作任务。',
           showCancel: false
         });
       },

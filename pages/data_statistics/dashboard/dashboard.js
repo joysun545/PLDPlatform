@@ -9,6 +9,9 @@ const DOMAIN_META = {
 
 const METRIC_NAMES = {
   produced_device_count: '生产设备', inventory_device_count: '当前库存',
+  received_device_count: '入库设备', order_plan_count: '订单计划',
+  channel_inventory_device_count: '链路库存',
+  organization_inventory_device_count: '组织库存',
   installed_device_count: '已安装', activated_device_count: '已激活',
   installation_rate: '安装率', activation_rate: '激活率',
   material_batch_count: '物料批次', material_usage_count: '配套记录',
@@ -23,10 +26,16 @@ const PERCENT_METRICS = ['installation_rate', 'activation_rate', 'aftersales_fau
 
 function normalizeSection(section = {}) {
   const meta = DOMAIN_META[section.domain] || { title: section.domain, subtitle: '', icon: '数' };
-  const metrics = Object.keys(section.metrics || {}).map(code => ({
+  const sourceMetrics = section.metrics || {};
+  const metricCodes = Object.keys(sourceMetrics).filter(code => !(
+    section.domain === 'FLOW'
+    && code === 'inventory_device_count'
+    && sourceMetrics.channel_inventory_device_count !== undefined
+  ));
+  const metrics = metricCodes.map(code => ({
     code,
     name: METRIC_NAMES[code] || code,
-    value: section.metrics[code],
+    value: sourceMetrics[code],
     unit: PERCENT_METRICS.includes(code) ? '%' : ''
   }));
   return Object.assign({}, section, meta, { metrics });
@@ -43,14 +52,16 @@ Page({
     sections: []
   },
 
-  onLoad() { this.loadDashboard(); },
-  onShow() { if (!this.data.loading && this.data.sections.length) return; this.loadDashboard(); },
+  onShow() { this.loadDashboard(); },
   onPullDownRefresh() { this.loadDashboard(() => wx.stopPullDownRefresh()); },
 
   loadDashboard(done) {
+    if (this._dashboardLoading) { done && done(); return; }
+    this._dashboardLoading = true;
     this.setData({ loading: true, error: '' });
     app.ensureLogin(ok => {
       if (!ok) {
+        this._dashboardLoading = false;
         this.setData({ loading: false, error: '登录状态无效，请返回后重试。' });
         done && done();
         return;
@@ -81,7 +92,7 @@ Page({
           });
         },
         fail: () => this.setData({ loading: false, error: '网络连接失败，请下拉刷新。' }),
-        complete: () => { done && done(); }
+        complete: () => { this._dashboardLoading = false; done && done(); }
       });
     });
   },

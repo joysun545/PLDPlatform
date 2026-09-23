@@ -93,6 +93,12 @@ Page({
     this.loadDetail();
   },
 
+  openTransferDetail() {
+    wx.redirectTo({
+      url: `/pages/stock/goods_transfer_detail/goods_transfer_detail?transfer_id=${this.data.transferId}`
+    });
+  },
+
   onAmountInput(e) {
     this.setData({ [`detail.cases[${e.currentTarget.dataset.index}].amountInput`]: e.detail.value || '' });
   },

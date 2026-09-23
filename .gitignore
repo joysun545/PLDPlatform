@@ -13,3 +13,13 @@ node_modules/
 
 # 编辑器配置
 .vscode/
+
+# Local build, backup and rollback files
+project.private.config.json
+.env
+.env.*
+!.env.example
+miniprogram_npm/
+dist/
+backups/
+*.order-material-flow-rollback

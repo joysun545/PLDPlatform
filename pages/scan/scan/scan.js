@@ -82,6 +82,11 @@ Page({
           return;
         }
 
+        if (qrText.startsWith('PLDP_PRINT_LOGIN|')) {
+          this.approvePrintCenterLogin(qrText);
+          return;
+        }
+
         this.resolveDeviceQRCode(qrText);
       },
       fail: (err) => {
@@ -90,6 +95,58 @@ Page({
           wx.showToast({ title: '扫码失败', icon: 'none' });
         }
       }
+    });
+  },
+
+  approvePrintCenterLogin(qrText) {
+    const match = /^PLDP_PRINT_LOGIN\|([a-f0-9]{64})$/.exec(qrText);
+    if (!match) {
+      this.finishScanning();
+      wx.showToast({ title: '打印中心登录二维码无效', icon: 'none' });
+      return;
+    }
+    wx.showModal({
+      title: '授权电脑进入打印中心',
+      content: '允许当前电脑以你的厂家成品库管身份进入打印中心？仅在本人电脑上确认。',
+      confirmText: '确认授权',
+      success: result => {
+        if (!result.confirm) {
+          this.finishScanning();
+          return;
+        }
+        wx.showLoading({ title: '正在核验身份', mask: true });
+        const webBase = app.globalData.apiBase.replace(/\/api\/?$/, '');
+        wx.request({
+          url: `${webBase}/web/print/api/login/approve/`,
+          method: 'POST',
+          header: app.authHeader('application/json'),
+          data: { token: match[1] },
+          success: res => {
+            const body = res.data || {};
+            if (res.statusCode === 401) app.reauthenticate();
+            if (res.statusCode < 200 || res.statusCode >= 300 || body.code !== 0) {
+              wx.showModal({
+                title: '授权未完成',
+                content: body.msg || '请刷新电脑上的二维码后，使用厂家成品库管账号重新扫码。',
+                showCancel: false
+              });
+              return;
+            }
+            const data = body.data || {};
+            wx.showModal({
+              title: '打印中心已授权',
+              content: `${data.organization_name || '当前厂家'} · ${data.role_name || '厂家成品库管'}。请返回电脑继续打印，完成后退出登录。`,
+              showCancel: false
+            });
+          },
+          fail: () => wx.showToast({ title: '网络请求失败，请查看电脑状态后重试', icon: 'none' }),
+          complete: () => {
+            wx.hideLoading();
+            this.finishScanning();
+          }
+        });
+      },
+      fail: () => this.finishScanning()
     });
   },
 

@@ -17,24 +17,86 @@
     </view>
 
     <view class="independence-tip top-tip">本页的商业单据、付款和收款，与收货方“确认入库/物权转移”并行推进，互不作为前置条件。</view>
+    <button class="secondary-button" bindtap="openTransferDetail">查看发货与收货</button>
 
-    <view class="money-grid">
+    <view class="carry-notice" wx:if="{{detail.showCarriedForward}}">
+      <text class="carry-title">后续款项在最新发货单办理</text>
+      <text class="carry-description">本单未收余额已纳入双方累计往来，付款与收款在 {{detail.rolling_receivables.active_flow_no}} 继续办理。本页保留本单应收和抵扣记录。</text>
+      <button class="secondary-button" bindtap="openCurrentSettlement">前往最新发货单办理货款</button>
+    </view>
+
+    <view class="section-card" wx:if="{{detail.isCurrentReceivable}}">
+      <view class="section-head">
+        <text class="section-title">双方累计往来</text>
+        <text class="section-state">本单统一办理</text>
+      </view>
+      <text class="form-tip">仅累计当前发货方与收货方的货款。收款优先抵扣前单欠款，剩余再抵扣后续发货单。</text>
+      <view class="money-grid rolling-money-grid">
+        <view class="money-cell">
+          <text class="money-label">累计原始应收</text>
+          <text class="money-value">¥{{detail.rolling_receivables.receivable_amount}}</text>
+        </view>
+        <view class="money-cell">
+          <text class="money-label">累计确认到账</text>
+          <text class="money-value received">¥{{detail.rolling_receivables.confirmed_received_amount}}</text>
+        </view>
+        <view class="money-cell">
+          <text class="money-label">累计退货冲抵</text>
+          <text class="money-value credit">¥{{detail.rolling_receivables.confirmed_credit_amount}}</text>
+        </view>
+        <view class="money-cell">
+          <text class="money-label">累计未收余额</text>
+          <text class="money-value outstanding">¥{{detail.rolling_receivables.outstanding_amount}}</text>
+        </view>
+      </view>
+      <view class="balance-details">
+        <view class="balance-row"><text>前单未收余额</text><text>¥{{detail.rolling_receivables.carry_forward_amount}}</text></view>
+        <view class="balance-row"><text>本单新增应收</text><text>¥{{detail.rolling_receivables.current_receivable_amount}}</text></view>
+        <view class="balance-row"><text>本单已分配到账</text><text>¥{{detail.rolling_receivables.current_received_amount}}</text></view>
+        <view class="balance-row"><text>本单退货冲抵</text><text>¥{{detail.rolling_receivables.current_credit_amount}}</text></view>
+        <view class="balance-row balance-total"><text>本单未收余额</text><text>¥{{detail.rolling_receivables.current_outstanding_amount}}</text></view>
+      </view>
+      <text class="form-tip">前单未收余额与本单未收余额随实际到账、退货冲抵更新。每张清单的原始应收只计算一次。</text>
+    </view>
+
+    <view class="money-grid" wx:if="{{!detail.isCurrentReceivable}}">
       <view class="money-cell">
-        <text class="money-label">应收货款</text>
+        <text class="money-label">本单原始应收</text>
         <text class="money-value">{{detail.receivable_amount ? '¥' + detail.receivable_amount : '--'}}</text>
       </view>
       <view class="money-cell">
-        <text class="money-label">累计已收</text>
+        <text class="money-label">{{detail.hasRollingReceivables ? '本单已分配到账' : '累计已收'}}</text>
         <text class="money-value received">¥{{detail.confirmed_received_amount}}</text>
       </view>
       <view class="money-cell">
-        <text class="money-label">退货冲抵</text>
+        <text class="money-label">本单退货冲抵</text>
         <text class="money-value credit">¥{{detail.confirmed_credit_amount || '0.00'}}</text>
       </view>
       <view class="money-cell">
-        <text class="money-label">应收余额</text>
+        <text class="money-label">本单未收余额</text>
         <text class="money-value outstanding">{{detail.outstanding_amount !== null ? '¥' + detail.outstanding_amount : '--'}}</text>
       </view>
+    </view>
+
+    <view class="section-card" wx:if="{{detail.isCurrentReceivable && detail.rolling_receivables.settlements.length}}">
+      <view class="section-head">
+        <text class="section-title">关联发货单</text>
+        <text class="section-state">{{detail.rolling_receivables.settlements.length}} 单</text>
+      </view>
+      <button class="link-button" bindtap="toggleReceivableHistory">{{showReceivableHistory ? '收起关联单明细' : '展开关联单明细'}}</button>
+      <block wx:if="{{showReceivableHistory}}">
+      <view class="invoice-card" wx:for="{{detail.rolling_receivables.settlements}}" wx:key="transfer_id">
+        <view class="payment-head">
+          <text class="invoice-flow">{{item.flow_no}}</text>
+          <text class="payment-state">{{item.is_current ? '当前单' : '历史单'}}</text>
+        </view>
+        <view class="balance-row"><text>原始应收</text><text>¥{{item.receivable_amount}}</text></view>
+        <view class="balance-row"><text>已分配到账</text><text>¥{{item.received_amount}}</text></view>
+        <view class="balance-row"><text>退货冲抵</text><text>¥{{item.credit_amount}}</text></view>
+        <view class="balance-row balance-total"><text>未收余额</text><text>¥{{item.unpaid_amount}}</text></view>
+        <button wx:if="{{!item.is_current}}" class="link-button" data-id="{{item.transfer_id}}" bindtap="openSettlementHistory">查看本单清单与记录</button>
+      </view>
+      </block>
     </view>
 
     <view class="section-card">
@@ -48,8 +110,8 @@
         <button class="secondary-button" bindtap="previewStatement">查看货品清单图片</button>
       </view>
       <view wx:if="{{detail.actions.can_submit_statement}}" class="action-form">
-        <text class="form-tip">上传包含货品和价格的清单图片，并手动填写本次应收货款。</text>
-        <input class="amount-input" type="digit" value="{{receivableAmount}}" placeholder="填写货品应收金额" bindinput="onReceivableInput" />
+        <text class="form-tip">上传包含货品和价格的清单图片，仅填写本单新增应收货款，不含前单未收余额。前单余额由系统自动累计。</text>
+        <input class="amount-input" type="digit" value="{{receivableAmount}}" placeholder="本单新增应收金额，不含旧余额" bindinput="onReceivableInput" />
         <button class="secondary-button" bindtap="chooseStatement">{{selectedStatementPath ? '已选择清单图片，点击更换' : '选择货品清单图片'}}</button>
         <image wx:if="{{selectedStatementPath}}" class="preview" src="{{selectedStatementPath}}" mode="aspectFill" />
         <button class="primary-button" loading="{{submittingStatement}}" disabled="{{submittingStatement}}" bindtap="submitStatement">提交货品清单</button>
@@ -85,12 +147,12 @@
       </view>
     </view>
 
-    <view class="section-card" wx:if="{{detail.actions.can_upload_payment}}">
+    <view class="section-card" wx:if="{{detail.actions.can_upload_payment && !detail.showCarriedForward}}">
       <view class="section-head">
         <text class="section-title">上传本次付款凭证</text>
         <text class="section-state pending">需要处理</text>
       </view>
-      <text class="form-tip">付款后上传凭证，实际到账金额由发货方手动确认。</text>
+      <text class="form-tip">付款后上传凭证，实际到账金额由发货方手动确认。{{detail.isCurrentReceivable ? '付款统一抵扣双方累计未收货款。' : ''}}</text>
       <button class="secondary-button" bindtap="chooseVoucher">{{selectedVoucherPath ? '已选择付款凭证，点击更换' : '选择付款凭证'}}</button>
       <image wx:if="{{selectedVoucherPath}}" class="preview" src="{{selectedVoucherPath}}" mode="aspectFill" />
       <button class="primary-button" loading="{{uploadingVoucher}}" disabled="{{uploadingVoucher}}" bindtap="submitVoucher">上传付款凭证</button>
@@ -98,7 +160,7 @@
 
     <view class="section-card">
       <view class="section-head">
-        <text class="section-title">付款与收款记录</text>
+        <text class="section-title">{{detail.isCurrentReceivable ? '双方付款与收款记录' : '本单付款与抵扣记录'}}</text>
         <text class="section-state">共 {{detail.payment_count}} 笔</text>
       </view>
       <view wx:if="{{detail.payments.length === 0}}" class="empty-tip">尚未上传付款凭证</view>
@@ -107,6 +169,7 @@
           <text class="payment-title">第 {{item.sequence_no}} 笔付款</text>
           <text class="payment-state {{item.status === 'PENDING' ? 'pending' : ''}}">{{item.status_name}}</text>
         </view>
+        <text wx:if="{{item.source_flow_no}}" class="payment-meta">凭证所属发货单：{{item.source_flow_no}}</text>
         <text class="payment-meta">上传人：{{item.uploaded_by_name}}</text>
         <text class="payment-meta">上传时间：{{item.uploadedText}}</text>
         <button class="link-button" data-path="{{item.voucher_preview_path}}" bindtap="previewVoucher">查看付款凭证</button>
@@ -114,8 +177,14 @@
           <text class="confirmed-amount">确认到账 ¥{{item.confirmed_amount}}</text>
           <text>确认人：{{item.confirmed_by_name}}</text>
           <text>确认时间：{{item.confirmedText}}</text>
+          <view wx:if="{{item.allocations.length}}" class="allocation-list">
+            <text class="allocation-title">本笔到账抵扣明细</text>
+            <view class="allocation-row" wx:for="{{item.allocations}}" wx:for-item="allocation" wx:key="transfer_id">
+              <text>{{allocation.flow_no}}</text><text>¥{{allocation.amount}}</text>
+            </view>
+          </view>
         </view>
-        <view wx:if="{{item.can_confirm}}" class="confirm-form">
+        <view wx:if="{{item.can_confirm && !detail.showCarriedForward}}" class="confirm-form">
           <input class="amount-input" type="digit" value="{{item.confirmInput}}" placeholder="依据凭证填写实际到账金额" data-id="{{item.id}}" bindinput="onConfirmAmountInput" />
           <button class="primary-button" data-id="{{item.id}}" loading="{{confirmingPaymentId === item.id}}" disabled="{{confirmingPaymentId !== 0}}" bindtap="confirmPayment">确认本次收款</button>
         </view>

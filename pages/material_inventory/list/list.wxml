@@ -1,0 +1,25 @@
+<view class="page">
+  <view class="notice" wx:if="{{canManage}}">物料库只办理实际入库、退给供应商和三包件退回供应商。故障件和换回件由售后、拆机或召回流程自动生成。</view>
+  <view class="actions" wx:if="{{canManage}}">
+    <button class="primary" bindtap="receipt">物料入库</button>
+    <button class="secondary" bindtap="warranty">三包件退货</button>
+  </view>
+  <view class="search">
+    <input class="input" placeholder="输入供应商、物料或规格筛选" value="{{query}}" bindinput="inputQuery" bindconfirm="search" confirm-type="search" />
+    <button class="secondary" bindtap="search">查询</button>
+  </view>
+  <view wx:if="{{error}}" class="notice error">{{error}}<button class="wide secondary" bindtap="search">重新加载</button></view>
+  <view class="card" wx:for="{{items}}" wx:key="id" data-id="{{item.id}}" bindtap="open">
+    <view class="title">{{item.material_name}} · {{item.spec_name}}</view>
+    <view class="code">{{item.spec_code}}</view>
+    <view class="subtitle">厂家：{{item.factory_name}}</view>
+    <view class="subtitle">供应商：{{item.supplier_name}}</view>
+    <view class="row"><view>正常库存 <text class="number">{{item.on_hand}}</text> {{item.unit}}</view><view>{{item.active_lot_count}} 个结余批次</view></view>
+    <view class="row muted"><view>可用 {{item.available}} · 已预占 {{item.reserved}}</view><view>查看明细 ›</view></view>
+    <view class="muted">故障件在库 {{item.fault_on_hand}} · 待换回 {{item.awaiting_replacement}}</view>
+  </view>
+  <view class="empty" wx:if="{{!loading && !error && !searched}}">输入供应商、物料名称或规格后查看对应库存；完整历史批次请到“数据统计”。</view>
+  <view class="empty" wx:if="{{!loading && !error && searched && !items.length}}">没有符合条件的物料库存</view>
+  <view class="empty" wx:if="{{loading}}">正在加载…</view>
+  <button wx:if="{{nextCursor && !loading}}" class="secondary wide" bindtap="onReachBottom">加载更多</button>
+</view>

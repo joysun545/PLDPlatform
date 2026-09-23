@@ -41,7 +41,7 @@
           <text>× {{item.quantity}}</text>
         </view>
         <view class="created-split">
-          <text>调用退货库存 {{item.return_inventory_quantity}} 台</text>
+          <text>调用成品库存 {{item.return_inventory_quantity}} 台</text>
           <text>新生产 {{item.production_quantity}} 台</text>
         </view>
         <text class="code-line">订单批次：{{item.order_batch_code}}</text>
@@ -49,6 +49,7 @@
       </view>
     </view>
 
+    <button class="secondary-button detail-button" bindtap="openCreatedPlan">查看订单计划动态</button>
     <button class="primary-button" bindtap="createAnother">继续创建订单计划</button>
   </block>
 
@@ -144,7 +145,9 @@
         </view>
         <button class="add-button" bindtap="addProductRow">＋ 添加</button>
       </view>
-      <text class="helper">显示全部已建立有效 v1 BOM 的产品型号；每个型号将生成独立订单批次码和生命周期链路码</text>
+      <text class="helper">选择产品型号后，请在本页确定本次生产所用 BOM 版本。系统优先推荐该商家最近冻结的版本；首次下单默认最新有效版本。调用成品库存的设备仍保留原始 BOM 追溯。</text>
+      <text class="bom-recommendation-tip" wx:if="{{bomRecommendationLoading}}">正在读取该商家的最近订单 BOM 推荐…</text>
+      <text class="bom-recommendation-tip error" wx:elif="{{bomRecommendationError}}">{{bomRecommendationError}}</text>
 
       <view class="product-row" wx:for="{{productRows}}" wx:key="key">
         <view class="product-row-head">
@@ -185,6 +188,116 @@
           </view>
         </picker>
 
+        <text class="field-label">本次生产 BOM 版本</text>
+        <picker
+          range="{{item.bomOptions}}"
+          range-key="display_name"
+          value="{{item.bomIndex}}"
+          data-key="{{item.key}}"
+          bindchange="onBomChange"
+          disabled="{{item.productModelId === '' || item.bomOptions.length === 0}}"
+        >
+          <view class="picker-field {{item.bomIndex < 0 ? 'placeholder' : ''}}">
+            {{item.bomIndex >= 0 ? item.bomOptions[item.bomIndex].display_name : (item.productModelId ? '该型号暂无可选 BOM' : '请先选择产品型号')}}
+            <text class="picker-arrow">⌄</text>
+          </view>
+        </picker>
+        <text class="bom-tip" wx:if="{{item.bomIndex >= 0}}">本次订单将冻结 {{item.bomOptions[item.bomIndex].display_name}}，后续物料需求只按该冻结版本计算。</text>
+        <text class="bom-source-tip" wx:if="{{item.selectedBomSourceName}}">{{item.selectedBomSourceName}}</text>
+
+        <view class="bom-editor-card" wx:if="{{item.productModelId && item.sourceBomId}}">
+          <view class="bom-editor-head">
+            <view>
+              <text class="bom-editor-title">本次订单 BOM 物料</text>
+              <text class="bom-editor-subtitle">不编辑则沿用所选版本；修改后会在创建订单时冻结为新的 BOM 版本。</text>
+            </view>
+            <button
+              class="bom-editor-toggle"
+              data-key="{{item.key}}"
+              bindtap="toggleBomEditor"
+            >{{item.materialEditorVisible ? '收起物料' : '编辑物料'}}</button>
+          </view>
+
+          <block wx:if="{{item.materialEditorVisible}}">
+            <view class="bom-editor-state" wx:if="{{item.materialEditorLoading}}">正在加载物料、规格和可选供应商…</view>
+            <view class="bom-editor-state error" wx:elif="{{item.materialEditorError}}">
+              <text>{{item.materialEditorError}}</text>
+              <button class="retry-bom-button" data-key="{{item.key}}" bindtap="reloadBomMaterials">重新加载</button>
+            </view>
+            <block wx:elif="{{item.materialEditorLoaded}}">
+              <text class="bom-editor-note">单台用量由所选BOM固定；可调整物料是否使用、规格、供应商和备注。未改动时不会创建新版本。</text>
+              <view
+                class="bom-material-card {{bomMaterial.deleted ? 'deleted' : ''}}"
+                wx:for="{{item.bomMaterials}}"
+                wx:for-item="bomMaterial"
+                wx:for-index="materialIndex"
+                wx:key="materialId"
+              >
+                <view class="bom-material-head">
+                  <view>
+                    <text class="bom-material-name">{{bomMaterial.name}}</text>
+                    <text class="bom-material-code">{{bomMaterial.code}}</text>
+                  </view>
+                  <label class="delete-toggle">
+                    <text>不使用</text>
+                    <switch
+                      color="#df5d5d"
+                      checked="{{bomMaterial.deleted}}"
+                      data-key="{{item.key}}"
+                      data-material-index="{{materialIndex}}"
+                      bindchange="onMaterialDeleteChange"
+                    />
+                  </label>
+                </view>
+                <text class="bom-material-meta" wx:if="{{bomMaterial.quantity}}">单台用量：{{bomMaterial.quantity}}</text>
+
+                <view class="bom-material-fields" wx:if="{{!bomMaterial.deleted}}">
+                  <text class="field-label">物料规格</text>
+                  <picker
+                    range="{{bomMaterial.specOptions}}"
+                    range-key="name"
+                    value="{{bomMaterial.specIndex}}"
+                    data-key="{{item.key}}"
+                    data-material-index="{{materialIndex}}"
+                    bindchange="onMaterialSpecChange"
+                  >
+                    <view class="bom-picker-field">
+                      {{bomMaterial.specOptions[bomMaterial.specIndex].name}}
+                      <text class="picker-arrow">⌄</text>
+                    </view>
+                  </picker>
+
+                  <text class="field-label">供应商</text>
+                  <picker
+                    range="{{bomMaterial.supplierOptions}}"
+                    range-key="name"
+                    value="{{bomMaterial.supplierIndex}}"
+                    data-key="{{item.key}}"
+                    data-material-index="{{materialIndex}}"
+                    bindchange="onMaterialSupplierChange"
+                  >
+                    <view class="bom-picker-field">
+                      {{bomMaterial.supplierOptions[bomMaterial.supplierIndex].name}}
+                      <text class="picker-arrow">⌄</text>
+                    </view>
+                  </picker>
+
+                  <text class="field-label">物料备注</text>
+                  <input
+                    class="bom-remark-input"
+                    value="{{bomMaterial.remark}}"
+                    maxlength="500"
+                    placeholder="可填写该物料备注（选填）"
+                    data-key="{{item.key}}"
+                    data-material-index="{{materialIndex}}"
+                    bindinput="onMaterialRemarkInput"
+                  />
+                </view>
+              </view>
+            </block>
+          </block>
+        </view>
+
         <text class="field-label">计划数量</text>
         <input
           class="input-field quantity"
@@ -196,7 +309,7 @@
 
         <view class="reissue-card" wx:if="{{item.productModelId}}">
           <view class="reissue-state" wx:if="{{item.reissueLoading}}">
-            正在查询厂家待流转库存…
+            正在查询厂家成品库存…
           </view>
           <view class="reissue-state error" wx:elif="{{item.reissueError}}">
             {{item.reissueError}}
@@ -204,7 +317,7 @@
           <block wx:elif="{{item.reissueInfo}}">
             <view class="reissue-head">
               <view>
-                <text class="reissue-title">厂家待流转库存</text>
+                <text class="reissue-title">厂家成品库存</text>
                 <text class="reissue-count">当前可用 {{item.reissueInfo.available_count}} 台</text>
               </view>
               <switch
@@ -218,7 +331,7 @@
 
             <view class="bom-compare">
               <view class="bom-compare-block">
-                <text class="bom-label">待流转设备实际BOM</text>
+                <text class="bom-label">成品库存设备实际BOM</text>
                 <block wx:if="{{item.reissueInfo.return_inventory_boms.length}}">
                   <text
                     class="bom-line"
@@ -240,11 +353,11 @@
 
             <view class="split-preview">
               <view><text>{{item.quantity}}</text><text>总需求</text></view>
-              <view><text>{{item.returnInventoryQuantity}}</text><text>调用退货库存</text></view>
+              <view><text>{{item.returnInventoryQuantity}}</text><text>调用成品库存</text></view>
               <view><text>{{item.productionQuantity}}</text><text>新生产</text></view>
             </view>
             <text class="reissue-note" wx:if="{{item.useReturnInventory}}">
-              系统提交时会逐台锁定待流转设备；每台保留原BOM、原批次和原生命周期追溯。
+              系统提交时会逐台锁定成品库存设备；每台保留原BOM、原批次和原生命周期追溯。
             </text>
           </block>
         </view>

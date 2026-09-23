@@ -1,0 +1,25 @@
+<view class="page">
+  <view class="state-card" wx:if="{{loading}}">正在生成订单配送入库清单…</view>
+  <view class="state-card error" wx:elif="{{error && !form}}">{{error}}</view>
+  <block wx:elif="{{form}}">
+    <view class="notice">
+      本页仅处理本订单已完成线下配送、尚未入库的物料。物料、规格、供应商、数量均由订单配送计划自动带入；确认后自动生成厂家物料批次。
+    </view>
+    <view class="card"><text class="title">订单 {{form.plan_code}}</text><text class="subtitle">直接商家：{{form.merchant_name}}</text></view>
+    <view class="card" wx:for="{{form.items}}" wx:key="delivery_line_id">
+      <text class="title">{{item.material_name}} · {{item.spec_name}}</text>
+      <text class="code">{{item.spec_code}}</text>
+      <view class="divider"></view>
+      <view class="row"><text class="muted">供应商</text><text>{{item.supplier_name}}</text></view>
+      <view class="row"><text class="muted">计量单位</text><text>{{item.unit}}</text></view>
+      <view class="row"><text class="muted">本次入库数量</text><text class="number">{{item.quantity}} {{item.unit}}</text></view>
+    </view>
+    <view class="empty" wx:if="{{!form.items.length && !received.length}}">当前没有已完成线下配送、待入库的物料。</view>
+    <view class="card" wx:if="{{received.length}}"><text class="title">入库完成</text><view class="divider"></view><view wx:for="{{received}}" wx:key="delivery_line_id" class="row"><text>{{item.material_name}} · {{item.spec_name}}</text><text>{{item.quantity}} · {{item.lot_code}}</text></view></view>
+    <view class="error notice" wx:if="{{error}}">{{error}}</view>
+    <view wx:if="{{form.can_submit}}" class="primary wide receipt-submit" catchtap="submitAllReceipt">
+      <text>{{submitting ? '正在全部入库...' : '确认全部物料入库'}}</text>
+    </view>
+    <button class="secondary wide" wx:if="{{received.length}}" bindtap="backToPlan">返回订单计划详情</button>
+  </block>
+</view>

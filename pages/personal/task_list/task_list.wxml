@@ -15,7 +15,7 @@
   <view wx:else class="task-list">
     <view
       wx:for="{{taskList}}"
-      wx:key="id"
+      wx:key="cardKey"
       class="task-card {{item.stateClass}}"
       data-id="{{item.id}}"
       bindtap="openTask"
@@ -31,8 +31,8 @@
       </text>
       <view class="task-bottom">
         <text>{{item.cursor_time}}</text>
-        <text wx:if="{{item.grouped}}" class="group-entry">
-          {{item.isWorkorder ? '查看服务单 ›' : (item.isRecallGroup ? '进入召回详情 ›' : '进入任务详情 ›')}}
+        <text wx:if="{{item.grouped || item.isGoodsTransfer}}" class="group-entry">
+          {{item.isGoodsTransfer ? (item.need_action ? '查看并处理 ›' : '查看流转进展 ›') : (item.isWorkorder ? '查看服务单 ›' : (item.isRecallGroup ? '进入召回详情 ›' : '进入任务详情 ›'))}}
         </text>
         <text wx:elif="{{item.need_action}}" class="need-action">需要处理</text>
         <text wx:else class="ack-task">查看即知晓</text>

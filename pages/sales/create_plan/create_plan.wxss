@@ -100,6 +100,178 @@ page {
   line-height: 1.55;
 }
 
+.bom-tip {
+  display: block;
+  margin: 10rpx 4rpx 4rpx;
+  color: #5e786b;
+  font-size: 21rpx;
+  line-height: 1.55;
+}
+
+.bom-source-tip,
+.bom-recommendation-tip {
+  display: block;
+  margin: 8rpx 4rpx 0;
+  color: #168556;
+  font-size: 21rpx;
+  line-height: 1.5;
+}
+
+.bom-recommendation-tip {
+  margin: -10rpx 0 22rpx;
+  padding: 14rpx 18rpx;
+  border-radius: 12rpx;
+  background: #edf8f2;
+}
+
+.bom-recommendation-tip.error {
+  color: #9a5d22;
+  background: #fff7e7;
+}
+
+.bom-editor-card {
+  margin-top: 22rpx;
+  padding: 22rpx;
+  border: 1rpx solid #cde7da;
+  border-radius: 18rpx;
+  background: #f4fbf7;
+}
+
+.bom-editor-head,
+.bom-material-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.bom-editor-title,
+.bom-editor-subtitle,
+.bom-editor-note,
+.bom-editor-state,
+.bom-material-name,
+.bom-material-code,
+.bom-material-meta {
+  display: block;
+}
+
+.bom-editor-title {
+  color: #17734e;
+  font-size: 26rpx;
+  font-weight: 650;
+}
+
+.bom-editor-subtitle {
+  max-width: 430rpx;
+  margin-top: 7rpx;
+  color: #6d7d74;
+  font-size: 21rpx;
+  line-height: 1.5;
+}
+
+.bom-editor-toggle,
+.retry-bom-button {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0 18rpx;
+  border: 1rpx solid #a4d9bb;
+  border-radius: 12rpx;
+  color: #087e48;
+  background: #fff;
+  font-size: 22rpx;
+  line-height: 58rpx;
+}
+
+.bom-editor-toggle::after,
+.retry-bom-button::after {
+  border: none;
+}
+
+.bom-editor-state {
+  margin-top: 18rpx;
+  color: #61766b;
+  font-size: 23rpx;
+  line-height: 1.6;
+}
+
+.bom-editor-state.error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  color: #a5574c;
+}
+
+.bom-editor-note {
+  margin-top: 18rpx;
+  color: #587267;
+  font-size: 21rpx;
+  line-height: 1.6;
+}
+
+.bom-material-card {
+  margin-top: 18rpx;
+  padding: 20rpx;
+  border: 1rpx solid #dce9e2;
+  border-radius: 16rpx;
+  background: #fff;
+}
+
+.bom-material-card.deleted {
+  border-style: dashed;
+  background: #f3f5f4;
+  opacity: 0.78;
+}
+
+.bom-material-name {
+  color: #20372b;
+  font-size: 25rpx;
+  font-weight: 650;
+}
+
+.bom-material-code,
+.bom-material-meta {
+  margin-top: 6rpx;
+  color: #7a8880;
+  font-size: 20rpx;
+}
+
+.delete-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  color: #a25a54;
+  font-size: 21rpx;
+  white-space: nowrap;
+}
+
+.delete-toggle switch {
+  transform: scale(0.75);
+}
+
+.bom-material-fields {
+  margin-top: 18rpx;
+}
+
+.bom-picker-field,
+.bom-remark-input {
+  width: 100%;
+  min-height: 76rpx;
+  padding: 0 20rpx;
+  border: 1rpx solid #d8e4de;
+  border-radius: 13rpx;
+  box-sizing: border-box;
+  color: #29382f;
+  background: #fbfdfc;
+  font-size: 24rpx;
+}
+
+.bom-picker-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .factory-card {
   display: flex;
   align-items: center;
@@ -330,6 +502,10 @@ button::after {
 .primary-button {
   color: #fff;
   background: #07b85e;
+}
+
+.detail-button {
+  margin-bottom: 18rpx;
 }
 
 .primary-button.compact,
