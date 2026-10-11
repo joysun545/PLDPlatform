@@ -47,6 +47,7 @@ Page({
   data: {
     loading: true,
     errorMessage: '',
+    titleMetric: '',
     inventoryData: null,
     filterValue: ''
   },
@@ -85,8 +86,10 @@ Page({
           });
           return;
         }
+        const totalCount = Number(body.data.total_count) || 0;
         this.setData({
           loading: false,
+          titleMetric: `共 ${totalCount} 台`,
           inventoryData: prepareData(body.data, this.data.filterValue)
         });
       },

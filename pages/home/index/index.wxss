@@ -5,13 +5,13 @@
 }
 
 .header {
-  background: linear-gradient(135deg, #07c160, #009688);
+  background: linear-gradient(135deg, var(--ui-primary-bright), var(--ui-primary));
   color: white;
   text-align: center;
   padding: 30rpx 0 60rpx;
   border-bottom-left-radius: 50rpx;
   border-bottom-right-radius: 50rpx;
-  box-shadow: 0 10rpx 30rpx rgba(7, 193, 96, 0.3);
+  box-shadow: 0 10rpx 30rpx rgba(0,0,0,.14);
 }
 
 .title {
@@ -33,9 +33,10 @@
 
 .menu-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 40rpx;
   padding: 60rpx 60rpx;
+  box-sizing: border-box;
 }
 
 .menu-item {
@@ -48,7 +49,9 @@
   justify-content: center;
   transition: all 0.3s;
   aspect-ratio: 1 / 1;
-  padding: 50rpx;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 32rpx;
 }
 
 .menu-item:active {
@@ -63,6 +66,10 @@
 }
 
 .menu-item text {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
   font-size: 32rpx;
   color: #333;
   font-weight: 500;

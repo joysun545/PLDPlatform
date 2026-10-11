@@ -10,11 +10,14 @@ Page({
     role_name: '',
     company_name: '',
     region: '',
+    organizationAddress: '',
+    canEditOrganizationAddress: false,
     saving: false
   },
 
   onLoad() {
     this.loadProfile();
+    this.loadOrganizationAddress();
   },
 
   loadProfile() {
@@ -45,6 +48,35 @@ Page({
     this.setData({ phone: e.detail.value.replace(/\D/g, '') });
   },
 
+  loadOrganizationAddress() {
+    app.ensureLogin(ok => {
+      if (!ok) return;
+      wx.request({
+        url: `${app.globalData.apiBase}/account/profile/`,
+        method: 'GET',
+        header: app.authHeader(),
+        success: res => {
+          const body = res.data || {};
+          if (res.statusCode === 401 || body.code === 401) {
+            app.reauthenticate();
+            return;
+          }
+          if (body.code !== 0 || !body.data) return;
+          this.setData({
+            canEditOrganizationAddress: !!body.data.can_edit_organization_address,
+            organizationAddress: body.data.can_edit_organization_address
+              ? (body.data.organization_address || '')
+              : ''
+          });
+        }
+      });
+    });
+  },
+
+  onOrganizationAddressInput(e) {
+    this.setData({ organizationAddress: e.detail.value });
+  },
+
   saveProfile() {
     if (this.data.saving) return;
 
@@ -59,6 +91,16 @@ Page({
       wx.showToast({ title: '请填写正确的电话号码', icon: 'none' });
       return;
     }
+    const organizationAddress = (this.data.organizationAddress || '').trim();
+    if (this.data.canEditOrganizationAddress && organizationAddress.length > 255) {
+      wx.showToast({ title: '组织官方地址不能超过255个字符', icon: 'none' });
+      return;
+    }
+
+    const profileData = { nickname, phone };
+    if (this.data.canEditOrganizationAddress) {
+      profileData.organization_address = organizationAddress;
+    }
 
     this.setData({ saving: true });
     wx.showLoading({ title: '正在保存' });
@@ -70,31 +112,31 @@ Page({
       }
 
       if (this.data.selectedAvatarPath) {
-        this.uploadProfileWithAvatar(nickname, phone);
+        this.uploadProfileWithAvatar(profileData);
       } else {
-        this.saveProfileFields(nickname, phone);
+        this.saveProfileFields(profileData);
       }
     });
   },
 
-  saveProfileFields(nickname, phone) {
+  saveProfileFields(profileData) {
     wx.request({
       url: `${app.globalData.apiBase}/account/profile/`,
       method: 'POST',
       header: app.authHeader(),
-      data: { nickname, phone },
+      data: profileData,
       success: (res) => this.handleSaveResponse(res.data),
       fail: () => this.finishSaving('网络错误')
     });
   },
 
-  uploadProfileWithAvatar(nickname, phone) {
+  uploadProfileWithAvatar(profileData) {
     wx.uploadFile({
       url: `${app.globalData.apiBase}/account/profile/`,
       filePath: this.data.selectedAvatarPath,
       name: 'avatar',
       header: app.authHeader(null),
-      formData: { nickname, phone },
+      formData: profileData,
       success: (res) => {
         let data = {};
         try {
@@ -119,6 +161,9 @@ Page({
     }
 
     app.applyUserPayload(data.data);
+    if (this.data.canEditOrganizationAddress) {
+      this.setData({ organizationAddress: data.data.organization_address || '' });
+    }
     wx.hideLoading();
     this.setData({ saving: false });
     wx.showToast({ title: '保存成功', icon: 'success' });

@@ -1,3 +1,4 @@
+<theme-shell>
 <view class="page">
   <view wx:if="{{loading}}" class="state">正在读取售后申请...</view>
   <view wx:elif="{{error}}" class="state error"><text>{{error}}</text><button bindtap="backHome">返回首页</button></view>
@@ -71,7 +72,7 @@
     </view>
 
     <view class="card action" wx:if="{{detail.actions.can_triage}}">
-      <text class="section-title">厂家销售经理：故障认定与指派</text>
+      <text class="section-title">厂家售后经理：故障认定与指派</text>
       <picker range="{{detail.triage_options.preliminary_fault_types}}" range-key="label" bindchange="onTriageFault">
         <view class="picker">初步故障认定：{{triage.faultIndex >= 0 ? detail.triage_options.preliminary_fault_types[triage.faultIndex].label : '请选择'}}</view>
       </picker>
@@ -146,14 +147,14 @@
 
     <view class="card action" wx:if="{{detail.actions.can_applicant_confirm}}">
       <text class="section-title">发起人：确认售后结果</text>
-      <text class="tip">七天内未确认时，系统将自动转交厂家销售经理做最终归因结案。</text>
+      <text class="tip">七天内未确认时，系统将自动转交厂家售后经理做最终归因结案。</text>
       <textarea value="{{applicantFeedback}}" bindinput="onApplicantFeedback" placeholder="可填写使用结果或补充反馈"></textarea>
       <button loading="{{submitting}}" disabled="{{submitting}}" data-confirmed="true" bindtap="submitApplicantConfirm">确认售后已完成</button>
       <button class="secondary" loading="{{submitting}}" disabled="{{submitting}}" data-confirmed="false" bindtap="submitApplicantConfirm">问题仍未完全解决</button>
     </view>
 
     <view class="card action" wx:if="{{detail.actions.can_third_party_material_shipment}}">
-      <text class="section-title">厂家销售经理：第三方备件寄送</text>
+      <text class="section-title">厂家售后经理：第三方备件寄送</text>
       <text class="tip">此路径只记录真实发生的寄送、费用和故障物料返还事实，不自动扣减库存。</text>
       <aftersale-media-uploader files="{{actionMedia}}" max-count="9" allow-document="{{true}}" disabled="{{submitting}}" bindchange="onActionMediaChange" bindretry="onActionMediaRetry"></aftersale-media-uploader>
       <input class="field" data-field="thirdCompany" bindinput="onThirdInput" placeholder="物流公司" />
@@ -163,7 +164,7 @@
     </view>
 
     <view class="card action" wx:if="{{detail.actions.can_third_party_expense}}">
-      <text class="section-title">厂家销售经理：第三方维修费用</text>
+      <text class="section-title">厂家售后经理：第三方维修费用</text>
       <aftersale-media-uploader files="{{actionMedia}}" max-count="9" allow-document="{{true}}" disabled="{{submitting}}" bindchange="onActionMediaChange" bindretry="onActionMediaRetry"></aftersale-media-uploader>
       <input class="field" data-field="thirdAmount" bindinput="onThirdInput" placeholder="维修费用金额（元）" type="digit" />
       <textarea data-field="thirdRemark" bindinput="onThirdInput" placeholder="费用说明（可选）"></textarea>
@@ -171,7 +172,7 @@
     </view>
 
     <view class="card action" wx:if="{{detail.actions.can_third_party_fault_material_return}}">
-      <text class="section-title">厂家销售经理：故障物料返还</text>
+      <text class="section-title">厂家售后经理：故障物料返还</text>
       <aftersale-media-uploader files="{{actionMedia}}" max-count="9" allow-document="{{true}}" disabled="{{submitting}}" bindchange="onActionMediaChange" bindretry="onActionMediaRetry"></aftersale-media-uploader>
       <input class="field" data-field="thirdReturnCompany" bindinput="onThirdInput" placeholder="返还物流公司" />
       <input class="field" data-field="thirdReturnTrackingNo" bindinput="onThirdInput" placeholder="返还物流单号" />
@@ -179,7 +180,7 @@
     </view>
 
     <view class="card action" wx:if="{{detail.actions.can_factory_close}}">
-      <text class="section-title">厂家销售经理：最终归因与结案</text>
+      <text class="section-title">厂家售后经理：最终归因与结案</text>
       <picker range="{{detail.final_fault_types}}" range-key="label" bindchange="onFinalFault"><view class="picker">最终故障类型：{{finalForm.faultIndex >= 0 ? detail.final_fault_types[finalForm.faultIndex].label : '请选择'}}</view></picker>
       <picker range="{{detail.solution_types}}" range-key="label" bindchange="onFinalSolution"><view class="picker">最终解决方案：{{finalForm.solutionIndex >= 0 ? detail.solution_types[finalForm.solutionIndex].label : '请选择'}}</view></picker>
       <checkbox-group bindchange="onFinalMaterials"><label class="check-row" wx:for="{{detail.final_material_options}}" wx:key="material_id"><checkbox value="{{item.bom_item_id || item.material_id}}" />{{item.material_name}} {{item.specification_name}}</label></checkbox-group>
@@ -215,3 +216,5 @@
     </view>
   </block>
 </view>
+
+</theme-shell>

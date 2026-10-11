@@ -1,9 +1,5 @@
+<theme-shell title-eyebrow="独立商品流转" title="扫码商品流转" title-subtitle="逐台扫码，按组织转移物权">
 <view class="page">
-  <view class="hero-card">
-    <text class="hero-eyebrow">独立商品流转</text>
-    <text class="hero-title">逐台扫码，按组织转移物权</text>
-    <text class="hero-tip">发货和退货须由收货方确认；调货由上级商家直接完成 B → C。</text>
-  </view>
 
   <view class="state-card" wx:if="{{loading}}">正在加载业务关系…</view>
   <view class="state-card error" wx:elif="{{errorMessage}}">
@@ -11,7 +7,7 @@
     <button class="secondary-button" bindtap="retryLoad">重新加载</button>
   </view>
 
-  <block wx:elif="{{!transferId}}">
+  <block wx:elif="{{!transferId && !scanReady}}">
     <view class="section-card">
       <text class="section-title">选择流转方式</text>
       <view class="type-grid">
@@ -73,9 +69,29 @@
         <text class="flow-type">{{detail.flow_type_name}}</text>
         <text class="status-pill">{{detail.status_name}}</text>
       </view>
-      <text class="flow-no">{{detail.flow_no}}</text>
+      <text class="flow-no" wx:if="{{transferId}}">{{detail.flow_no}}</text>
       <text class="route">{{detail.from_organization.name}} → {{detail.to_organization.name}}</text>
-      <text class="meta">发起人：{{detail.initiated_by_name}}｜{{detail.createdText}}</text>
+      <text class="meta" wx:if="{{transferId}}">发起人：{{detail.initiated_by_name}}｜{{detail.createdText}}</text>
+    </view>
+
+    <view class="section-card scan-conflict-card" wx:if="{{scanConflict}}">
+      <view class="rule-tip danger" style="margin-top:0;">
+        <text>{{scanConflict.message}}</text>
+        <text wx:if="{{scanConflict.flowNo}}" style="display:block; margin-top:8rpx;">未完成流转单：{{scanConflict.flowNo}}</text>
+      </view>
+      <view style="display:flex; gap:16rpx;">
+        <button
+          class="primary-button"
+          wx:if="{{scanConflict.transferId}}"
+          style="flex:1; margin:18rpx 0 0; padding-left:8rpx; padding-right:8rpx;"
+          catchtap="openConflictTransfer"
+        >继续处理</button>
+        <button
+          class="secondary-button"
+          style="flex:1; margin:18rpx 0 0; padding-left:8rpx; padding-right:8rpx;"
+          catchtap="cancelScanConflict"
+        >取消</button>
+      </view>
     </view>
 
     <view class="section-card">
@@ -115,7 +131,12 @@
         />
       </view>
 
-      <button class="scan-button" loading="{{scanning}}" disabled="{{scanning}}" wx:if="{{detail.actions.can_scan}}" bindtap="scanDevice">扫一扫，加入下一台设备</button>
+      <button class="scan-button" loading="{{scanning || creating}}" disabled="{{scanning || creating}}" wx:if="{{detail.actions.can_scan}}" bindtap="scanDevice">
+        <view style="line-height: 1.35; text-align: center;">
+          <view>扫一扫</view>
+          <view>加入下一台设备</view>
+        </view>
+      </button>
       <button
         class="primary-button"
         loading="{{submitting}}"
@@ -127,3 +148,5 @@
     </view>
   </block>
 </view>
+
+</theme-shell>

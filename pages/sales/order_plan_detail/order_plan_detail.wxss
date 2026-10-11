@@ -1,5 +1,5 @@
 page {
-  background: #f4f7f5;
+  background: var(--ui-primary-pale);
   color: #1d3027;
 }
 
@@ -52,7 +52,7 @@ page {
   padding: 44rpx 40rpx 58rpx;
   border-radius: 0 0 42rpx 42rpx;
   color: #fff;
-  background: linear-gradient(140deg, #037d4b 0%, #08bf70 58%, #44d88e 100%);
+  background: linear-gradient(140deg, var(--ui-gradient-start) 0%, var(--ui-primary) 58%, var(--ui-gradient-end) 100%);
 }
 
 .hero-top,
@@ -654,7 +654,7 @@ page {
   margin: 0;
   border-radius: 14rpx;
   color: #fff;
-  background: linear-gradient(135deg, #05ba70, #009c6b);
+  background: linear-gradient(135deg, var(--ui-gradient-start), var(--ui-gradient-end));
   font-size: 25rpx;
 }
 
@@ -679,7 +679,7 @@ page {
   margin-top: 16rpx;
   border-radius: 18rpx;
   color: #fff;
-  background: linear-gradient(135deg, #05ba70, #009c6b);
+  background: linear-gradient(135deg, var(--ui-gradient-start), var(--ui-gradient-end));
   font-size: 30rpx;
   font-weight: 650;
 }

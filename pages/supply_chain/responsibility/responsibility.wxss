@@ -1,4 +1,4 @@
-page { background: #f4f7f6; color: #18332d; }
+page { background: var(--ui-primary-pale); color: #18332d; }
 .page { min-height: 100vh; padding: 28rpx 28rpx 70rpx; box-sizing: border-box; }
 .hero { padding: 20rpx 8rpx 28rpx; display: flex; flex-direction: column; }
 .eyebrow { color: #08a874; font-size: 24rpx; letter-spacing: 4rpx; }
@@ -12,7 +12,7 @@ page { background: #f4f7f6; color: #18332d; }
 .state-card button { margin-top: 20rpx; width: 240rpx; font-size: 26rpx; }
 .section-title { font-size: 30rpx; font-weight: 700; }
 .section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18rpx; color: #71827e; }
-.picker-field { margin-top: 24rpx; background: #f4faf7; border: 2rpx solid #dbe9e4; border-radius: 20rpx; padding: 24rpx; display: flex; justify-content: space-between; align-items: center; }
+.picker-field { margin-top: 24rpx; background: var(--ui-primary-pale); border: 2rpx solid #dbe9e4; border-radius: 20rpx; padding: 24rpx; display: flex; justify-content: space-between; align-items: center; }
 .manager-name, .manager-phone { display: block; }
 .manager-name { font-size: 32rpx; font-weight: 600; }
 .manager-phone { color: #84918e; font-size: 24rpx; margin-top: 8rpx; }
@@ -28,5 +28,5 @@ page { background: #f4f7f6; color: #18332d; }
 .target-code, .target-category { color: #87938f; font-size: 23rpx; margin-top: 6rpx; }
 .occupied { color: #b17622; background: #fff6e5; border-radius: 10rpx; padding: 8rpx 12rpx; font-size: 22rpx; margin-top: 10rpx; }
 .empty-target { text-align: center; color: #84918e; padding: 50rpx 0; }
-.save-button { background: #07c160; color: #fff; border-radius: 22rpx; font-weight: 600; }
+.save-button { background: var(--ui-primary-bright); color: #fff; border-radius: 22rpx; font-weight: 600; }
 .save-button::after { border: none; }

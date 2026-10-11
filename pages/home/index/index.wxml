@@ -1,101 +1,108 @@
+<theme-shell>
 <!--pages/home/index/index.wxml-->
 <view class="container">
-  <view class="header">
-    <text class="title">产品生命周期\n数字平台</text>
-    <text class="role">{{role_name || nickname}}</text>
-    <text class="welcome">{{real_name || nickname || '用户'}}</text>
-  </view>
-
   <view class="menu-grid">
+    <view class="menu-item" bindtap="goThemeSettings" wx:if="{{showThemeSettings}}">
+      <image src="/images/menu_icons/{{iconTheme}}/theme-settings.png" class="icon" mode="aspectFit" />
+      <text>界面主题</text>
+    </view>
+
     <view class="menu-item" bindtap="goMaterialInventory" wx:if="{{showMaterialInventory}}">
-      <image src="/images/stock_manage.png" class="icon" />
+      <image src="/images/menu_icons/{{iconTheme}}/material-inventory.png" class="icon" mode="aspectFit" />
       <text>物料库</text>
     </view>
 
     <view class="menu-item" bindtap="goQualityTrace" wx:if="{{showQualityTrace}}">
-      <image src="/images/data_statistics.png" class="icon" />
+      <image src="/images/menu_icons/{{iconTheme}}/quality-trace.png" class="icon" mode="aspectFit" />
       <text>质量追溯</text>
     </view>
 
     <!-- 邀请下级 -->
     <view class="menu-item" bindtap="goInvite" wx:if="{{showInvite}}">
-      <image src="/images/role_invite.png" class="icon" />
-      <text>邀请下级</text>
+      <image src="/images/menu_icons/{{iconTheme}}/invite.png" class="icon" mode="aspectFit" />
+      <text>{{isPlatformAdmin ? '邀请厂家负责人' : '邀请下级'}}</text>
     </view>
 
     <!-- 所有具备邀请能力的角色同时具备直接下级查看入口 -->
     <view class="menu-item" bindtap="goManageSubordinates" wx:if="{{showManageSubordinates}}">
-      <image src="/images/role_manage.png" class="icon" />
+      <image src="/images/menu_icons/{{iconTheme}}/manage-subordinates.png" class="icon" mode="aspectFit" />
       <text>管理下级用户</text>
     </view>
 
     <!-- 创建订单计划（厂家销售经理） -->
     <view class="menu-item" bindtap="goCreateOrderPlan" wx:if="{{showCreateOrderPlan}}">
-      <image src="/images/create_plan.png" class="icon" />
+      <image src="/images/menu_icons/{{iconTheme}}/create-plan.png" class="icon" mode="aspectFit" />
       <text>创建订单计划</text>
     </view>
 
     <!-- 订单计划参与角色的隔离列表 -->
     <view class="menu-item" bindtap="goOrderPlanList" wx:if="{{showOrderPlanList}}">
-      <image src="/images/data_statistics.png" class="icon" />
+      <image src="/images/menu_icons/{{iconTheme}}/order-plans.png" class="icon" mode="aspectFit" />
       <text>订单计划列表</text>
     </view>
 
     <!-- 供应商负责人配置本组织销售经理责任范围 -->
     <view class="menu-item" bindtap="goSupplierResponsibility" wx:if="{{showSupplierResponsibility}}">
-      <image src="/images/role_manage.png" class="icon" />
+      <image src="/images/menu_icons/{{iconTheme}}/supplier-responsibility.png" class="icon" mode="aspectFit" />
       <text>销售责任分配</text>
     </view>
 
     <!-- 组织物料配套（厂家配套经理） -->
     <view class="menu-item" bindtap="goMatching" wx:if="{{showMatching}}">
-      <image src="/images/matching.png" class="icon" />
+      <image src="/images/menu_icons/{{iconTheme}}/matching.png" class="icon" mode="aspectFit" />
       <text>组织物料配套</text>
     </view>
 
     <!-- 我的设备（仅终端用户） -->
     <view class="menu-item" bindtap="goMyDevice" wx:if="{{showMyDevice}}">
-      <image src="/images/my_device.png" class="icon" />
+      <image src="/images/menu_icons/{{iconTheme}}/my-device.png" class="icon" mode="aspectFit" />
       <text>我的设备</text>
     </view>
 
     <!-- 售后列表 -->
     <view class="menu-item" bindtap="goAftersaleList" wx:if="{{showAftersale}}">
-      <image src="/images/aftersale.png" class="icon" />
+      <image src="/images/menu_icons/{{iconTheme}}/aftersale.png" class="icon" mode="aspectFit" />
       <text>售后列表</text>
+    </view>
+
+    <view class="menu-item" bindtap="goApplyServiceStation" wx:if="{{showApplyServiceStation}}">
+      <image src="/images/menu_icons/{{iconTheme}}/aftersale.png" class="icon" mode="aspectFit" />
+      <text>{{serviceStationEntryText}}</text>
     </view>
 
     <!-- 独立于订单计划的逐台商品流转 -->
     <view class="menu-item" bindtap="goGoodsTransfer" wx:if="{{showGoodsTransfer}}">
-      <image src="/images/stock_manage.png" class="icon" />
+      <image src="/images/menu_icons/{{iconTheme}}/goods-transfer.png" class="icon" mode="aspectFit" />
       <text>扫码商品流转</text>
     </view>
 
     <view class="menu-item" bindtap="goSupplierWarranty" wx:if="{{showSupplierWarranty}}">
-      <image src="/images/data_statistics.png" class="icon" />
+      <image src="/images/menu_icons/{{iconTheme}}/supplier-warranty.png" class="icon" mode="aspectFit" />
       <text>三包拆机清单</text>
     </view>
 
     <view class="menu-item" bindtap="goSupplierQualityNotices" wx:if="{{showSupplierQualityNotices}}">
-      <image src="/images/aftersale.png" class="icon" />
+      <image src="/images/menu_icons/{{iconTheme}}/quality-notices.png" class="icon" mode="aspectFit" />
       <text>售后质量通知</text>
     </view>
 
     <view class="menu-item" bindtap="goGoodsTransferList" wx:if="{{showGoodsTransferList}}">
-      <image src="/images/data_statistics.png" class="icon" />
+      <image src="/images/menu_icons/{{iconTheme}}/goods-transfer-list.png" class="icon" mode="aspectFit" />
       <text>商品流转列表</text>
     </view>
 
     <view class="menu-item" bindtap="goFactoryReturnInventory" wx:if="{{showFactoryReturnInventory}}">
-      <image src="/images/stock_manage.png" class="icon" />
+      <image src="/images/menu_icons/{{iconTheme}}/factory-stock.png" class="icon" mode="aspectFit" />
       <text>厂家成品库存</text>
     </view>
 
     <!-- 数据统计 -->
     <view class="menu-item" bindtap="goStats" wx:if="{{showStats}}">
-      <image src="/images/data_statistics.png" class="icon" />
+      <image src="/images/menu_icons/{{iconTheme}}/statistics.png" class="icon" mode="aspectFit" />
       <text>数据统计</text>
     </view>
 
   </view>
 </view>
+
+</theme-shell>

@@ -1,3 +1,4 @@
+<theme-shell>
 <view class="page">
   <view class="card">
     <view class="section-title">可编辑资料</view>
@@ -42,6 +43,17 @@
         bindinput="onPhoneInput"
       />
     </view>
+
+    <view class="form-item" wx:if="{{canEditOrganizationAddress}}">
+      <text class="label">组织官方地址</text>
+      <textarea
+        class="organization-address-input"
+        maxlength="255"
+        value="{{organizationAddress}}"
+        placeholder="请输入本组织对外使用的官方地址"
+        bindinput="onOrganizationAddressInput"
+      />
+    </view>
   </view>
 
   <view class="card readonly-card">
@@ -67,3 +79,5 @@
     bindtap="saveProfile"
   >保存账号资料</button>
 </view>
+
+</theme-shell>

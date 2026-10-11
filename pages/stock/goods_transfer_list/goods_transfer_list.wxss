@@ -22,7 +22,7 @@ page {
   align-items: center;
   justify-content: space-between;
   padding: 30rpx;
-  background: linear-gradient(135deg, #067a4e, #08aa6f);
+  background: linear-gradient(135deg, var(--ui-gradient-start), var(--ui-gradient-end));
   color: #fff;
 }
 
@@ -84,8 +84,8 @@ page {
 .secondary-button {
   margin-top: 18rpx;
   border-radius: 14rpx;
-  background: #ecfdf5;
-  color: #067a4e;
+  background: var(--ui-primary-soft);
+  color: var(--ui-primary-strong);
   font-size: 24rpx;
 }
 
@@ -110,7 +110,7 @@ page {
 
 .status-pill.completed {
   background: #eafaf3;
-  color: #067a4e;
+  color: var(--ui-primary-strong);
 }
 
 .status-pill.pending {
@@ -162,7 +162,7 @@ page {
 
 .action-text {
   margin-left: auto;
-  color: #079b65;
+  color: var(--ui-primary);
   font-size: 23rpx;
   font-weight: 600;
 }

@@ -1,3 +1,4 @@
+<theme-shell>
 <view class="page">
   <view class="hero">
     <text class="eyebrow">供应协作</text>
@@ -77,3 +78,5 @@
     >保存物料责任</button>
   </block>
 </view>
+
+</theme-shell>

@@ -1,3 +1,4 @@
+<theme-shell>
 <view class="page">
   <view wx:if="{{loading}}" class="state">正在读取设备信息...</view>
   <view wx:elif="{{error}}" class="state error"><text>{{error}}</text><button bindtap="goBack">返回</button></view>
@@ -5,7 +6,6 @@
   <block wx:elif="{{context}}">
     <view class="hero">
       <text class="eyebrow">一机一码 · 售后服务</text>
-      <text class="title">发起售后申请</text>
       <text>{{context.device.product_model}}｜{{context.device.sn}}</text>
     </view>
 
@@ -60,3 +60,5 @@
     <button class="submit" loading="{{submitting}}" disabled="{{submitting}}" bindtap="submit">提交售后申请</button>
   </block>
 </view>
+
+</theme-shell>

@@ -1,10 +1,5 @@
+<theme-shell title-eyebrow="物料库存订单协同" title-subtitle="{{viewer ? viewer.organization_name + ' · ' + viewer.role_name : ''}}">
 <view class="page">
-  <view class="page-header">
-    <text class="eyebrow">物料库存订单协同</text>
-    <text class="title">订单计划列表</text>
-    <text class="subtitle" wx:if="{{viewer}}">{{viewer.organization_name}} · {{viewer.role_name}}</text>
-  </view>
-
   <scroll-view class="filter-scroll" scroll-x="true" enhanced="true">
     <view class="filter-row">
       <view wx:for="{{filters}}" wx:key="key" class="filter-item {{activeStatus === item.key ? 'active' : ''}}" data-status="{{item.key}}" bindtap="selectStatus">{{item.label}}</view>
@@ -38,3 +33,5 @@
     </view>
   </block>
 </view>
+
+</theme-shell>

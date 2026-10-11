@@ -82,10 +82,15 @@ Page({
             return;
           }
           const data = body.data;
+          const organizationName = (data.identity || {}).organization_name || '';
+          if (organizationName) {
+            app.globalData.organization_name = organizationName;
+            if (app.saveUserToCache) app.saveUserToCache();
+          }
           this.setData({
             loading: false,
             dashboardName: data.dashboard_name || '岗位数据驾驶舱',
-            organizationName: (data.identity || {}).organization_name || '',
+            organizationName,
             roleName: (data.identity || {}).role_name || '',
             generatedAt: (data.generated_at || '').replace('T', ' ').slice(0, 19),
             sections: (data.sections || []).map(normalizeSection)

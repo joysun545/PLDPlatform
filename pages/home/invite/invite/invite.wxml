@@ -1,41 +1,87 @@
-<view class="container">
-  <view class="header">
-    <text class="title">邀请组织成员</text>
-    <text class="role">{{role_name}}</text>
-    <text class="welcome">欢迎，{{nickname || '用户'}}</text>
-  </view>
+<theme-shell title-eyebrow="组织邀请" title-subtitle="选择需要邀请加入组织的岗位">
+  <view class="container" style="{{themeStyle}}">
+    <view class="loading-tip" wx:if="{{loading}}">
+      正在获取可邀请岗位...
+    </view>
 
-  <view class="loading-tip" wx:if="{{loading}}">
-    正在获取可邀请岗位...
-  </view>
+    <view class="empty-tip" wx:elif="{{availableRoles.length === 0}}">
+      当前岗位没有可发起的邀请
+    </view>
 
-  <view class="empty-tip" wx:elif="{{availableRoles.length === 0}}">
-    当前岗位没有可发起的邀请
-  </view>
+    <view class="menu-grid" wx:else>
+      <block wx:for="{{availableRoles}}" wx:key="rule_id">
+        <button
+          class="menu-item"
+          bindtap="selectRole"
+          disabled="{{creating}}"
+          data-ruleid="{{item.rule_id}}"
+          data-role="{{item.role}}"
+          data-name="{{item.name}}"
+        >
+          <image src="/images/role_manage.png" class="icon" />
+          <text>{{item.name}}</text>
+          <text class="scope-tip" wx:if="{{item.scope === 'cross_organization'}}">
+            建立{{item.organization_type_name}}组织
+          </text>
+          <text class="scope-tip" wx:else>加入当前组织</text>
+        </button>
+      </block>
+    </view>
 
-  <view class="menu-grid" wx:else>
-    <block wx:for="{{availableRoles}}" wx:key="rule_id">
-      <button
-        class="menu-item"
-        bindtap="selectRole"
-        disabled="{{creating}}"
-        data-ruleid="{{item.rule_id}}"
-        data-role="{{item.role}}"
-        data-name="{{item.name}}"
-      >
-        <image src="/images/role_manage.png" class="icon" />
-        <text>{{item.name}}</text>
-        <text class="scope-tip" wx:if="{{item.scope === 'cross_organization'}}">
-          建立{{item.organization_type_name}}组织
-        </text>
-        <text class="scope-tip" wx:else>加入当前组织</text>
-      </button>
-    </block>
-  </view>
+    <view class="share-panel" wx:if="{{sharePanelVisible}}">
+      <text class="selected-role">已指定岗位：{{selectedRoleName}}</text>
+      <view wx:if="{{selectedManagerRoleCodes.length}}" class="manager-summary">
+        <text wx:if="{{managerJobTitle}}">分管职位：{{managerJobTitle}}</text>
+        <text>分管系统岗位：{{selectedManagerRoleNames}}</text>
+      </view>
+      <text class="share-tip">受邀者不能修改岗位，请点击下面按钮分享。</text>
+      <button class="share-btn" open-type="share">分享邀请链接</button>
+    </view>
 
-  <view class="share-panel" wx:if="{{shareReady}}">
-    <text class="selected-role">已指定岗位：{{selectedRoleName}}</text>
-    <text class="share-tip">受邀者不能修改岗位，请点击下面按钮分享。</text>
-    <button class="share-btn" open-type="share">分享邀请链接</button>
+    <view class="manager-config-mask" wx:if="{{managerConfigVisible}}">
+      <view class="manager-config-panel">
+        <block wx:if="{{!shareReady}}">
+          <text class="manager-config-title">配置{{selectedRoleName}}</text>
+          <text class="manager-config-tip">职位名称仅用于链路信息展示；勾选岗位决定该高级经理可邀请的同组织系统岗位。</text>
+
+          <view class="manager-title-field">
+            <text class="manager-field-label">分管职位（可选）</text>
+            <input
+              maxlength="64"
+              placeholder="例如：销售分管、供应链分管"
+              value="{{managerJobTitle}}"
+              bindinput="onManagerJobTitleInput"
+            />
+          </view>
+
+          <text class="manager-field-label roles-label">分管系统岗位（至少选择一项）</text>
+          <scroll-view class="manager-role-scroll" scroll-y="true">
+            <checkbox-group bindchange="onManagedRolesChange">
+              <label class="manager-role-option" wx:for="{{managerRoleOptions}}" wx:key="code">
+                <checkbox value="{{item.code}}" checked="{{item.checked}}" />
+                <text>{{item.name}}</text>
+              </label>
+            </checkbox-group>
+          </scroll-view>
+
+          <text class="manager-config-error" wx:if="{{invitationError}}">{{invitationError}}</text>
+          <view class="manager-config-actions">
+            <button class="manager-cancel" bindtap="cancelManagerConfig" disabled="{{creating}}">取消</button>
+            <button class="manager-confirm" bindtap="confirmManagerConfig" disabled="{{creating}}">生成邀请</button>
+          </view>
+        </block>
+
+        <block wx:else>
+          <text class="manager-config-title">邀请已生成</text>
+          <text class="manager-config-tip">已生成“{{selectedRoleName}}”邀请，分享下方链接即可邀请。</text>
+          <view class="manager-summary manager-summary-success">
+            <text>分管职位：{{managerJobTitle || '未填写'}}</text>
+            <text>分管系统岗位：{{selectedManagerRoleNames}}</text>
+          </view>
+          <button class="manager-confirm manager-share-btn" open-type="share">分享邀请链接</button>
+          <button class="manager-cancel manager-done-btn" bindtap="cancelManagerConfig">完成</button>
+        </block>
+      </view>
+    </view>
   </view>
-</view>
+</theme-shell>

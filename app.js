@@ -1,3 +1,11 @@
+const theme = typeof require === 'function'
+  ? require('./utils/theme')
+  : {
+      restore: () => ({ color_scheme: 'jade', style_scheme: 'flow' }),
+      normalize: value => value || { color_scheme: 'jade', style_scheme: 'flow' },
+      apply: value => value || { color_scheme: 'jade', style_scheme: 'flow' }
+    };
+
 App({
   globalData: {
     openid: '',
@@ -9,8 +17,14 @@ App({
     real_name: '',
     phone: '',
     company_name: '',
+    organization_name: '',
     organization_id: null,
+    factory_root_id: null,
+    factory_root_name: '',
+    is_platform_admin: false,
     organization_type: '',
+    delegated_role_codes: [],
+    appearance: theme.restore(),
 
     brand: '',
     brand_id: '',
@@ -66,13 +80,22 @@ App({
           real_name: data.real_name || '',
           phone: data.phone || '',
           company_name: data.company_name || '',
+          organization_name: data.organization_name || (data.appearance && data.appearance.owner_organization_name) || '',
           organization_id: data.organization_id || null,
+          factory_root_id: data.factory_root_id || (data.appearance && data.appearance.owner_organization_id) || null,
+          factory_root_name: data.factory_root_name || (data.appearance && data.appearance.owner_organization_name) || '',
+          is_platform_admin: !!data.is_platform_admin,
           organization_type: data.organization_type || '',
+          delegated_role_codes: Array.isArray(data.delegated_role_codes)
+            ? data.delegated_role_codes
+            : [],
+          appearance: theme.normalize(data.appearance || this.globalData.appearance),
           brand: data.brand || '',
           brand_id: data.brand_id || '',
           category_id: data.category_id || '',
           region: data.region || ''
         });
+        theme.apply(this.globalData.appearance, { persist: false });
       }
     } catch (e) {}
   },
@@ -90,8 +113,16 @@ App({
         real_name: g.real_name || '',
         phone: g.phone || '',
         company_name: g.company_name || '',
+        organization_name: g.organization_name || '',
         organization_id: g.organization_id || null,
+        factory_root_id: g.factory_root_id || null,
+        factory_root_name: g.factory_root_name || '',
+        is_platform_admin: !!g.is_platform_admin,
         organization_type: g.organization_type || '',
+        delegated_role_codes: Array.isArray(g.delegated_role_codes)
+          ? g.delegated_role_codes
+          : [],
+        appearance: theme.normalize(g.appearance),
         brand: g.brand || '',
         brand_id: g.brand_id || '',
         category_id: g.category_id || '',
@@ -113,6 +144,9 @@ App({
   },
 
   applyUserPayload(data = {}) {
+    const appearance = theme.normalize(data.appearance || this.globalData.appearance);
+    const nextOrganizationId = data.organization_id || null;
+    const sameOrganization = String(nextOrganizationId || '') === String(this.globalData.organization_id || '');
     Object.assign(this.globalData, {
       openid: data.openid || this.globalData.openid || '',
       role: data.role || 'tourist',
@@ -122,13 +156,22 @@ App({
       real_name: '',
       phone: data.phone || '',
       company_name: data.company_name || '',
-      organization_id: data.organization_id || null,
+      organization_name: data.organization_name || (data.organization && data.organization.name) || (appearance && appearance.owner_organization_name) || (sameOrganization ? this.globalData.organization_name : ''),
+      organization_id: nextOrganizationId,
+      factory_root_id: data.factory_root_id || (appearance && appearance.owner_organization_id) || null,
+      factory_root_name: data.factory_root_name || (appearance && appearance.owner_organization_name) || '',
+      is_platform_admin: !!data.is_platform_admin,
       organization_type: data.organization_type || '',
+      delegated_role_codes: Array.isArray(data.delegated_role_codes)
+        ? data.delegated_role_codes
+        : [],
       brand: data.brand_name || data.brand || '',
       brand_id: data.brand_id || '',
       category_id: data.category_id || '',
-      region: data.region || ''
+      region: data.region || '',
+      appearance
     });
+    theme.apply(appearance);
     this.saveUserToCache();
   },
 
@@ -251,9 +294,17 @@ App({
       'pages/quality_trace/alert_list/alert_list',
       'pages/quality_trace/case_list/case_list',
       'pages/quality_trace/recall_list/recall_list',
-      'pages/quality_trace/recall_detail/recall_detail'
+      'pages/quality_trace/recall_detail/recall_detail',
+      'pages/theme/setting/setting'
     ];
     if (protectedRoutes.includes(currentRoute)) return;
+
+    if (this.globalData.is_platform_admin) {
+      if (currentRoute !== 'pages/home/index/index') {
+        wx.switchTab({ url: '/pages/home/index/index' });
+      }
+      return;
+    }
 
     const manageRoles = [
       'factory_admin',
@@ -281,6 +332,15 @@ App({
 
   updateTabBarBadge() {
     const count = this.globalData.taskCount;
+    const pages = getCurrentPages();
+    const currentPage = pages.length ? pages[pages.length - 1] : null;
+    const customTabBar = currentPage && currentPage.getTabBar
+      ? currentPage.getTabBar()
+      : null;
+    if (customTabBar) {
+      customTabBar.setData({ badge: count > 0 ? count : 0 });
+      return;
+    }
     const index = 2;
     if (count > 0) {
       wx.setTabBarBadge({

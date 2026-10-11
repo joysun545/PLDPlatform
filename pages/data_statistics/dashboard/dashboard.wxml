@@ -1,11 +1,5 @@
+<theme-shell>
 <view class="page">
-  <view class="hero">
-    <view class="hero-kicker">DATA STATISTICS</view>
-    <view class="hero-title">{{dashboardName}}</view>
-    <view class="hero-sub">{{organizationName}} · {{roleName}}</view>
-    <view class="hero-time" wx:if="{{generatedAt}}">更新于 {{generatedAt}}</view>
-  </view>
-
   <view class="state-card" wx:if="{{loading}}">正在汇总业务数据…</view>
   <view class="state-card error" wx:elif="{{error}}">{{error}}</view>
   <view class="state-card" wx:elif="{{!sections.length}}">当前岗位暂无可查看的统计模块</view>
@@ -30,3 +24,5 @@
 
   <view class="footer-note">统计页面只读，不会修改订单、库存、售后或质量业务状态。</view>
 </view>
+
+</theme-shell>

@@ -29,7 +29,7 @@ Page({
         pageSubtitle: isCustomer
           ? '查看每台设备的申请进展、处理方案与结案结果'
           : isFactoryAftersales
-            ? '查看厂家销售经理分派给您的维修工单'
+            ? '处理售后申请、跟进维修与结案'
             : '申请、判断、维修与结案',
         emptyText: isCustomer
           ? '暂无售后服务单，可从“我的设备”进入设备详情发起申请'

@@ -1,0 +1,45 @@
+<theme-shell>
+<view class="page">
+  <view wx:if="{{loading}}" class="state-card">正在读取全局主题…</view>
+  <view wx:if="{{errorMessage}}" class="state-card error">{{errorMessage}}</view>
+
+  <block wx:if="{{!loading}}">
+    <view class="section-card">
+      <text class="section-title">第一步 · 选择色系</text>
+      <view class="option-list">
+        <view wx:for="{{colors}}" wx:key="code" class="option color-option color-{{item.code}} {{selectedColor === item.code ? 'selected' : ''}}" data-code="{{item.code}}" bindtap="selectColor">
+          <view class="color-swatch"></view>
+          <view class="option-copy">
+            <text class="option-name">{{item.name}}</text>
+            <text class="option-description">{{item.description}}</text>
+          </view>
+          <text class="check">{{selectedColor === item.code ? '✓' : ''}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="section-card">
+      <text class="section-title">第二步 · 选择页面风格</text>
+      <view class="option-list">
+        <view wx:for="{{styles}}" wx:key="code" class="option style-option style-{{item.code}} {{selectedStyle === item.code ? 'selected' : ''}}" data-code="{{item.code}}" bindtap="selectStyle">
+          <view class="style-preview"><view></view><view></view><view></view></view>
+          <view class="option-copy">
+            <text class="option-name">{{item.name}}</text>
+            <text class="option-description">{{item.description}}</text>
+          </view>
+          <text class="check">{{selectedStyle === item.code ? '✓' : ''}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="combination-card color-{{selectedColor}} style-{{selectedStyle}}">
+      <text class="combination-label">当前组合预览</text>
+      <text class="combination-code">{{selectedColor}} × {{selectedStyle}}</text>
+      <view class="mock-card"><text>页面头部</text><text>内容卡片与操作按钮</text></view>
+    </view>
+
+    <button wx:if="{{canManage}}" class="save-button" loading="{{saving}}" disabled="{{saving}}" bindtap="save">保存并全局应用</button>
+    <view wx:else class="readonly-tip">当前账号可以查看主题，但只有运营业主负责人可以修改。</view>
+  </block>
+</view>
+</theme-shell>

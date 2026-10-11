@@ -1,3 +1,4 @@
+<theme-shell>
 <view class="page">
   <view class="empty" wx:if="{{loading}}">正在加载…</view>
   <view class="notice error" wx:if="{{error}}">{{error}}<button class="secondary wide" wx:if="{{!ready}}" bindtap="load">重新加载</button></view>
@@ -42,3 +43,5 @@
     <button class="primary wide" bindtap="done">查看物料库存</button>
   </view>
 </view>
+
+</theme-shell>

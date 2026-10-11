@@ -1,3 +1,4 @@
+<theme-shell>
 <view class="container">
   <view class="loading-tip" wx:if="{{loading}}">
     正在读取邀请信息...
@@ -20,6 +21,7 @@
     <view class="invite-info">
       <text class="text">邀请您成为：</text>
       <text class="highlight-role">{{targetRoleName}}</text>
+      <text class="desc" wx:if="{{targetOrganizationName}}">所属{{targetOrganizationTypeName}}：{{targetOrganizationName}}</text>
       <text class="desc">接受后将为您开放该岗位的功能入口</text>
     </view>
 
@@ -96,9 +98,10 @@
             placeholder="请输入详细地址"
             value="{{address}}"
             bindinput="onAddressInput"
-            class="input"
-          />
+          class="input"
+        />
         </view>
+
       </block>
 
       <view class="form-item tip">
@@ -129,3 +132,4 @@
     </view>
   </block>
 </view>
+</theme-shell>

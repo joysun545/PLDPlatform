@@ -1,0 +1,13 @@
+<view class="global-page-title">
+  <view class="global-page-title-first-line">
+    <text class="global-page-title-eyebrow">{{eyebrow}}</text>
+    <view class="global-page-title-back" bindtap="goBack" aria-role="button" aria-label="返回上一页">
+      <text>‹</text>
+    </view>
+  </view>
+  <view class="global-page-title-main-row">
+    <text class="global-page-title-main">{{title}}</text>
+    <text class="global-page-title-metric" wx:if="{{metric}}">{{metric}}</text>
+  </view>
+  <text class="global-page-title-subtitle">{{subtitle}}</text>
+</view>

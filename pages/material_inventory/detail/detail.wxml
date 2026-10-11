@@ -1,3 +1,4 @@
+<theme-shell>
 <view class="page">
   <view wx:if="{{error}}" class="notice error">{{error}}<button class="secondary wide" bindtap="retry">重新加载</button></view>
   <view class="card" wx:if="{{stock}}">
@@ -53,3 +54,5 @@
   <view class="empty" wx:if="{{loading}}">正在加载…</view>
   <button wx:if="{{nextCursor && !loading}}" class="secondary wide" bindtap="onReachBottom">加载更多</button>
 </view>
+
+</theme-shell>

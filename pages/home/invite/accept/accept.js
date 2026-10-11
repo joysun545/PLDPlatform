@@ -15,6 +15,7 @@ Page({
     targetRole: '',
     targetRoleName: '',
     targetOrganizationTypeName: '',
+    targetOrganizationName: '',
     requiresOrganizationProfile: false,
 
     nickname: '',
@@ -67,6 +68,7 @@ Page({
         const inviter = data.inviter || {};
         const targetRole = data.target_role || {};
         const targetType = data.target_organization_type || {};
+        const targetOrganization = data.target_organization || {};
         const sourceOrganization = data.source_organization || {};
 
         if (!data.can_accept) {
@@ -83,6 +85,7 @@ Page({
           targetRole: targetRole.code || '',
           targetRoleName: targetRole.name || '成员',
           targetOrganizationTypeName: targetType.name || '',
+          targetOrganizationName: targetOrganization.name || '',
           requiresOrganizationProfile: !!data.requires_organization_profile,
           region: sourceOrganization.region || ''
         });
@@ -205,18 +208,7 @@ Page({
         }
 
         const profile = res.data.data || {};
-        Object.assign(app.globalData, {
-          role: profile.role || this.data.targetRole,
-          role_name: profile.role_name || this.data.targetRoleName,
-          nickname: profile.nickname || this.data.nickname,
-          avatar_url: profile.avatar_url || app.globalData.avatar_url || '',
-          phone: profile.phone || this.data.phone || '',
-          company_name: profile.company_name || '',
-          organization_id: profile.organization_id || null,
-          organization_type: profile.organization_type || '',
-          region: profile.region || this.data.region || ''
-        });
-        app.saveUserToCache();
+        app.applyUserPayload(profile);
 
         wx.showToast({ title: '加入成功', icon: 'success' });
         setTimeout(() => {

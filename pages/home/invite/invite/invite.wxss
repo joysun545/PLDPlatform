@@ -1,34 +1,11 @@
 /* pages/common/invite/invite/invite.wxss */
 .container {
-  min-height: 100vh;
-  background: linear-gradient(#f0f2f5, #ffffff);
-}
-
-.header {
-  background: linear-gradient(135deg, #07c160, #009688);
-  color: white;
-  text-align: center;
-  padding: 80rpx 0 60rpx;
-  border-bottom-left-radius: 50rpx;
-  border-bottom-right-radius: 50rpx;
-  box-shadow: 0 10rpx 30rpx rgba(7, 193, 96, 0.3);
-}
-
-.title {
-  font-size: 48rpx;
-  font-weight: bold;
-}
-
-.role {
-  font-size: 36rpx;
-  margin: 20rpx 0;
   display: block;
-  opacity: 0.9;
-}
-
-.welcome {
-  font-size: 32rpx;
-  opacity: 0.8;
+  width: 100%;
+  min-height: 100%;
+  padding: 0 28rpx 24rpx;
+  box-sizing: border-box;
+  background: transparent;
 }
 
 .menu-grid {
@@ -148,5 +125,198 @@
   margin-top: 60rpx;
 }
 
+.manager-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  color: #59615e;
+  font-size: 26rpx;
+  margin: 18rpx 0;
+}
+
+.manager-config-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 36rpx;
+  box-sizing: border-box;
+  background: rgba(20, 30, 27, 0.48);
+}
+
+.manager-config-panel {
+  width: 100%;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: 36rpx 32rpx 28rpx;
+  border-radius: 24rpx;
+  background: #fff;
+}
+
+.manager-config-title {
+  color: #24312c;
+  font-size: 36rpx;
+  font-weight: 700;
+  text-align: center;
+}
+
+.manager-config-tip {
+  margin-top: 16rpx;
+  color: #77817c;
+  font-size: 25rpx;
+  line-height: 1.5;
+}
+
+.manager-title-field {
+  margin-top: 28rpx;
+  padding: 18rpx 20rpx;
+  border-radius: 14rpx;
+  background: #f5f7f6;
+}
+
+.manager-field-label {
+  display: block;
+  color: #39443f;
+  font-size: 27rpx;
+  font-weight: 600;
+}
+
+.manager-title-field input {
+  margin-top: 12rpx;
+  padding: 12rpx 0;
+  color: #333;
+  font-size: 28rpx;
+}
+
+.roles-label {
+  margin: 26rpx 4rpx 10rpx;
+}
+
+.manager-role-scroll {
+  min-height: 160rpx;
+  max-height: 38vh;
+}
+
+.manager-role-option {
+  display: flex;
+  align-items: center;
+  min-height: 82rpx;
+  padding: 0 8rpx;
+  border-bottom: 1rpx solid #edf0ee;
+  color: #303a35;
+  font-size: 28rpx;
+}
+
+.manager-config-actions {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 24rpx;
+}
+
+.manager-config-actions button {
+  flex: 1;
+  margin: 0;
+  border-radius: 999rpx;
+  font-size: 28rpx;
+}
+
+.manager-config-actions button::after {
+  border: none;
+}
+
+.manager-cancel {
+  color: #59615e;
+  background: #f0f2f1;
+}
+
+.manager-confirm {
+  color: #fff;
+  background-color: var(--ui-primary-strong, var(--ui-primary, #168b68));
+}
 
 
+
+
+.manager-config-error {
+  display: block;
+  margin-top: 18rpx;
+  color: #c83b35;
+  font-size: 25rpx;
+  line-height: 1.5;
+}
+
+.manager-summary-success {
+  margin: 30rpx 0;
+  padding: 20rpx;
+  border-radius: 14rpx;
+  background: #f5f7f6;
+}
+
+/* Keep invite prompts and share actions centered inside the global themed page. */
+.share-panel {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.share-panel > .selected-role,
+.share-panel > .share-tip {
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+
+.share-tip {
+  margin-top: 16rpx;
+  color: var(--ui-muted, #718078);
+  line-height: 1.5;
+}
+
+.share-btn {
+  display: block;
+  align-self: center;
+  width: 80%;
+  margin: 24rpx auto 0;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  border-radius: 999rpx;
+  color: #fff;
+  background-color: var(--ui-primary-strong, var(--ui-primary, #168b68));
+  font-size: 28rpx;
+}
+
+.share-btn::after,
+.manager-share-btn::after,
+.manager-done-btn::after {
+  border: none;
+}
+
+/* The senior-manager success state stacks both actions on the modal centerline. */
+.manager-share-btn,
+.manager-done-btn {
+  display: block;
+  align-self: center;
+  width: 80%;
+  margin: 12rpx 0 0;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  border-radius: 999rpx;
+  text-align: center;
+}
+
+.manager-share-btn {
+  color: #fff;
+  background-color: var(--ui-primary-strong, var(--ui-primary, #168b68));
+}
+
+.manager-done-btn {
+  color: #59615e;
+  background-color: #f0f2f1;
+}

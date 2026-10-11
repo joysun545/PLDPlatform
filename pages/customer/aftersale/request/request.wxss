@@ -1,1 +1,24 @@
-page{background:#f4f7f6;color:#26332e}.page{min-height:100vh;padding:28rpx;box-sizing:border-box}.state{padding-top:42vh;text-align:center;color:#718078}.state text{display:block;margin-bottom:26rpx}.error{color:#bd5555}.hero{display:flex;flex-direction:column;gap:10rpx;padding:38rpx 32rpx;margin-bottom:22rpx;border-radius:28rpx;background:linear-gradient(135deg,#08b879,#078f72);color:#fff}.eyebrow{font-size:23rpx;opacity:.84}.title{font-size:40rpx;font-weight:700}.card{padding:28rpx;margin-bottom:22rpx;border-radius:24rpx;background:#fff;box-shadow:0 8rpx 26rpx rgba(10,76,55,.06)}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20rpx}.grid view{padding:18rpx;border-radius:16rpx;background:#f6faf8}.grid text{display:block;color:#829088;font-size:23rpx}.strong{margin-top:8rpx;color:#26332e!important;font-size:25rpx!important;font-weight:700;word-break:break-all}.row{display:flex;justify-content:space-between;align-items:center}.section-title{font-size:31rpx;font-weight:700}.link{color:#07986f}.tip,.muted{display:block;margin-top:15rpx;color:#76847d;font-size:24rpx;line-height:1.55}.bom-row{display:flex;justify-content:space-between;gap:20rpx;padding:19rpx 0;border-top:1rpx solid #edf1ef}.bom-row text:last-child{color:#718078;text-align:right}.secondary,.confirm-location{margin:20rpx 0 0!important;border-radius:14rpx;font-size:26rpx}.secondary{color:#087d4b!important;background:#ebf8f0!important}.confirm-location{color:#fff;background:#08a870}.location-ready{display:flex;flex-direction:column;gap:8rpx;margin-top:20rpx;padding:18rpx;border-radius:14rpx;background:#eef9f3;color:#087e51;font-size:23rpx}.field,.description{width:100%;box-sizing:border-box;margin-top:18rpx;padding:20rpx;background:#f7f9fa;border-radius:14rpx}.description{min-height:240rpx;line-height:1.6}.submit{margin:6rpx 0 52rpx;color:#fff;background:#07a85d;border-radius:16rpx}
+page{background:var(--ui-page-bg);color:var(--ui-ink)}.page{min-height:100vh;padding:28rpx;box-sizing:border-box}.state{padding-top:42vh;text-align:center;color:var(--ui-muted)}.state text{display:block;margin-bottom:26rpx}.error{color:#bd5555}.hero{display:flex;flex-direction:column;gap:10rpx;padding:38rpx 32rpx;margin-bottom:22rpx;border-radius:var(--ui-panel-radius);background:linear-gradient(135deg,var(--ui-gradient-start),var(--ui-gradient-end));color:#fff}.eyebrow{font-size:23rpx;opacity:.84}.title{font-size:40rpx;font-weight:700}.card{padding:28rpx;margin-bottom:22rpx;border-radius:var(--ui-card-radius);background:#fff;box-shadow:var(--ui-card-shadow)}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20rpx}.grid view{padding:18rpx;border-radius:16rpx;background:var(--ui-primary-pale)}.grid text{display:block;color:var(--ui-muted);font-size:23rpx}.strong{margin-top:8rpx;color:var(--ui-ink)!important;font-size:25rpx!important;font-weight:700;word-break:break-all}.row{display:flex;justify-content:space-between;align-items:center}.section-title{font-size:31rpx;font-weight:700}.link{color:var(--ui-primary)}.tip,.muted{display:block;margin-top:15rpx;color:var(--ui-muted);font-size:24rpx;line-height:1.55}.bom-row{display:flex;justify-content:space-between;gap:20rpx;padding:19rpx 0;border-top:1rpx solid var(--ui-border)}.bom-row text:last-child{color:var(--ui-muted);text-align:right}.secondary,.confirm-location{margin:20rpx 0 0!important;border-radius:var(--ui-control-radius);font-size:26rpx}.secondary{color:var(--ui-primary)!important;background:var(--ui-primary-soft)!important}.confirm-location{color:#fff;background:var(--ui-primary)}.location-ready{display:flex;flex-direction:column;gap:8rpx;margin-top:20rpx;padding:18rpx;border-radius:14rpx;background:var(--ui-primary-soft);color:var(--ui-primary);font-size:23rpx}.field,.description{width:100%;box-sizing:border-box;margin-top:18rpx;padding:20rpx;background:var(--ui-primary-pale);border-radius:var(--ui-control-radius)}.description{min-height:240rpx;line-height:1.6}.submit{margin:6rpx 0 52rpx;color:#fff;background:var(--ui-primary);border-radius:var(--ui-control-radius)}
+
+/* Keep form fields readable when the selected theme uses pill-shaped buttons. */
+.theme-shell .page .field {
+  display: block;
+  width: 100%;
+  height: 92rpx;
+  min-height: 92rpx;
+  box-sizing: border-box;
+  padding: 0 22rpx;
+  line-height: 92rpx;
+  border-radius: 16rpx;
+}
+
+.theme-shell .page textarea.description {
+  display: block;
+  width: 100%;
+  height: 240rpx;
+  min-height: 240rpx;
+  box-sizing: border-box;
+  padding: 22rpx;
+  line-height: 1.6;
+  border-radius: 16rpx;
+}

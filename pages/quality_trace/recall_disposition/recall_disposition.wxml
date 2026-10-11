@@ -1,3 +1,4 @@
+<theme-shell>
 <view class="page">
   <view class="hero" wx:if="{{campaign}}">
     <view class="hero-title">召回后风险与处置</view>
@@ -43,3 +44,5 @@
     </view>
   </view>
 </view>
+
+</theme-shell>

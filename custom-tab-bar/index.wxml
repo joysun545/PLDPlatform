@@ -1,0 +1,30 @@
+<view wx:if="{{!hidden}}" class="custom-tab-bar {{themeClass}}" style="{{themeStyle}}">
+  <view
+    wx:for="{{items}}"
+    wx:key="pagePath"
+    class="tab-item {{selected === index ? 'selected' : ''}}"
+    data-index="{{index}}"
+    bindtap="switchTab"
+  >
+    <view class="tab-icon tab-icon-{{item.icon}}">
+      <block wx:if="{{item.icon === 'home'}}">
+        <view class="home-roof"></view>
+        <view class="home-body"></view>
+      </block>
+      <block wx:elif="{{item.icon === 'scan'}}">
+        <view class="scan-corner scan-corner-tl"></view>
+        <view class="scan-corner scan-corner-tr"></view>
+        <view class="scan-corner scan-corner-bl"></view>
+        <view class="scan-corner scan-corner-br"></view>
+        <view class="scan-core"></view>
+      </block>
+      <block wx:else>
+        <view class="my-head"></view>
+        <view class="my-body"></view>
+      </block>
+    </view>
+    <text class="tab-label">{{item.text}}</text>
+    <text wx:if="{{index === 2 && badge > 0}}" class="tab-badge">{{badge > 99 ? '99+' : badge}}</text>
+  </view>
+  <view class="safe-bottom"></view>
+</view>

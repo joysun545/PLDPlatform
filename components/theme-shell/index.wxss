@@ -1,0 +1,29 @@
+:host { display: block; min-height: 100vh; }
+.theme-shell {
+  min-height: 100vh;
+  color: var(--ui-ink);
+  background: var(--ui-page-bg);
+  box-sizing: border-box;
+}
+.theme-header { position: fixed; top: 0; left: 0; right: 0; width: 100%; z-index: 900; color: #fff; background: linear-gradient(135deg, var(--ui-gradient-start), var(--ui-gradient-end)); box-sizing: border-box; }
+.theme-header-tab { overflow: hidden; background: linear-gradient(135deg, var(--ui-gradient-start), var(--ui-gradient-end)); }
+.tab-hero { min-height: 186rpx; display: flex; align-items: center; gap: 24rpx; padding: 24rpx 32rpx 40rpx; box-sizing: border-box; }
+.brand-mark { display: flex; width: 76rpx; height: 76rpx; align-items: center; justify-content: center; flex-shrink: 0; border: 2rpx solid rgba(255,255,255,.55); color: #fff; background: rgba(255,255,255,.14); font-size: 28rpx; font-weight: 800; letter-spacing: 2rpx; }
+.tab-hero-copy { min-width: 0; display: flex; flex-direction: column; }
+.organization-line { max-width: 100%; margin-bottom: 5rpx; overflow: hidden; color: rgba(255,255,255,.78); font-size: 21rpx; line-height: 1.15; text-overflow: ellipsis; white-space: nowrap; }
+.platform-name { color: #fff; font-size: 36rpx; font-weight: 750; line-height: 1.15; }
+.identity-line-row { display: flex; min-width: 0; align-items: center; gap: 10rpx; margin-top: 8rpx; }
+.identity-line { min-width: 0; margin-top: 0; overflow: hidden; flex: 1; color: rgba(255,255,255,.84); font-size: 22rpx; text-overflow: ellipsis; white-space: nowrap; }
+.service-station-badge { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 4rpx; padding: 2rpx 8rpx 2rpx 4rpx; border: 1rpx solid rgba(255,255,255,.58); border-radius: 999rpx; color: #fff; background: rgba(255,255,255,.13); font-size: 18rpx; line-height: 26rpx; }
+.service-station-badge image { display: block; width: 34rpx; height: 34rpx; }
+.theme-page-title-fixed { position: fixed; z-index: 899; top: 0; left: 32rpx; right: 32rpx; background: transparent; pointer-events: none; }
+.theme-page-body { min-height: 0; }
+.level-tab .theme-page-body { padding-bottom: calc(112rpx + env(safe-area-inset-bottom)); }
+
+.theme-style-flow .theme-header { overflow: hidden; border-bottom-right-radius: 54rpx; box-shadow: 0 18rpx 42rpx rgba(0,0,0,.14); }
+.theme-style-flow .brand-mark { border-radius: 24rpx; }
+
+.theme-style-order .theme-header { background: linear-gradient(135deg, var(--ui-primary-strong), var(--ui-primary-bright)); border-bottom: 6rpx solid var(--ui-primary-bright); }
+.theme-style-order .tab-hero { min-height: 166rpx; }
+.theme-style-order .brand-mark { border-radius: 4rpx; }
+

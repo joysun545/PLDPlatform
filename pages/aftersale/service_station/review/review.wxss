@@ -1,0 +1,28 @@
+.page { padding: 24rpx 28rpx 60rpx; box-sizing: border-box; }
+.notice-card, .status-card, .detail-card, .review-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
+  margin-bottom: 22rpx;
+  padding: 26rpx;
+  border: 1rpx solid var(--ui-border, #e4ebe7);
+  border-radius: 22rpx;
+  background: var(--ui-surface, #fff);
+  box-shadow: 0 8rpx 24rpx rgba(24, 51, 42, 0.06);
+}
+.status-card { border-top: 6rpx solid var(--ui-primary, #079b69); }
+.status-label, .body-copy { color: var(--ui-text-secondary, #6b7b74); font-size: 25rpx; line-height: 1.6; }
+.status-value { color: var(--ui-primary, #079b69); font-size: 34rpx; font-weight: 700; }
+.section-title { color: var(--ui-text, #24342d); font-size: 29rpx; font-weight: 700; }
+.primary-copy { color: var(--ui-text, #24342d); font-size: 27rpx; line-height: 1.6; word-break: break-all; }
+.review-note, .completion-note { color: var(--ui-primary, #079b69); font-size: 25rpx; line-height: 1.6; }
+.liaison-row { display: flex; align-items: center; justify-content: space-between; gap: 18rpx; padding: 8rpx 0; }
+.secondary-button { align-self: flex-start; margin: 6rpx 0 0; padding: 0 26rpx; color: var(--ui-primary, #079b69); background: var(--ui-primary-soft, #eaf7f2); border-radius: 999rpx; font-size: 24rpx; }
+.review-textarea { width: 100%; min-height: 180rpx; padding: 20rpx; box-sizing: border-box; border: 1rpx solid var(--ui-border, #d9e2dd); border-radius: 14rpx; background: var(--ui-surface, #fff); color: var(--ui-text, #24342d); font-size: 26rpx; line-height: 1.6; }
+.action-row { display: flex; gap: 18rpx; margin-top: 8rpx; }
+.action-row button { display: flex; flex: 1; min-width: 0; min-height: 88rpx; align-items: center; justify-content: center; box-sizing: border-box; margin: 0; padding: 0 12rpx; border-radius: 999rpx; font-size: 27rpx; font-weight: 600; line-height: 1.4; text-align: center; }
+.action-row button[disabled] { opacity: .62; }
+.approve-button { color: #fff; background: var(--ui-primary, #079b69); }
+.reject-button { color: var(--ui-primary, #079b69); background: var(--ui-primary-soft, #eaf7f2); }
+.error-card .secondary-button { align-self: center; }
+button::after { border: 0; }

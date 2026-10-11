@@ -9,8 +9,8 @@
   text-align: center;
   border-bottom-right-radius: 50rpx;
   border-bottom-left-radius: 50rpx;
-  background: linear-gradient(135deg, #07c160, #009688);
-  box-shadow: 0 10rpx 30rpx rgba(7, 193, 96, 0.3);
+  background: linear-gradient(135deg, var(--ui-gradient-start), var(--ui-gradient-end));
+  box-shadow: 0 10rpx 30rpx rgba(0,0,0,.14);
 }
 
 .avatar {
@@ -26,7 +26,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #07a85b;
+  color: var(--ui-primary-bright);
   background: #fff;
   font-size: 52rpx;
   font-weight: 700;

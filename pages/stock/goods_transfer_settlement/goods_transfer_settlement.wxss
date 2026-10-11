@@ -27,7 +27,7 @@ page {
 
 .header-card {
   padding: 30rpx;
-  background: linear-gradient(135deg, #0f766e, #0d9488);
+  background: linear-gradient(135deg, var(--ui-gradient-start), var(--ui-gradient-end));
   color: #fff;
 }
 
@@ -94,7 +94,7 @@ page {
 
 .action-form, .confirm-form { margin-top: 24rpx; }
 .form-tip, .empty-tip { color: #64748b; font-size: 24rpx; line-height: 1.65; margin: 18rpx 0; }
-.selected-file { margin-top: 16rpx; color: #0f766e; font-size: 23rpx; overflow-wrap: anywhere; }
+.selected-file { margin-top: 16rpx; color: var(--ui-primary-strong); font-size: 23rpx; overflow-wrap: anywhere; }
 
 .amount-input,
 .remark-input {
@@ -109,17 +109,17 @@ page {
 
 .remark-input { margin-top: 18rpx; }
 .primary-button, .secondary-button, .link-button { margin-top: 18rpx; border-radius: 14rpx; font-size: 26rpx; }
-.primary-button { background: #0f766e; color: #fff; }
-.secondary-button { background: #ecfdf5; color: #047857; }
+.primary-button { background: var(--ui-primary-strong); color: #fff; }
+.secondary-button { background: var(--ui-primary-soft); color: #047857; }
 .choice-row .secondary-button.half { width: 48%; margin: 18rpx 0 0; }
-.link-button { margin-left: 0; padding: 0; background: transparent; color: #0f766e; text-align: left; line-height: 60rpx; }
+.link-button { margin-left: 0; padding: 0; background: transparent; color: var(--ui-primary-strong); text-align: left; line-height: 60rpx; }
 .link-button::after, .secondary-button::after { border: 0; }
 
 .preview { width: 220rpx; height: 220rpx; display: block; margin: 18rpx auto 0; border-radius: 14rpx; background: #e2e8f0; }
 .payment-card, .document-card { margin-top: 22rpx; padding-top: 22rpx; border-top: 1rpx solid #e5e7eb; }
 .payment-title { font-size: 27rpx; font-weight: 600; }
 .payment-meta { margin-top: 8rpx; color: #64748b; font-size: 23rpx; overflow-wrap: anywhere; }
-.confirmed-box { padding: 18rpx; border-radius: 14rpx; background: #ecfdf5; }
+.confirmed-box { padding: 18rpx; border-radius: 14rpx; background: var(--ui-primary-soft); }
 .confirmed-amount { color: #047857; font-size: 28rpx; font-weight: 700; }
 
 .independence-tip {
@@ -143,7 +143,7 @@ page {
 }
 
 .carry-title, .carry-description { display: block; }
-.carry-title { font-size: 28rpx; font-weight: 700; color: #0f766e; }
+.carry-title { font-size: 28rpx; font-weight: 700; color: var(--ui-primary-strong); }
 .carry-description { margin-top: 12rpx; font-size: 24rpx; line-height: 1.7; color: #475569; overflow-wrap: anywhere; }
 .rolling-money-grid { box-shadow: none; border: 1rpx solid #e5e7eb; }
 .balance-details { margin-top: 18rpx; }

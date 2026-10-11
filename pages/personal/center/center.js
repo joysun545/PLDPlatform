@@ -1,5 +1,8 @@
 // pages/personal/center/center.js
 const app = getApp();
+const tabBar = typeof require === 'function'
+  ? require('../../../utils/tab-bar')
+  : { sync() {} };
 
 Page({
   data: {
@@ -21,6 +24,7 @@ Page({
   },
 
   onShow() {
+    tabBar.sync(this, 2);
     this.loadUserInfo();
     this.syncTasks();
 

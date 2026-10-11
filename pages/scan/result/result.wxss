@@ -2,8 +2,8 @@
   min-height: 100vh;
   box-sizing: border-box;
   padding: 28rpx 28rpx 56rpx;
-  color: #20252b;
-  background: #f3f6f8;
+  color: var(--ui-ink);
+  background: var(--ui-page-bg);
 }
 
 .state-box {
@@ -36,7 +36,7 @@
   width: 22rpx;
   height: 22rpx;
   margin-bottom: 24rpx;
-  background: #07c160;
+  background: var(--ui-primary-strong);
   border-radius: 50%;
   box-shadow: 34rpx 0 #76dba7, -34rpx 0 #bcefd4;
 }
@@ -44,7 +44,7 @@
 .hero-card {
   padding: 38rpx 34rpx;
   color: #ffffff;
-  background: linear-gradient(135deg, #09bb68, #008d78);
+  background: linear-gradient(135deg, var(--ui-gradient-start), var(--ui-gradient-end));
   border-radius: 28rpx;
   box-shadow: 0 14rpx 34rpx rgba(0, 153, 112, 0.2);
 }
@@ -143,7 +143,7 @@
 }
 
 .value.accent {
-  color: #079e52;
+  color: var(--ui-primary-strong);
   font-weight: 600;
 }
 
@@ -160,7 +160,7 @@
 
 .status-cell {
   padding: 22rpx;
-  background: #f5faf7;
+  background: var(--ui-primary-pale);
   border-radius: 16rpx;
 }
 
@@ -176,7 +176,7 @@
 
 .status-value {
   margin-top: 8rpx;
-  color: #087e48;
+  color: var(--ui-primary-strong);
   font-size: 28rpx;
   font-weight: 600;
 }
@@ -187,7 +187,7 @@
   justify-content: space-between;
   margin-bottom: 12rpx;
   padding: 22rpx;
-  background: #eaf8f0;
+  background: var(--ui-primary-soft);
   border-radius: 16rpx;
 }
 
@@ -197,7 +197,7 @@
 }
 
 .relation-value {
-  color: #078d4b;
+  color: var(--ui-primary-strong);
   font-size: 27rpx;
   font-weight: 700;
 }
@@ -219,7 +219,7 @@
   width: 18rpx;
   height: 18rpx;
   margin: 8rpx 0 0 5rpx;
-  background: #07c160;
+  background: var(--ui-primary-strong);
   border: 6rpx solid #dff6e9;
   border-radius: 50%;
 }
@@ -277,8 +277,8 @@
 }
 
 .activated-banner {
-  color: #087a46;
-  background: #eaf8f0;
+  color: var(--ui-primary-strong);
+  background: var(--ui-primary-soft);
 }
 
 .trace-card {
@@ -302,7 +302,7 @@
 }
 
 .expand-icon {
-  color: #079e52;
+  color: var(--ui-primary);
 }
 
 .bom-item {
@@ -356,11 +356,11 @@
 
 .primary-btn {
   color: #ffffff;
-  background: #07c160;
+  background: var(--ui-primary-strong);
 }
 
 .install-btn {
-  background: linear-gradient(135deg, #07c160, #05a960);
+  background: linear-gradient(135deg, var(--ui-gradient-start), var(--ui-gradient-end));
 }
 
 .invite-btn {
@@ -371,7 +371,7 @@
   width: 320rpx;
   margin-top: 30rpx;
   color: #ffffff;
-  background: #07c160;
+  background: var(--ui-primary-strong);
 }
 
 .scan-again-btn {
@@ -477,4 +477,3 @@
 button::after {
   border: 0;
 }
-

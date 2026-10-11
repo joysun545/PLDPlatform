@@ -1,5 +1,5 @@
 page {
-  background: #f4f7f5;
+  background: var(--ui-primary-pale);
   color: #1f2d26;
 }
 
@@ -13,7 +13,7 @@ page {
   margin: 0 -28rpx 28rpx;
   padding: 44rpx 40rpx 64rpx;
   color: #fff;
-  background: linear-gradient(140deg, #047a49 0%, #07c160 62%, #41d989 100%);
+  background: linear-gradient(140deg, var(--ui-gradient-start) 0%, var(--ui-primary) 62%, var(--ui-gradient-end) 100%);
   border-radius: 0 0 44rpx 44rpx;
 }
 
@@ -71,7 +71,7 @@ page {
 
 .section-number {
   margin-right: 14rpx;
-  color: #07a85a;
+  color: var(--ui-primary-bright);
   font-size: 22rpx;
   font-weight: 700;
   letter-spacing: 2rpx;
@@ -112,7 +112,7 @@ page {
 .bom-recommendation-tip {
   display: block;
   margin: 8rpx 4rpx 0;
-  color: #168556;
+  color: var(--ui-primary-strong);
   font-size: 21rpx;
   line-height: 1.5;
 }
@@ -121,7 +121,7 @@ page {
   margin: -10rpx 0 22rpx;
   padding: 14rpx 18rpx;
   border-radius: 12rpx;
-  background: #edf8f2;
+  background: var(--ui-primary-soft);
 }
 
 .bom-recommendation-tip.error {
@@ -132,9 +132,9 @@ page {
 .bom-editor-card {
   margin-top: 22rpx;
   padding: 22rpx;
-  border: 1rpx solid #cde7da;
+  border: 1rpx solid var(--ui-border);
   border-radius: 18rpx;
-  background: #f4fbf7;
+  background: var(--ui-primary-pale);
 }
 
 .bom-editor-head,
@@ -156,7 +156,7 @@ page {
 }
 
 .bom-editor-title {
-  color: #17734e;
+  color: var(--ui-primary-strong);
   font-size: 26rpx;
   font-weight: 650;
 }
@@ -176,7 +176,7 @@ page {
   padding: 0 18rpx;
   border: 1rpx solid #a4d9bb;
   border-radius: 12rpx;
-  color: #087e48;
+  color: var(--ui-primary-strong);
   background: #fff;
   font-size: 22rpx;
   line-height: 58rpx;
@@ -276,7 +276,7 @@ page {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #eaf8f0;
+  background: var(--ui-primary-soft);
 }
 
 .label {

@@ -1,3 +1,4 @@
+<theme-shell>
 <view class="page">
   <view class="error" wx:if="{{error}}">{{error}}</view>
   <view wx:if="{{item.id}}">
@@ -25,3 +26,5 @@
     </view>
   </view>
 </view>
+
+</theme-shell>

@@ -1,0 +1,32 @@
+:host { display: block; }
+.custom-tab-bar {
+  position: fixed;
+  z-index: 999;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  padding: 10rpx 18rpx calc(10rpx + env(safe-area-inset-bottom));
+  border-top: 1rpx solid var(--ui-border);
+  background: rgba(255,255,255,.97);
+  box-shadow: 0 -8rpx 28rpx rgba(20,35,30,.07);
+  box-sizing: border-box;
+}
+.tab-item { position: relative; min-height: 82rpx; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #8A9590; }
+.tab-icon { position: relative; width: 43rpx; height: 43rpx; color: currentColor; box-sizing: border-box; }
+.home-roof { position: absolute; top: 4rpx; left: 8rpx; width: 25rpx; height: 25rpx; border-top: 5rpx solid currentColor; border-left: 5rpx solid currentColor; transform: rotate(45deg); box-sizing: border-box; }
+.home-body { position: absolute; right: 8rpx; bottom: 3rpx; left: 8rpx; height: 24rpx; border: 5rpx solid currentColor; border-top: 0; border-radius: 2rpx 2rpx 6rpx 6rpx; box-sizing: border-box; }
+.scan-corner { position: absolute; width: 14rpx; height: 14rpx; border-color: currentColor; border-style: solid; box-sizing: border-box; }
+.scan-corner-tl { top: 2rpx; left: 2rpx; border-width: 5rpx 0 0 5rpx; border-radius: 5rpx 0 0 0; }
+.scan-corner-tr { top: 2rpx; right: 2rpx; border-width: 5rpx 5rpx 0 0; border-radius: 0 5rpx 0 0; }
+.scan-corner-bl { bottom: 2rpx; left: 2rpx; border-width: 0 0 5rpx 5rpx; border-radius: 0 0 0 5rpx; }
+.scan-corner-br { right: 2rpx; bottom: 2rpx; border-width: 0 5rpx 5rpx 0; border-radius: 0 0 5rpx 0; }
+.scan-core { position: absolute; top: 17rpx; left: 17rpx; width: 9rpx; height: 9rpx; border: 3rpx solid currentColor; border-radius: 3rpx; box-sizing: border-box; }
+.my-head { position: absolute; top: 2rpx; left: 14rpx; width: 15rpx; height: 15rpx; border: 4rpx solid currentColor; border-radius: 50%; box-sizing: border-box; }
+.my-body { position: absolute; right: 5rpx; bottom: 2rpx; left: 5rpx; height: 22rpx; border: 4rpx solid currentColor; border-bottom: 0; border-radius: 22rpx 22rpx 0 0; box-sizing: border-box; }
+.tab-label { margin-top: 4rpx; font-size: 21rpx; line-height: 1.2; }
+.tab-item.selected { color: var(--ui-primary); font-weight: 700; }
+.tab-badge { position: absolute; top: 0; left: calc(50% + 18rpx); min-width: 30rpx; height: 30rpx; padding: 0 7rpx; border: 3rpx solid #fff; border-radius: 999rpx; color: #fff; background: #E43D3D; font-size: 18rpx; line-height: 30rpx; text-align: center; box-sizing: content-box; }
+.theme-style-order { border-top-width: 4rpx; box-shadow: none; }
+.theme-style-order .tab-item.selected { background: var(--ui-primary-pale); border-radius: 8rpx; }

@@ -1,3 +1,4 @@
+<theme-shell>
 <view class="page">
   <view wx:if="{{error}}" class="error">{{error}}</view>
   <view wx:if="{{item.id}}">
@@ -21,3 +22,5 @@
     <view class="card" wx:for="{{item.versions}}" wx:key="id"><view class="row"><text>版本 v{{item.version}}</text><text class="tag">{{item.metric_type}}</text></view><view class="muted">生效：{{item.effective_from}}</view></view>
   </view>
 </view>
+
+</theme-shell>

@@ -1,5 +1,6 @@
+<theme-shell>
 <view class="page">
-  <view class="hero"><view class="hero-title">质量案件</view><view class="hero-sub">人工研判后冻结的证据、设备范围与控制动作</view></view>
+  <view class="page-intro">人工研判后冻结的证据、设备范围与控制动作</view>
   <view class="error" wx:if="{{error}}">{{error}}</view>
   <view class="empty" wx:if="{{!loading && !error && !items.length}}">暂无质量案件</view>
   <view class="card" wx:for="{{items}}" wx:key="id" data-id="{{item.id}}" bindtap="openDetail">
@@ -9,3 +10,5 @@
     <view class="link-hint">查看设备与控制操作 ›</view>
   </view>
 </view>
+
+</theme-shell>

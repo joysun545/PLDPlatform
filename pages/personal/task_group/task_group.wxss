@@ -10,7 +10,7 @@
   padding: 30rpx;
   color: #fff;
   border-radius: 22rpx;
-  background: linear-gradient(135deg, #07c160, #008f7a);
+  background: linear-gradient(135deg, var(--ui-gradient-start), var(--ui-gradient-end));
 }
 
 .group-top,
@@ -90,7 +90,7 @@
 }
 
 .domain {
-  color: #07a85b;
+  color: var(--ui-primary-strong);
   font-size: 25rpx;
 }
 
@@ -138,7 +138,7 @@
 }
 
 .child-action {
-  color: #07a85b;
+  color: var(--ui-primary-strong);
   font-weight: 600;
 }
 
@@ -148,7 +148,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #07a85b;
+  color: var(--ui-primary-strong);
   background: rgba(255, 255, 255, 0.9);
   font-size: 28rpx;
 }

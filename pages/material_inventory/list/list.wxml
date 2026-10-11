@@ -1,3 +1,4 @@
+<theme-shell>
 <view class="page">
   <view class="notice" wx:if="{{canManage}}">物料库只办理实际入库、退给供应商和三包件退回供应商。故障件和换回件由售后、拆机或召回流程自动生成。</view>
   <view class="actions" wx:if="{{canManage}}">
@@ -23,3 +24,5 @@
   <view class="empty" wx:if="{{loading}}">正在加载…</view>
   <button wx:if="{{nextCursor && !loading}}" class="secondary wide" bindtap="onReachBottom">加载更多</button>
 </view>
+
+</theme-shell>

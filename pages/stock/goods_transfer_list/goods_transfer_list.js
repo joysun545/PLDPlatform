@@ -23,6 +23,8 @@ Page({
     loading: true,
     errorMessage: '',
     viewer: null,
+    headerSubtitle: '当前组织',
+    deletingTransferId: 0,
     items: []
   },
 
@@ -68,9 +70,14 @@ Page({
             ? '待你确认入库'
             : (item.actions && item.actions.can_scan ? '继续扫码' : '查看详情')
         }));
+        const viewer = body.data.viewer || null;
+        const headerSubtitle = viewer
+          ? [viewer.organization_name, viewer.role_name].filter(Boolean).join(' · ')
+          : '当前组织';
         this.setData({
           loading: false,
-          viewer: body.data.viewer || null,
+          viewer,
+          headerSubtitle,
           items
         });
       },
@@ -86,12 +93,48 @@ Page({
   openItem(e) {
     const transferId = Number(e.currentTarget.dataset.id);
     if (!transferId) return;
+    const item = this.data.items.find(row => Number(row.id) === transferId);
+    const page = item && item.actions && item.actions.can_scan
+      ? 'goods_transfer/goods_transfer'
+      : 'goods_transfer_detail/goods_transfer_detail';
     wx.navigateTo({
-      url: `/pages/stock/goods_transfer_detail/goods_transfer_detail?transfer_id=${transferId}`
+      url: `/pages/stock/${page}?transfer_id=${transferId}`
     });
   },
 
-  createFlow() {
-    wx.navigateTo({ url: '/pages/stock/goods_transfer/goods_transfer' });
-  }
+  deleteDraft(e) {
+    const transferId = Number(e.currentTarget.dataset.id || 0);
+    if (!transferId || this.data.deletingTransferId) return;
+    const item = this.data.items.find(row => Number(row.id) === transferId);
+    if (!item || !item.actions || !item.actions.can_delete) return;
+
+    wx.showModal({
+      title: '删除未完成流转？',
+      content: `删除 ${item.flow_no} 及其未提交扫码记录。设备库存和生命周期记录不会改变。`,
+      confirmText: '删除',
+      confirmColor: '#b42318',
+      success: modal => {
+        if (!modal.confirm) return;
+        this.setData({ deletingTransferId: transferId });
+        wx.request({
+          url: `${app.globalData.apiBase}/lifecycle/goods-transfers/${transferId}/`,
+          method: 'DELETE',
+          header: app.authHeader(),
+          success: res => {
+            const body = res.data || {};
+            if (res.statusCode === 401 || body.code === 401) app.reauthenticate();
+            if (body.code !== 0) {
+              wx.showToast({ title: body.msg || '删除未完成流转失败', icon: 'none' });
+              return;
+            }
+            wx.showToast({ title: '未完成流转已删除', icon: 'none' });
+            this.loadList();
+          },
+          fail: () => wx.showToast({ title: '网络连接失败，请稍后重试', icon: 'none' }),
+          complete: () => this.setData({ deletingTransferId: 0 })
+        });
+      }
+    });
+  },
+
 });

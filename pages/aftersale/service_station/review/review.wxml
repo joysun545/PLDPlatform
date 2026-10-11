@@ -1,0 +1,87 @@
+<theme-shell title-eyebrow="售后服务站审核" title-subtitle="查看申请资料，并向申请方和相关组织发送审核结果">
+  <view class="page">
+    <view wx:if="{{loading}}" class="notice-card">正在读取申请资料…</view>
+
+    <view wx:elif="{{error}}" class="notice-card error-card">
+      <text class="section-title">暂时无法查看</text>
+      <text class="body-copy">{{error}}</text>
+      <button class="secondary-button" bindtap="loadApplication">重新读取</button>
+    </view>
+
+    <block wx:elif="{{application}}">
+      <view class="status-card">
+        <text class="status-label">申请状态</text>
+        <text class="status-value">{{application.status_name}}</text>
+        <text wx:if="{{application.reviewed_by_name}}" class="body-copy">
+          审核人：{{application.reviewed_by_name}}
+        </text>
+        <text wx:if="{{application.review_note}}" class="review-note">
+          审核说明：{{application.review_note}}
+        </text>
+        <text wx:if="{{taskCompletedByName}}" class="completion-note">
+          此审核任务已由{{taskCompletedByName}}完成，无需重复操作。
+        </text>
+      </view>
+
+      <view class="detail-card">
+        <text class="section-title">申请组织</text>
+        <text class="primary-copy">{{application.organization.name}}</text>
+        <text class="body-copy">申请人：{{application.applicant.name}}</text>
+        <text class="body-copy">提交时间：{{application.submitted_at}}</text>
+      </view>
+
+      <view class="detail-card">
+        <text class="section-title">维修服务地点</text>
+        <text wx:if="{{application.service_location.name}}" class="primary-copy">
+          {{application.service_location.name}}
+        </text>
+        <text wx:if="{{application.service_location.address}}" class="body-copy">
+          {{application.service_location.address}}
+        </text>
+        <text class="body-copy">
+          GPS：{{application.service_location.latitude}}, {{application.service_location.longitude}}
+        </text>
+        <button class="secondary-button" bindtap="openServiceLocation">打开地图导航</button>
+      </view>
+
+      <view class="detail-card">
+        <text class="section-title">官方售后服务收件信息</text>
+        <text class="primary-copy">{{application.receiving.address}}</text>
+        <text class="body-copy">
+          {{application.receiving.contact_name}} · {{application.receiving.contact_phone}}
+        </text>
+      </view>
+
+      <view class="detail-card">
+        <text class="section-title">售后服务对接人员</text>
+        <view wx:for="{{application.liaisons}}" wx:key="identity_id" class="liaison-row">
+          <text class="primary-copy">{{item.name}}</text>
+          <text class="body-copy">{{item.role_name}}</text>
+        </view>
+      </view>
+
+      <view wx:if="{{canReview}}" class="review-card">
+        <text class="section-title">审核说明</text>
+        <textarea
+          class="review-textarea"
+          maxlength="2000"
+          value="{{reviewNote}}"
+          placeholder="未通过申请时请填写原因"
+          bindinput="onReviewNoteInput"
+        />
+        <view class="action-row">
+          <button class="reject-button" data-action="reject" loading="{{submitting}}" disabled="{{submitting}}" bindtap="decide">
+            不予通过
+          </button>
+          <button class="approve-button" data-action="approve" loading="{{submitting}}" disabled="{{submitting}}" bindtap="decide">
+            确认通过
+          </button>
+        </view>
+      </view>
+
+      <view wx:elif="{{application.status === 'PENDING_REVIEW'}}" class="notice-card">
+        <text class="body-copy">你可以查看申请进度。所属厂家销售经理及分管该岗位的高级经理可以协同审核，任一人完成后任务即结束。</text>
+      </view>
+    </block>
+  </view>
+</theme-shell>

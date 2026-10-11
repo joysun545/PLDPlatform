@@ -6,7 +6,7 @@
 }
 
 .header {
-  background: linear-gradient(135deg, #07c160, #009688);
+  background: linear-gradient(135deg, var(--ui-gradient-start), var(--ui-gradient-end));
   padding: 80rpx 60rpx;
   display: flex;
   flex-direction: column;
@@ -14,7 +14,7 @@
   align-items: center;
   border-bottom-left-radius: 50rpx;
   border-bottom-right-radius: 50rpx;
-  box-shadow: 0 10rpx 30rpx rgba(7, 193, 96, 0.3);
+  box-shadow: 0 10rpx 30rpx rgba(0,0,0,.14);
 }
 
 .user-info-row {
@@ -65,7 +65,7 @@
 .highlight-role {
   font-size: 52rpx;
   font-weight: bold;
-  color: #07c160;
+  color: var(--ui-primary-bright);
   margin: 40rpx 0;
   display: block;
 }
@@ -149,7 +149,7 @@ input {
 }
 
 .accept-btn {
-  background: #07c160;
+  background: var(--ui-primary-bright);
   color: white;
   font-size: 36rpx;
   padding: 30rpx;
@@ -188,9 +188,7 @@ input {
 }
 
 .link {
-  color: #07c160;
+  color: var(--ui-primary-bright);
   text-decoration: underline;
   margin: 0 4rpx;
 }
-
-

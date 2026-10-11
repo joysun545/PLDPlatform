@@ -1,3 +1,4 @@
+<theme-shell>
 <view class="page">
   <view class="state" wx:if="{{loading}}">正在读取邀请信息...</view>
   <view class="state error" wx:elif="{{error}}">
@@ -85,3 +86,5 @@
     >{{expired ? '邀请已过期' : (addingDevice ? '添加设备并进入设备页面' : '接受邀请并进入设备页面')}}</button>
   </block>
 </view>
+
+</theme-shell>

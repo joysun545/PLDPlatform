@@ -19,7 +19,7 @@ page {
 
 .hero-card {
   padding: 32rpx;
-  background: linear-gradient(135deg, #067a4e, #08aa6f 62%, #29c88b);
+  background: linear-gradient(135deg, var(--ui-gradient-start), var(--ui-primary) 62%, var(--ui-gradient-end));
   color: #fff;
 }
 
@@ -145,13 +145,13 @@ page {
 .count,
 .item-status,
 .document-status {
-  color: #079b65;
+  color: var(--ui-primary);
   font-size: 22rpx;
 }
 
 .material-card {
-  border: 1rpx solid #bdebd8;
-  background: #fbfffd;
+  border: 1rpx solid var(--ui-primary-soft);
+  background: var(--ui-primary-pale);
 }
 
 .material-rule,
@@ -179,7 +179,7 @@ page {
   flex: 1;
   margin: 0;
   border-radius: 12rpx;
-  color: #067a4e;
+  color: var(--ui-primary-strong);
   background: #eaf9f2;
   font-size: 23rpx;
 }
@@ -191,7 +191,7 @@ page {
 
 .selected-file {
   margin-top: 15rpx;
-  color: #067a4e;
+  color: var(--ui-primary-strong);
   font-size: 22rpx;
   word-break: break-all;
 }
@@ -211,7 +211,7 @@ page {
   margin-top: 18rpx;
   border-radius: 12rpx;
   color: #fff;
-  background: #079b65;
+  background: var(--ui-primary);
   font-size: 25rpx;
 }
 
@@ -247,7 +247,7 @@ page {
   width: 118rpx;
   margin: 0;
   border-radius: 10rpx;
-  color: #067a4e;
+  color: var(--ui-primary-strong);
   background: #eaf9f2;
   font-size: 22rpx;
 }
@@ -301,8 +301,8 @@ page {
 }
 
 .dot.complete {
-  border-color: #079b65;
-  background: #079b65;
+  border-color: var(--ui-primary);
+  background: var(--ui-primary);
 }
 
 .time-title {
@@ -327,20 +327,20 @@ page {
 }
 
 .scan-button {
-  border: 2rpx solid #079b65;
+  border: 2rpx solid var(--ui-primary);
   background: #fff;
-  color: #079b65;
+  color: var(--ui-primary);
 }
 
 .receipt-button {
-  background: #079b65;
+  background: var(--ui-primary);
   color: #fff;
 }
 
 .settlement-button {
-  border: 2rpx solid #0f766e;
-  background: #ecfdf5;
-  color: #0f766e;
+  border: 2rpx solid var(--ui-primary-strong);
+  background: var(--ui-primary-soft);
+  color: var(--ui-primary-strong);
 }
 
 .account-button {
@@ -350,8 +350,8 @@ page {
 }
 
 .secondary-button {
-  background: #ecfdf5;
-  color: #067a4e;
+  background: var(--ui-primary-soft);
+  color: var(--ui-primary-strong);
 }
 
 .scan-button::after,

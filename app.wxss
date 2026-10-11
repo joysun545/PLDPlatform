@@ -1,10 +1,179 @@
 /**app.wxss**/
-.container {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  padding: 200rpx 0;
+page {
+  min-height: 100%;
+  color: var(--ui-ink, #17211d);
+  background: var(--ui-page-bg, #f3f7f5);
+}
+
+theme-shell { display: block; min-height: 100vh; }
+
+.theme-shell .page,
+.theme-shell .container {
+  color: var(--ui-ink);
+  background-color: var(--ui-page-bg);
+}
+
+.theme-shell button:not([class*="danger"]),
+.theme-shell .primary-button,
+.theme-shell .primary,
+.theme-shell .create-button,
+.theme-shell .scan-button {
+  border-radius: var(--ui-control-radius);
+}
+
+.theme-shell .card,
+.theme-shell .section-card,
+.theme-shell .summary-card,
+.theme-shell .state-card,
+.theme-shell .hero-card,
+.theme-shell .menu-item,
+.theme-shell .info-section,
+.theme-shell .function-list,
+.theme-shell .plan-card,
+.theme-shell .task-card,
+.theme-shell .child-card,
+.theme-shell .tree-panel,
+.theme-shell .flow-total-card,
+.theme-shell .warehouse-panel,
+.theme-shell .info-card,
+.theme-shell .action-card,
+.theme-shell .device-card,
+.theme-shell .subordinate-card,
+.theme-shell .edit-panel,
+.theme-shell .content-card,
+.theme-shell .file-card,
+.theme-shell .intro-card,
+.theme-shell .combination-card,
+.theme-shell .mock-card,
+.theme-shell .task-context-card,
+.theme-shell .rule-card,
+.theme-shell .empty-card,
+.theme-shell .list-card,
+.theme-shell .notice-card,
+.theme-shell .result-card,
+.theme-shell .material-card,
+.theme-shell .privacy-card,
+.theme-shell .complete-card,
+.theme-shell .tip-card,
+.theme-shell .form-card,
+.theme-shell .flow-card,
+.theme-shell .workflow-card,
+.theme-shell .account-card,
+.theme-shell .process-card,
+.theme-shell .case-card,
+.theme-shell .capture-panel,
+.theme-shell .bom-editor-card,
+.theme-shell .bom-material-card,
+.theme-shell .reissue-card,
+.theme-shell .warning-card,
+.theme-shell .inventory-row,
+.theme-shell .bom-card,
+.theme-shell .material-requirement,
+.theme-shell .delivery-card,
+.theme-shell .subplan-card,
+.theme-shell .qrcode-card,
+.theme-shell .nested-batch-card,
+.theme-shell .operation-card,
+.theme-shell .repair-material-panel,
+.theme-shell .return-submit-card,
+.theme-shell .type-card,
+.theme-shell .activate-card,
+.theme-shell .activated-card,
+.theme-shell .success-card {
+  border: var(--ui-border-width) solid var(--ui-border);
+  border-radius: var(--ui-card-radius);
+  box-shadow: var(--ui-card-shadow);
+}
+
+.theme-shell .hero,
+.theme-shell .page-header,
+.theme-shell .header-card {
+  border-radius: var(--ui-panel-radius);
+}
+
+.theme-shell .theme-page-body > .page,
+.theme-shell .theme-page-body > .container {
+  min-height: calc(100vh - 88rpx);
+  padding-bottom: calc(120rpx + env(safe-area-inset-bottom));
   box-sizing: border-box;
-} 
+}
+
+.theme-shell.level-primary .theme-page-body,
+.theme-shell.level-secondary .theme-page-body,
+.theme-shell.level-tertiary .theme-page-body {
+  border-top: 1rpx solid transparent;
+}
+
+.theme-style-order .theme-page-body > .page,
+.theme-style-order .theme-page-body > .container {
+  background-image: linear-gradient(rgba(120,130,140,.045) 1rpx, transparent 1rpx);
+  background-size: 100% 48rpx;
+}
+
+
+
+/* Global appearance tokens: shared by content pages, controls and tab surfaces. */
+.theme-shell { --ui-action: var(--ui-primary-strong); }
+.theme-shell .page,
+.theme-shell .container { color: var(--ui-ink); background-color: var(--ui-page-bg); }
+.theme-shell .card,
+.theme-shell .panel,
+.theme-shell .section-card,
+.theme-shell .summary-card,
+.theme-shell .state-card,
+.theme-shell .menu-item,
+.theme-shell .info-section { background-color: var(--ui-surface); }
+.theme-shell input,
+.theme-shell textarea,
+.theme-shell .input,
+.theme-shell .textarea,
+.theme-shell .picker,
+.theme-shell .picker-field { background-color: var(--ui-field-bg); border-color: var(--ui-border); color: var(--ui-ink); }
+.theme-shell .primary-button,
+.theme-shell .primary,
+.theme-shell .create-button,
+.theme-shell .scan-button { background-color: var(--ui-primary-strong); color: #fff; }
+.theme-shell .secondary-button,
+.theme-shell .secondary { background-color: var(--ui-primary-soft); color: var(--ui-primary-strong); border-color: var(--ui-border); }
+.theme-shell .filter-item.active,
+.theme-shell .filter-tab.active,
+.theme-shell .tab-item.selected { background-color: var(--ui-primary-strong); color: #fff; }
+.theme-shell .link-hint,
+.theme-shell .open-tip,
+.theme-shell .section-number,
+.theme-shell .metric-value { color: var(--ui-primary-strong); }
+.theme-shell .page-header,
+.theme-shell .header-card,
+.theme-shell .heading,
+.theme-shell .hero:not(.status-hero),
+.theme-shell .hero-card:not(.status-hero) { background-image: linear-gradient(135deg, var(--ui-gradient-start), var(--ui-gradient-end)); }
+.theme-shell.theme-style-order .card,
+.theme-shell.theme-style-order .section-card,
+.theme-shell.theme-style-order .plan-card,
+.theme-shell.theme-style-order .task-card,
+.theme-shell.theme-style-order .hero-card { border-radius: var(--ui-card-radius); }
+
+.theme-shell .activate-btn,
+.theme-shell .accept-btn,
+.theme-shell .confirm-btn,
+.theme-shell .share-btn,
+.theme-shell .save-button,
+.theme-shell .confirm-location,
+.theme-shell .submit,
+.theme-shell .primary-btn,
+.theme-shell .install-btn,
+.theme-shell .method-btn.primary {
+  background-color: var(--ui-primary-strong);
+  color: #fff;
+}
+.theme-shell .tabs .active { background-color: var(--ui-primary-strong); color: #fff; }
+
+.theme-shell .scope-tip,
+.theme-shell .material-flow-tip,
+.theme-shell .tree-definition,
+.theme-shell .section-note,
+.theme-shell .note {
+  background-color: var(--ui-primary-soft);
+  color: var(--ui-primary-strong);
+  border-color: var(--ui-border);
+}

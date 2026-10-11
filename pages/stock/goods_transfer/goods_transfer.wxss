@@ -19,7 +19,7 @@ page {
 
 .hero-card {
   padding: 32rpx;
-  background: linear-gradient(135deg, #067a4e, #07a86d 58%, #20c887);
+  background: linear-gradient(135deg, var(--ui-gradient-start), var(--ui-primary) 58%, var(--ui-gradient-end));
   color: #fff;
 }
 
@@ -95,7 +95,7 @@ page {
 .type-card.active {
   border-color: #08a66d;
   background: #eafaf3;
-  color: #067a4e;
+  color: var(--ui-primary-strong);
 }
 
 .type-name {
@@ -135,7 +135,7 @@ page {
   margin-top: 18rpx;
   padding: 18rpx 20rpx;
   border-radius: 12rpx;
-  background: #ecfdf5;
+  background: var(--ui-primary-soft);
   color: #08754e;
   font-size: 22rpx;
   line-height: 1.6;
@@ -172,19 +172,19 @@ page {
 }
 
 .primary-button {
-  background: #079b65;
+  background: var(--ui-primary);
   color: #fff;
 }
 
 .secondary-button {
-  background: #ecfdf5;
-  color: #067a4e;
+  background: var(--ui-primary-soft);
+  color: var(--ui-primary-strong);
 }
 
 .scan-button {
-  border: 2rpx solid #079b65;
+  border: 2rpx solid var(--ui-primary);
   background: #fff;
-  color: #079b65;
+  color: var(--ui-primary);
 }
 
 .primary-button::after,
@@ -210,7 +210,7 @@ page {
   padding: 8rpx 15rpx;
   border-radius: 999rpx;
   background: #eafaf3;
-  color: #067a4e;
+  color: var(--ui-primary-strong);
   font-size: 21rpx;
 }
 
@@ -233,7 +233,7 @@ page {
 }
 
 .count {
-  color: #079b65;
+  color: var(--ui-primary);
   font-size: 24rpx;
 }
 
@@ -267,7 +267,7 @@ page {
 
 .item-status {
   margin-left: 18rpx;
-  color: #079b65;
+  color: var(--ui-primary);
   font-size: 22rpx;
   white-space: nowrap;
 }
@@ -275,7 +275,7 @@ page {
 .return-submit-card {
   margin-top: 26rpx;
   padding: 22rpx;
-  border: 1rpx solid #bdebd8;
+  border: 1rpx solid var(--ui-primary-soft);
   border-radius: 16rpx;
   background: #f7fffb;
 }
@@ -309,7 +309,7 @@ page {
   flex: 1;
   margin: 0;
   border-radius: 12rpx;
-  color: #087f5b;
+  color: var(--ui-primary);
   background: #e7f8f0;
   font-size: 23rpx;
 }
@@ -326,5 +326,5 @@ page {
 }
 
 .selected-document.ready {
-  color: #087f5b;
+  color: var(--ui-primary);
 }

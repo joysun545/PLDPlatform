@@ -1,4 +1,8 @@
 const app = getApp();
+const theme = require('../../../utils/theme');
+const tabBar = typeof require === 'function'
+  ? require('../../../utils/tab-bar')
+  : { sync() {} };
 
 
 Page({
@@ -6,6 +10,7 @@ Page({
     role: 'tourist',
     nickname: '',
     role_name: '',
+    iconTheme: 'jade',
     scanning: false
   },
 
@@ -26,19 +31,17 @@ Page({
   },
 
   updateUserInfo() {
+    const colorScheme = theme.get().color_scheme;
     this.setData({
       role: app.globalData.role || 'tourist',
       nickname: app.globalData.nickname || '用户',
-      role_name: app.globalData.role_name || '游客'
+      role_name: app.globalData.role_name || '游客',
+      iconTheme: ['jade', 'ocean', 'amber'].includes(colorScheme) ? colorScheme : 'jade'
     });
   },
 
   controlTabBar() {
-    if (this.data.role === 'tourist') {
-      wx.hideTabBar();
-    } else {
-      wx.showTabBar();
-    }
+    tabBar.sync(this, 1, { hidden: this.data.role === 'tourist' });
   },
 
   directScan() {

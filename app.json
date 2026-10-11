@@ -19,6 +19,8 @@
     "pages/customer/aftersale/request/request",
     "pages/customer/aftersale/detail/detail",
     "pages/aftersale/list/list",
+    "pages/aftersale/service_station/application/application",
+    "pages/aftersale/service_station/review/review",
     "pages/aftersale/detail/detail",
     "pages/logs/logs",
     "pages/sales/create_plan/create_plan",
@@ -55,18 +57,27 @@
     ,"pages/material_inventory/detail/detail"
     ,"pages/material_inventory/form/form"
     ,"pages/material_inventory/warranty_list/warranty_list"
+    ,"pages/theme/setting/setting"
   ],
   "window": {
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#07c160",
     "navigationBarTitleText": "渠道管理及售后服务系统",
-    "navigationBarTextStyle": "white"
+    "navigationBarTextStyle": "white",
+    "navigationStyle": "custom"
+  },
+  "usingComponents": {
+    "theme-shell": "/components/theme-shell/index",
+    "theme-page-title": "/components/theme-page-title/index"
   },
   "permission": {
     "scope.userLocation": {
       "desc": "你的位置信息将用于售后申请中的真实位置确认"
     }
   },
+  "requiredPrivateInfos": [
+    "getLocation"
+  ],
   "style": "v2",
   "networkTimeout": {
     "request": 30000,
@@ -75,6 +86,7 @@
   },
   "sitemapLocation": "sitemap.json",
   "tabBar": {
+    "custom": true,
     "color": "#999999",
     "selectedColor": "#07c160",
     "backgroundColor": "#ffffff",

@@ -1,3 +1,4 @@
+<theme-shell>
 <view class="page">
   <view class="hero" wx:if="{{campaign}}">
     <view class="row"><text class="hero-title">{{campaign.recall_no}}</text><text>{{campaign.statusText || campaign.status}}</text></view>
@@ -205,3 +206,5 @@
     </view>
   </view>
 </view>
+
+</theme-shell>

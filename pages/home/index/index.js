@@ -1,10 +1,14 @@
 const app = getApp();
+const tabBar = typeof require === 'function'
+  ? require('../../../utils/tab-bar')
+  : { sync() {} };
 
 Page({
   data: {
     nickname: '',
     role_name: '',
     real_name: '',
+    isPlatformAdmin: false,
 
     showInvite: false,
     showManageSubordinates: false,
@@ -21,8 +25,12 @@ Page({
     showFactoryReturnInventory: false,
     showStats: false,
     showAftersale: false,
+    showApplyServiceStation: false,
+    serviceStationEntryText: '申请售后服务站',
     showMyDevice: false,
-    showQualityTrace: false
+    showQualityTrace: false,
+    showThemeSettings: false,
+    iconTheme: 'jade'
   },
 
   onLoad() {
@@ -30,6 +38,7 @@ Page({
   },
 
   onShow() {
+    tabBar.sync(this, 0);
     this.refreshPage();
   },
 
@@ -43,15 +52,22 @@ Page({
     this.setData({
       nickname: app.globalData.nickname || '用户',
       role_name: app.globalData.role_name || '',
-      real_name: app.globalData.real_name || ''
+      real_name: app.globalData.real_name || '',
+      isPlatformAdmin: !!app.globalData.is_platform_admin
     });
   },
 
   updateButtons() {
     const role = (app.globalData.role || 'tourist').trim();
+    const appearance = app.globalData.appearance || {};
+    const iconTheme = ['jade', 'ocean', 'amber'].includes(appearance.color_scheme)
+      ? appearance.color_scheme
+      : 'jade';
 
     this.setData({
+      iconTheme,
       showCreateOrderPlan: role === 'factory_sales',
+      showThemeSettings: role === 'factory_admin',
       showOrderPlanList: [
         // These are V2 awareness roles.  The server decides which plans they
         // can read and returns no action button unless a real task belongs to
@@ -96,7 +112,12 @@ Page({
         'merchant_owner',
         'merchant_sales',
         'merchant_stock'
-      ].includes(role),
+      ].includes(role) || (
+        role === 'merchant_senior_manager' &&
+        (app.globalData.delegated_role_codes || []).some(code =>
+          ['merchant_sales', 'merchant_stock'].includes(code)
+        )
+      ),
 
       showGoodsTransferList: [
         'merchant_owner',
@@ -104,7 +125,12 @@ Page({
         'merchant_stock',
         'factory_stock',
         'factory_sales'
-      ].includes(role),
+      ].includes(role) || (
+        role === 'merchant_senior_manager' &&
+        (app.globalData.delegated_role_codes || []).some(code =>
+          ['merchant_sales', 'merchant_stock'].includes(code)
+        )
+      ),
 
       showFactoryReturnInventory: [
         'factory_sales',
@@ -161,11 +187,17 @@ Page({
     app.ensureLogin(ok => {
       this.updateUserInfo();
       this.updateButtons();
-      if (!ok || app.globalData.role === 'tourist') {
+      this.updateServiceStationCapability(ok);
+      if (!ok || (app.globalData.role === 'tourist' && !app.globalData.is_platform_admin)) {
         this.setData({
           showInvite: false,
           showManageSubordinates: false
         });
+        return;
+      }
+
+      if (app.globalData.is_platform_admin) {
+        this.setData({ showInvite: true, showManageSubordinates: false });
         return;
       }
 
@@ -283,8 +315,50 @@ Page({
     });
   },
 
+  updateServiceStationCapability(loginReady) {
+    this.setData({ showApplyServiceStation: false });
+    if (!loginReady || (app.globalData.role || '').trim() !== 'merchant_owner') return;
+
+    wx.request({
+      url: `${app.globalData.apiBase}/lifecycle/after-sales/service-station/application/`,
+      method: 'GET',
+      header: app.authHeader(),
+      success: res => {
+        const data = res.data && res.data.code === 0 ? (res.data.data || {}) : {};
+        if (!data.eligible) {
+          this.setData({ showApplyServiceStation: false });
+          return;
+        }
+        const application = data.application || null;
+        this.setData({
+          showApplyServiceStation: true,
+          serviceStationEntryText: application && application.status === 'APPROVED'
+            ? '查看售后服务站'
+            : application
+              ? '售后服务站申请'
+              : '申请售后服务站'
+        });
+      },
+      fail: () => this.setData({ showApplyServiceStation: false })
+      });
+  },
+
+  goThemeSettings() {
+    wx.navigateTo({
+      url: '/pages/theme/setting/setting',
+      fail: () => wx.showToast({ title: '主题设置页面打开失败', icon: 'none' })
+    });
+  },
+
   goAftersaleList() {
     wx.navigateTo({ url: '/pages/aftersale/list/list' });
+  },
+
+  goApplyServiceStation() {
+    wx.navigateTo({
+      url: '/pages/aftersale/service_station/application/application',
+      fail: () => wx.showToast({ title: '服务站申请页面打开失败', icon: 'none' })
+    });
   },
 
   goMyDevice() {

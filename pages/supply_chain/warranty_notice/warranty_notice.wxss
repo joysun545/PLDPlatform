@@ -2,8 +2,8 @@
   min-height: 100vh;
   padding: 28rpx;
   box-sizing: border-box;
-  background: #f5f7f8;
-  color: #202124;
+  background: var(--ui-page-bg);
+  color: var(--ui-ink);
 }
 
 .state-card,
@@ -21,12 +21,12 @@
 
 .state-card { text-align: center; color: #66706d; }
 .state-card.error { color: #b83b2e; }
-.secondary-button { width: 240rpx; margin-top: 24rpx; color: #087f5b; background: #e9f8f1; }
-.hero-card { color: #fff; background: linear-gradient(135deg, #08b878, #087f69); }
+.secondary-button { width: 240rpx; margin-top: 24rpx; color: var(--ui-primary); background: var(--ui-primary-soft); }
+.hero-card { color: #fff; background: linear-gradient(135deg, var(--ui-gradient-start), var(--ui-gradient-end)); }
 .hero-head,
 .material-head { display: flex; align-items: center; justify-content: space-between; gap: 18rpx; }
 .hero-title { font-size: 34rpx; font-weight: 700; }
-.status-pill { padding: 8rpx 16rpx; border-radius: 999rpx; color: #087f5b; background: #eafff5; font-size: 22rpx; }
+.status-pill { padding: 8rpx 16rpx; border-radius: 999rpx; color: var(--ui-primary-strong); background: var(--ui-primary-soft); font-size: 22rpx; }
 .supplier-name,
 .hero-meta,
 .device-sn,
@@ -44,18 +44,18 @@
 .device-sn { font-size: 31rpx; font-weight: 700; }
 .device-model { margin-top: 8rpx; color: #68706e; font-size: 25rpx; }
 .confirmed { margin-top: 18rpx; color: #74807b; font-size: 23rpx; }
-.rule-card { border-left: 8rpx solid #7c3aed; background: #faf7ff; }
+.rule-card { border-left: 8rpx solid var(--ui-primary); background: var(--ui-primary-soft); }
 .rule-title,
 .complete-title { font-size: 28rpx; font-weight: 700; }
 .rule-text,
 .complete-text { margin-top: 12rpx; color: #665b78; font-size: 24rpx; line-height: 1.7; }
-.material-card { border: 1rpx solid #ded1ff; background: #fdfbff; }
+.material-card { border: 1rpx solid var(--ui-border); background: var(--ui-primary-pale); }
 .material-name { font-size: 27rpx; font-weight: 700; }
-.warranty-tag { padding: 6rpx 13rpx; border-radius: 999rpx; color: #6d28d9; background: #f0e9ff; font-size: 20rpx; }
+.warranty-tag { padding: 6rpx 13rpx; border-radius: 999rpx; color: var(--ui-primary-strong); background: var(--ui-primary-soft); font-size: 20rpx; }
 .material-line,
 .material-note { margin-top: 12rpx; color: #67736f; font-size: 23rpx; line-height: 1.55; }
-.material-note { padding: 14rpx; border-radius: 10rpx; color: #5c496d; background: #f3eff9; }
-.primary-button { margin-top: 24rpx; border-radius: 14rpx; color: #fff; background: #079b65; font-size: 28rpx; }
-.complete-card { color: #087f5b; background: #edfbf5; }
+.material-note { padding: 14rpx; border-radius: 10rpx; color: var(--ui-ink); background: var(--ui-primary-soft); }
+.primary-button { margin-top: 24rpx; border-radius: 14rpx; color: #fff; background: var(--ui-primary); font-size: 28rpx; }
+.complete-card { color: var(--ui-primary-strong); background: var(--ui-primary-soft); }
 .primary-button::after,
 .secondary-button::after { border: 0; }

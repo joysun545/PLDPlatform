@@ -1,0 +1,108 @@
+<theme-shell title-eyebrow="售后服务站" title-subtitle="登记实际维修定位、标准收件信息及本组织售后对接人员">
+  <view class="container">
+    <view wx:if="{{loading}}" class="notice-card">正在读取申请资料…</view>
+
+    <view wx:elif="{{!eligible}}" class="notice-card">
+      <text class="notice-title">暂不具备申请资格</text>
+      <text class="notice-copy">{{reason || '当前账号或组织不能申请售后服务站。'}}</text>
+    </view>
+
+    <block wx:elif="{{eligible}}">
+      <view wx:if="{{application}}" class="status-card">
+        <text class="status-label">当前申请状态</text>
+        <text class="status-value">{{application.status_name}}</text>
+        <text wx:if="{{application.review_note}}" class="status-note">{{application.review_note}}</text>
+      </view>
+
+      <view wx:if="{{canSubmit}}" class="form-card">
+        <view class="section-title">售后服务对接人员</view>
+        <text class="field-hint">系统按“商家电工、商家销售经理、商家负责人”的顺序提供本组织成员，请选择一人。</text>
+        <radio-group class="liaison-list" bindchange="onLiaisonChange">
+          <label wx:for="{{liaisonCandidates}}" wx:key="identity_id" class="liaison-row">
+            <radio value="{{item.identity_id}}" checked="{{item.selected}}" />
+            <view class="liaison-copy">
+              <text class="liaison-name">{{item.name}}</text>
+              <text class="liaison-role">{{item.role_name}}</text>
+            </view>
+          </label>
+        </radio-group>
+        <view wx:if="{{!liaisonCandidates.length}}" class="empty-members">本组织暂无可用的电工、销售经理或负责人账号，请先完成相应成员设置。</view>
+
+        <view class="section-title">维修服务地点</view>
+        <text class="field-hint">请在维修服务现场获取当前 GPS 定位。提交时要求在 15 分钟内重新确认，保存的坐标可直接打开地图导航。</text>
+        <button class="location-button" bindtap="captureServiceLocation">获取当前维修服务点 GPS</button>
+        <view wx:if="{{serviceLocation}}" class="location-card">
+          <text class="location-name">{{serviceLocation.name || '已选择维修服务地点'}}</text>
+          <text wx:if="{{serviceLocation.address}}" class="location-address">{{serviceLocation.address}}</text>
+          <text class="location-coordinates">{{serviceLocation.latitude}}, {{serviceLocation.longitude}}</text>
+          <text wx:if="{{locationCapturedAtLabel}}" class="location-captured">定位确认时间：{{locationCapturedAtLabel}}</text>
+          <text wx:if="{{serviceLocation.accuracy}}" class="location-captured">设备报告精度：约 {{serviceLocation.accuracy}} 米</text>
+          <button class="map-button" bindtap="openServiceLocation">在地图中查看</button>
+        </view>
+        <view wx:else class="empty-location">尚未选择维修服务地点</view>
+
+        <view class="section-title section-gap">故障设备收件资料</view>
+        <view class="field-block">
+          <text class="field-label">官方售后服务收件地址</text>
+          <textarea class="field-textarea" maxlength="255" value="{{receivingAddress}}" placeholder="填写可以签收故障设备的售后服务收件地址" bindinput="onReceivingAddressInput" />
+        </view>
+        <view class="field-block">
+          <text class="field-label">收件联系人</text>
+          <input class="field-input generated-input" value="{{receivingContactName}}" placeholder="根据所选对接人员自动生成" readonly="{{true}}" />
+        </view>
+        <view class="field-block">
+          <text class="field-label">收件联系电话</text>
+          <input class="field-input generated-input" type="text" value="{{receivingContactPhone}}" placeholder="根据所选对接人员自动生成" readonly="{{true}}" />
+          <text wx:if="{{liaisonCandidates.length && !receivingContactPhone}}" class="field-hint phone-missing">所选成员尚未登记手机号，请先为其补充账号手机号后再提交申请。</text>
+        </view>
+
+        <view class="notice-section">
+          <view class="section-title">申请须知</view>
+          <view wx:for="{{noticeItems}}" wx:key="*this" class="notice-item">
+            <text class="notice-index">{{index + 1}}</text>
+            <text class="notice-copy">{{item}}</text>
+          </view>
+          <checkbox-group bindchange="onNoticeAgreeChange">
+            <label class="agree-row">
+              <checkbox value="agree" checked="{{noticeAgreed}}" />
+              <text>我已阅读并确认以上申请须知</text>
+            </label>
+          </checkbox-group>
+        </view>
+
+        <view wx:if="{{submitFeedback}}" class="submit-feedback {{submitFeedbackType}}">{{submitFeedback}}</view>
+        <button class="submit-button" loading="{{submitting}}" disabled="{{submitting}}" catchtap="submitApplication">
+          {{application ? '更新并提交申请' : '提交申请'}}
+        </button>
+      </view>
+
+      <view wx:elif="{{application && application.status === 'APPROVED'}}" class="notice-card">
+        <text class="notice-title">售后服务站已通过申请</text>
+        <text class="notice-copy">本组织已登记为售后服务站。</text>
+        <view wx:if="{{serviceLocation}}" class="approved-location">
+          <text class="field-label">维修服务地点</text>
+          <text class="location-coordinates">{{serviceLocation.latitude}}, {{serviceLocation.longitude}}</text>
+          <button class="map-button" bindtap="openServiceLocation">在地图中查看 / 导航</button>
+        </view>
+        <view wx:if="{{application.receiving}}" class="approved-receiving">
+          <text class="field-label">收件联系人和电话</text>
+          <text class="approved-detail">{{application.receiving.contact_name}} · {{application.receiving.contact_phone}}</text>
+        </view>
+        <view wx:if="{{application.liaisons.length}}" class="approved-receiving">
+          <text class="field-label">售后服务对接人员</text>
+          <text wx:for="{{application.liaisons}}" wx:key="identity_id" class="approved-detail">{{item.name}} · {{item.role_name}}</text>
+        </view>
+        <view wx:if="{{canEditReceivingAddress}}" class="approved-receiving">
+          <text class="field-label">官方售后服务收件地址</text>
+          <textarea class="field-textarea" maxlength="255" value="{{receivingAddress}}" placeholder="填写可以签收故障设备的售后服务收件地址" bindinput="onReceivingAddressInput" />
+          <button class="submit-button" loading="{{savingReceivingAddress}}" disabled="{{savingReceivingAddress}}" bindtap="saveApprovedReceivingAddress">保存收件地址</button>
+        </view>
+      </view>
+
+      <view wx:elif="{{!application}}" class="notice-card">
+        <text class="notice-title">尚无可用对接人员</text>
+        <text class="notice-copy">请确认本组织的商家电工、商家销售经理或商家负责人槽位有效，并登记所选人员的手机号。</text>
+      </view>
+    </block>
+  </view>
+</theme-shell>

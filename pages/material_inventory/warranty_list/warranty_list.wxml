@@ -1,3 +1,4 @@
+<theme-shell>
 <view class="page">
   <view class="notice">三包故障件由售后、拆机或召回流程自动归集。这里只查看故障件，并在实际线下交付后登记退回供应商数量。</view>
   <view class="search">
@@ -18,3 +19,5 @@
   <view class="empty" wx:if="{{loading}}">正在查询…</view>
   <button wx:if="{{nextCursor && !loading}}" class="secondary wide" bindtap="onReachBottom">加载更多</button>
 </view>
+
+</theme-shell>

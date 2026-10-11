@@ -51,7 +51,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #07a85b;
+  color: var(--ui-primary-bright);
   background: #e8f8f0;
   font-size: 25rpx;
 }
@@ -88,6 +88,19 @@
   box-sizing: border-box;
 }
 
+.organization-address-input {
+  width: 100%;
+  min-height: 180rpx;
+  padding: 20rpx 22rpx;
+  border: 1rpx solid var(--ui-border, #ddd);
+  border-radius: 12rpx;
+  background: var(--ui-field-bg, #fafafa);
+  color: var(--ui-ink, #333);
+  font-size: 29rpx;
+  line-height: 1.6;
+  box-sizing: border-box;
+}
+
 .readonly-card {
   color: #666;
 }
@@ -113,6 +126,6 @@
 
 .save-button {
   color: #fff;
-  background: #07c160;
+  background: var(--ui-primary-bright);
   font-size: 32rpx;
 }

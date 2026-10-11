@@ -1,3 +1,4 @@
+<theme-shell>
 <view class="page">
   <view class="state-card" wx:if="{{loading}}">正在生成订单配送入库清单…</view>
   <view class="state-card error" wx:elif="{{error && !form}}">{{error}}</view>
@@ -23,3 +24,5 @@
     <button class="secondary wide" wx:if="{{received.length}}" bindtap="backToPlan">返回订单计划详情</button>
   </block>
 </view>
+
+</theme-shell>

@@ -1,3 +1,4 @@
+<theme-shell>
 <view class="page">
   <view class="state-card" wx:if="{{loading}}">正在加载三包拆机数据…</view>
   <view class="state-card error" wx:elif="{{errorMessage}}">
@@ -28,7 +29,6 @@
     </view>
 
     <view class="hero-card">
-      <text class="hero-title">供应商退货协同清单</text>
       <text class="hero-name">{{pageData.viewer.supplier_name}}</text>
       <text class="hero-meta">当前身份：{{pageData.viewer.role_name}}</text>
       <text class="hero-meta">数据范围：{{pageData.viewer.scope_name}}</text>
@@ -125,3 +125,5 @@
     </block>
   </block>
 </view>
+
+</theme-shell>

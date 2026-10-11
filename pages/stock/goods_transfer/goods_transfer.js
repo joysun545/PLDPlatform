@@ -50,7 +50,9 @@ Page({
     scanning: false,
     submitting: false,
     transferId: 0,
+    scanReady: false,
     detail: null,
+    scanConflict: null,
     goodsListSelectedPath: '',
     goodsListSelectedName: '',
     returnSubmitRemark: ''
@@ -58,11 +60,7 @@ Page({
 
   onLoad(options) {
     const transferId = Number((options || {}).transfer_id || 0);
-    const role = app.globalData.role || '';
-    const flowTypes = role === 'merchant_stock'
-      ? this.data.flowTypes.filter(item => item.code !== 'TRANSFER')
-      : this.data.flowTypes;
-    this.setData({ flowTypes, transferId });
+    this.setData({ transferId });
     app.ensureLogin(ok => {
       if (!ok) {
         this.setData({ loading: false, errorMessage: '登录失败，请重新进入小程序' });
@@ -71,22 +69,32 @@ Page({
       if (transferId) {
         this.loadDetail();
       } else {
-        this.loadOptions('SHIPMENT');
+        this.loadAvailableFlowTypes();
       }
     });
+  },
+
+  onUnload() {
+    // Keep scanned rows attached to this server-side draft. Leaving this page
+    // must not release the draft's device records; the list can resume it by ID.
+    this._goodsTransferPageUnloading = true;
   },
 
   onPullDownRefresh() {
     const done = () => wx.stopPullDownRefresh();
     if (this.data.transferId) {
       this.loadDetail(done);
+    } else if (this.data.scanReady) {
+      done();
+    } else if (!this.data.selectedFlowType) {
+      this.loadAvailableFlowTypes(done);
     } else {
       this.loadOptions(this.data.selectedFlowType, done);
     }
   },
 
   chooseFlowType(e) {
-    if (this.data.transferId || this.data.creating) return;
+    if (this.data.transferId || this.data.scanReady || this.data.creating) return;
     const flowType = e.currentTarget.dataset.type;
     if (!FLOW_TYPE_NAMES[flowType] || flowType === this.data.selectedFlowType) return;
     this.setData({
@@ -123,9 +131,61 @@ Page({
     });
   },
 
+  loadAvailableFlowTypes(done) {
+    this.setData({ loading: true, errorMessage: '', options: null });
+    wx.request({
+      url: `${app.globalData.apiBase}/lifecycle/goods-transfers/options/?flow_type=CAPABILITIES`,
+      method: 'GET',
+      header: app.authHeader(),
+      success: res => {
+        const body = res.data || {};
+        if (res.statusCode === 401 || body.code === 401) app.reauthenticate();
+        if (body.code !== 0 || !body.data) {
+          this.setData({
+            loading: false,
+            errorMessage: body.msg || '商品流转权限加载失败'
+          });
+          if (done) done();
+          return;
+        }
+        const allowed = new Set(body.data.available_flow_types || []);
+        const flowTypes = this.data.flowTypes.filter(item => allowed.has(item.code));
+        if (!flowTypes.length) {
+          this.setData({
+            flowTypes: [],
+            selectedFlowType: '',
+            flowTypeName: '',
+            loading: false,
+            errorMessage: '当前岗位未配置商品流转操作权限'
+          });
+          if (done) done();
+          return;
+        }
+        const selected = flowTypes.find(
+          item => item.code === this.data.selectedFlowType
+        ) || flowTypes[0];
+        this.setData({
+          flowTypes,
+          selectedFlowType: selected.code,
+          flowTypeName: selected.name,
+          errorMessage: ''
+        });
+        this.loadOptions(selected.code, done);
+      },
+      fail: () => {
+        this.setData({ loading: false, errorMessage: '网络连接失败，请稍后重试' });
+        if (done) done();
+      }
+    });
+  },
+
   retryLoad() {
     if (this.data.transferId) {
       this.loadDetail();
+    } else if (this.data.scanReady) {
+      return;
+    } else if (!this.data.selectedFlowType) {
+      this.loadAvailableFlowTypes();
     } else {
       this.loadOptions(this.data.selectedFlowType);
     }
@@ -153,8 +213,38 @@ Page({
     this.setData({ remark: e.detail.value || '' });
   },
 
+  buildUnpersistedDetail() {
+    const flowType = this.data.selectedFlowType;
+    const options = this.data.options || {};
+    const source = flowType === 'TRANSFER'
+      ? this.data.selectedSource
+      : options.source_organization;
+    const target = this.data.selectedTarget;
+    const organization = item => ({
+      id: item ? Number(item.organization_id || item.id || 0) : 0,
+      name: item ? (item.organization_name || item.name || '') : '',
+      type: item ? (item.organization_type || item.type || '') : ''
+    });
+    return prepareDetail({
+      id: 0,
+      flow_type: flowType,
+      flow_type_name: FLOW_TYPE_NAMES[flowType] || this.data.flowTypeName,
+      status: 'SCANNING',
+      status_name: '待扫码',
+      flow_no: '',
+      from_organization: organization(source),
+      to_organization: organization(target),
+      initiated_by_name: '',
+      created_at: '',
+      item_count: 0,
+      items: [],
+      actions: { can_scan: true, can_submit: false },
+      receipt_required: flowType !== 'TRANSFER'
+    });
+  },
+
   createTransfer() {
-    if (this.data.creating) return;
+    if (this.data.creating || this.data.scanReady || this.data.transferId) return;
     const flowType = this.data.selectedFlowType;
     const target = this.data.selectedTarget;
     const source = this.data.selectedSource;
@@ -179,29 +269,12 @@ Page({
       remark: (this.data.remark || '').trim()
     };
     if (flowType === 'TRANSFER') payload.source_account_id = source.user_id;
-
-    this.setData({ creating: true });
-    wx.request({
-      url: `${app.globalData.apiBase}/lifecycle/goods-transfers/`,
-      method: 'POST',
-      header: app.authHeader(),
-      data: payload,
-      success: res => {
-        const body = res.data || {};
-        if (res.statusCode === 401 || body.code === 401) app.reauthenticate();
-        if (body.code !== 0 || !body.data) {
-          wx.showToast({ title: body.msg || '商品流转单创建失败', icon: 'none' });
-          return;
-        }
-        this.setData({
-          transferId: Number(body.data.id),
-          detail: prepareDetail(body.data),
-          errorMessage: ''
-        });
-        wx.showToast({ title: '流转单已创建，请逐台扫码', icon: 'none' });
-      },
-      fail: () => wx.showToast({ title: '网络连接失败', icon: 'none' }),
-      complete: () => this.setData({ creating: false })
+    this._pendingTransferPayload = payload;
+    this.setData({
+      scanReady: true,
+      detail: this.buildUnpersistedDetail(),
+      scanConflict: null,
+      errorMessage: ''
     });
   },
 
@@ -237,23 +310,53 @@ Page({
 
   scanDevice() {
     const detail = this.data.detail;
-    if (!detail || !detail.actions || !detail.actions.can_scan || this.data.scanning) return;
+    if (!detail || !detail.actions || !detail.actions.can_scan || this.data.scanning || this.data.creating) return;
+
+    if (typeof wx === 'undefined' || typeof wx.scanCode !== 'function') {
+      if (typeof wx !== 'undefined' && typeof wx.showToast === 'function') {
+        wx.showToast({ title: '当前环境不支持扫码', icon: 'none' });
+      }
+      return;
+    }
+
+    let scanningFinished = false;
+    const finishScanning = () => {
+      if (scanningFinished) return;
+      scanningFinished = true;
+      app.globalData._isScanning = false;
+      this.setData({ scanning: false });
+    };
+
     this.setData({ scanning: true });
     app.globalData._isScanning = true;
-    wx.scanCode({
-      onlyFromCamera: true,
-      scanType: ['qrCode'],
-      success: scan => this.addScannedDevice(scan.result || scan.path || ''),
-      fail: error => {
-        if (!error || !String(error.errMsg || '').includes('cancel')) {
-          wx.showToast({ title: '二维码扫描失败', icon: 'none' });
-        }
-      },
-      complete: () => {
-        app.globalData._isScanning = false;
-        this.setData({ scanning: false });
-      }
-    });
+    try {
+      wx.scanCode({
+        onlyFromCamera: true,
+        scanType: ['qrCode'],
+        success: scan => {
+          const qrText = String((scan && (scan.result || scan.path)) || '').trim();
+          if (!qrText) {
+            wx.showToast({ title: '二维码内容为空', icon: 'none' });
+            return;
+          }
+          try {
+            this.addScannedDevice(qrText);
+          } catch (error) {
+            wx.showToast({ title: '设备加入失败，请重试', icon: 'none' });
+          }
+        },
+        fail: error => {
+          const message = String((error && error.errMsg) || '');
+          if (!/cancel/i.test(message)) {
+            wx.showToast({ title: '二维码扫描失败', icon: 'none' });
+          }
+        },
+        complete: finishScanning
+      });
+    } catch (error) {
+      finishScanning();
+      wx.showToast({ title: '扫码功能暂不可用，请重试', icon: 'none' });
+    }
   },
 
   addScannedDevice(qrText) {
@@ -261,23 +364,152 @@ Page({
       wx.showToast({ title: '二维码内容为空', icon: 'none' });
       return;
     }
+    if (!this.data.transferId) {
+      this.createTransferAndAddFirstDevice(qrText);
+      return;
+    }
+    this.postScannedDevice(qrText, false);
+  },
+
+  createTransferAndAddFirstDevice(qrText) {
+    const payload = this._pendingTransferPayload;
+    if (!payload || this.data.creating || this.data.transferId) return;
+    this.setData({ creating: true, scanConflict: null });
+    this._goodsTransferScanRequestPending = true;
     wx.showLoading({ title: '正在加入...', mask: true });
+    let firstScanRequestStarted = false;
     wx.request({
-      url: `${app.globalData.apiBase}/lifecycle/goods-transfers/${this.data.transferId}/scan/`,
+      url: `${app.globalData.apiBase}/lifecycle/goods-transfers/`,
+      method: 'POST',
+      header: app.authHeader(),
+      data: payload,
+      success: res => {
+        const body = res.data || {};
+        if (res.statusCode === 401 || body.code === 401) app.reauthenticate();
+        if (body.code !== 0 || !body.data || !Number(body.data.id)) {
+          wx.showToast({ title: body.msg || '商品流转单创建失败', icon: 'none' });
+          return;
+        }
+        firstScanRequestStarted = true;
+        this.setData({
+          transferId: Number(body.data.id),
+          detail: prepareDetail(body.data),
+          scanReady: true,
+          errorMessage: ''
+        }, () => this.postScannedDevice(qrText, true));
+      },
+      fail: () => wx.showToast({ title: '网络连接失败，请重新扫码', icon: 'none' }),
+      complete: () => {
+        // A successful create starts the first device request in the callback;
+        // that request owns loading/creating cleanup. Failed creates stop here.
+        if (!firstScanRequestStarted) {
+          this._goodsTransferScanRequestPending = false;
+          this.setData({ creating: false });
+          wx.hideLoading();
+        }
+      }
+    });
+  },
+
+  postScannedDevice(qrText, isFirstScan) {
+    if (!qrText || !this.data.transferId) return;
+    const transferId = Number(this.data.transferId);
+    this._goodsTransferScanRequestPending = true;
+    if (!isFirstScan) wx.showLoading({ title: '正在加入...', mask: true });
+    wx.request({
+      url: `${app.globalData.apiBase}/lifecycle/goods-transfers/${transferId}/scan/`,
       method: 'POST',
       header: app.authHeader(),
       data: { qr_text: qrText },
       success: res => {
         const body = res.data || {};
         if (body.code !== 0) {
+          const errorData = body.data || {};
+          if (errorData.reason_code === 'DEVICE_IN_UNFINISHED_GOODS_TRANSFER') {
+            const conflict = errorData.conflict_transfer || {};
+            const scanConflict = {
+              message: body.msg || '此设备已在未完成的商品流转中，请先处理该流转。',
+              transferId: conflict.can_continue ? Number(conflict.id || 0) : 0,
+              flowNo: conflict.flow_no || ''
+            };
+            if (isFirstScan) {
+              this.deleteEmptyFirstScanDraft(transferId, () => this.showScanConflict(scanConflict));
+            } else {
+              this.showScanConflict(scanConflict);
+            }
+            return;
+          }
+          if (isFirstScan) {
+            wx.showToast({ title: body.msg || '设备加入失败', icon: 'none' });
+            this.deleteEmptyFirstScanDraft(transferId);
+            return;
+          }
           wx.showToast({ title: body.msg || '设备加入失败', icon: 'none' });
           return;
         }
+        this._pendingTransferPayload = null;
         wx.showToast({ title: `已加入第 ${body.data.item_count} 台`, icon: 'none' });
-        this.loadDetail();
+        if (!this._goodsTransferPageUnloading) this.loadDetail();
       },
-      fail: () => wx.showToast({ title: '网络连接失败', icon: 'none' }),
-      complete: () => wx.hideLoading()
+      fail: () => {
+        wx.showToast({ title: '网络连接失败，请刷新确认设备状态', icon: 'none' });
+        if (isFirstScan) this.reconcileFirstScanAfterNetworkError(transferId);
+      },
+      complete: () => {
+        this._goodsTransferScanRequestPending = false;
+        if (isFirstScan) this.setData({ creating: false });
+        wx.hideLoading();
+      }
+    });
+  },
+
+  showScanConflict(scanConflict) {
+    this.setData({ scanConflict }, () => {
+      if (typeof wx.pageScrollTo === 'function') {
+        wx.pageScrollTo({ scrollTop: 0, duration: 180 });
+      }
+    });
+  },
+
+  deleteEmptyFirstScanDraft(transferId, done) {
+    wx.request({
+      url: `${app.globalData.apiBase}/lifecycle/goods-transfers/${transferId}/`,
+      method: 'DELETE',
+      header: app.authHeader(),
+      success: res => {
+        const body = res.data || {};
+        if (res.statusCode === 401 || body.code === 401) app.reauthenticate();
+        if (body.code === 0) {
+          this.setData({
+            transferId: 0,
+            detail: this.buildUnpersistedDetail(),
+            scanReady: true
+          });
+          if (done) done();
+          return;
+        }
+        this.loadDetail(() => done && done());
+      },
+      fail: () => this.loadDetail(() => done && done())
+    });
+  },
+
+  reconcileFirstScanAfterNetworkError(transferId) {
+    wx.request({
+      url: `${app.globalData.apiBase}/lifecycle/goods-transfers/${transferId}/`,
+      method: 'GET',
+      header: app.authHeader(),
+      success: res => {
+        const body = res.data || {};
+        if (body.code === 0 && body.data) {
+          this.setData({ detail: prepareDetail(body.data) });
+          if (Number(body.data.item_count || 0) > 0) {
+            this._pendingTransferPayload = null;
+          } else {
+            this.deleteEmptyFirstScanDraft(transferId);
+          }
+        }
+      }
     });
   },
 
@@ -357,6 +589,7 @@ Page({
       wx.showToast({ title: body.msg || '商品流转提交失败', icon: 'none' });
       return;
     }
+    this._goodsTransferSubmitted = true;
     this.setData({ detail: prepareDetail(body.data) });
     if (typeof app.refreshTasks === 'function') app.refreshTasks();
     wx.showModal({
@@ -421,5 +654,55 @@ Page({
     wx.navigateTo({
       url: `/pages/stock/goods_transfer_detail/goods_transfer_detail?transfer_id=${this.data.transferId}`
     });
+  },
+
+  openConflictTransfer() {
+    const conflict = this.data.scanConflict || {};
+    const conflictTransferId = Number(conflict.transferId || 0);
+    if (!conflictTransferId || this._resumingConflictTransfer) return;
+
+    const currentTransferId = Number(this.data.transferId || 0);
+    const currentDetail = this.data.detail || {};
+    const continueExistingDraft = () => wx.redirectTo({
+      url: `/pages/stock/goods_transfer/goods_transfer?transfer_id=${conflictTransferId}`
+    });
+
+    // A fresh scan attempt may have created an empty transfer before finding
+    // this existing draft. Remove only that empty shell before resuming the
+    // original transfer, so the list does not gain a duplicate task.
+    if (
+      currentTransferId &&
+      currentTransferId !== conflictTransferId &&
+      Number(currentDetail.item_count || 0) === 0
+    ) {
+      this._resumingConflictTransfer = true;
+      wx.request({
+        url: `${app.globalData.apiBase}/lifecycle/goods-transfers/${currentTransferId}/`,
+        method: 'DELETE',
+        header: app.authHeader(),
+        success: res => {
+          const body = res.data || {};
+          if (res.statusCode === 401 || body.code === 401) app.reauthenticate();
+          if (body.code !== 0) {
+            wx.showToast({
+              title: body.msg || '空白流转单未删除，可稍后在列表中清理',
+              icon: 'none'
+            });
+          }
+        },
+        fail: () => wx.showToast({ title: '空白流转单清理失败', icon: 'none' }),
+        complete: () => {
+          this._resumingConflictTransfer = false;
+          continueExistingDraft();
+        }
+      });
+      return;
+    }
+
+    continueExistingDraft();
+  },
+
+  cancelScanConflict() {
+    this.setData({ scanConflict: null });
   }
 });

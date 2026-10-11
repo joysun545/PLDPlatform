@@ -1,0 +1,27 @@
+<view class="theme-shell {{themeClass}} level-{{pageLevel}}" style="{{themeStyle}}">
+  <view wx:if="{{!hideHeader && pageLevel !== 'none'}}" class="theme-header theme-header-tab">
+    <view class="safe-top" style="height: {{statusHeight}}px;"></view>
+
+    <view class="tab-hero" style="padding-right: {{capsuleRight}}px;">
+      <view class="brand-mark">PL</view>
+      <view class="tab-hero-copy">
+        <text class="organization-line" wx:if="{{organizationName}}">{{organizationName}}</text>
+        <text class="platform-name">产品生命周期数字平台</text>
+        <view class="identity-line-row">
+          <text class="identity-line">{{roleName}} · {{welcomeName}}</text>
+          <view wx:if="{{serviceStationApproved}}" class="service-station-badge" aria-role="img" aria-label="本组织已通过售后服务站申请">
+            <image src="/images/after-sales-station-badge.png" mode="aspectFit" />
+            <text>售后站</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{pageLevel !== 'tab' && pageLevel !== 'none' && !hideHeader}}" class="theme-page-title-fixed" style="top: {{titleTop}}px;">
+    <theme-page-title eyebrow="{{titleEyebrow}}" title="{{routeTitle}}" metric="{{titleMetric}}" subtitle="{{titleSubtitle}}" />
+  </view>
+  <view class="theme-page-body" style="padding-top: {{bodyOffset}}px;">
+    <slot></slot>
+  </view>
+</view>

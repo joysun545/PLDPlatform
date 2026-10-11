@@ -1,17 +1,17 @@
 /* pages/scan/scan/scan.wxss */
 .container {
   min-height: 100vh;
-  background: linear-gradient(#f0f2f5, #ffffff);
+  background: var(--ui-page-bg);
 }
 
 .header {
-  background: linear-gradient(135deg, #07c160, #009688);
+  background: linear-gradient(135deg, var(--ui-gradient-start), var(--ui-gradient-end));
   color: white;
   text-align: center;
   padding: 30rpx 0 60rpx;
   border-bottom-left-radius: 50rpx;
   border-bottom-right-radius: 50rpx;
-  box-shadow: 0 10rpx 30rpx rgba(7, 193, 96, 0.3);
+  box-shadow: 0 10rpx 30rpx rgba(0,0,0,.14);
 }
 
 .title {
@@ -33,7 +33,7 @@
 
 .tip {
   font-size: 36rpx;
-  color: #333;
+  color: var(--ui-ink);
   margin-bottom: 80rpx;
 }
 
@@ -50,7 +50,7 @@
   height: 300rpx;
   background: white;
   border-radius: 50rpx;
-  box-shadow: 0 15rpx 40rpx rgba(7, 193, 96, 0.2);
+  box-shadow: 0 15rpx 40rpx rgba(0,0,0,.10);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -70,14 +70,13 @@
 .btn-text {
   font-size: 30rpx;
   font-weight: bold;
-  color: #07c160;
+  color: var(--ui-primary-bright);
 } 
 
 .scan-tip {
   margin-top: 44rpx;
-  color: #7a7f86;
+  color: var(--ui-muted);
   font-size: 28rpx;
 }
-
 
 

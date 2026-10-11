@@ -1,3 +1,4 @@
+<theme-shell>
 <view class="page">
   <view class="hero" wx:if="{{campaign}}">
     <view class="row"><text class="hero-title">{{campaign.recall_no}}</text><text>{{campaign.statusText}}</text></view>
@@ -78,3 +79,5 @@
 
   <button class="primary" wx:if="{{campaign}}" bindtap="openRecallDetail">进入召回详情</button>
 </view>
+
+</theme-shell>

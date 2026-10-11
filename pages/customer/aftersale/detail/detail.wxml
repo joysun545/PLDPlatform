@@ -1,4 +1,7 @@
+<theme-shell>
 <view class="page">
   <view wx:if="{{error}}" class="error"><text>{{error}}</text><button bindtap="backHome">返回首页</button></view>
   <view wx:else class="loading">正在打开售后详情...</view>
 </view>
+
+</theme-shell>
