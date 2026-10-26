@@ -95,6 +95,34 @@ test('merchant dashboard distinguishes received, chain and organization inventor
   );
 });
 
+test('factory sales dashboard labels active order-plan flow stages', () => {
+  const { page, respond } = environment('dashboard');
+  page.onShow();
+  respond({ sections: [{ domain: 'FLOW', metrics: {
+    order_plan_count: 50,
+    order_plan_pending_production_device_count: 3,
+    order_plan_produced_pending_outbound_device_count: 4,
+    order_plan_outbounded_pending_ship_device_count: 2,
+    order_plan_shipped_device_count: 18,
+    order_plan_shipped_pending_accounting_device_count: 11,
+    order_plan_accounted_device_count: 7,
+    channel_inventory_device_count: 6
+  } }] });
+  assert.deepEqual(
+    Array.from(page.data.sections[0].metrics, row => `${row.name}:${row.value}`),
+    [
+      '有效计划设备:50',
+      '计划未完成生产:3',
+      '生产完成待出库:4',
+      '已出库待确认发货:2',
+      '累计已发货:18',
+      '发货待下账:11',
+      '物权已转移:7',
+      '链路库存:6'
+    ]
+  );
+});
+
 test('flow domain refetches stock on return and retains expanded organizations', () => {
   const { page, requests, respond } = environment('domain');
   page.onLoad({ domain: 'FLOW' });

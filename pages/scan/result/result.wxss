@@ -316,13 +316,17 @@
 
 .bom-heading {
   display: flex;
-  align-items: baseline;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 20rpx;
   margin-bottom: 12rpx;
 }
 
 .material-name {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.55;
+  word-break: break-all;
   font-weight: 600;
 }
 
@@ -330,6 +334,23 @@
 .bom-line {
   color: #7d858d;
   font-size: 24rpx;
+}
+
+.material-code {
+  flex-shrink: 0;
+  max-width: 34%;
+  text-align: right;
+  word-break: break-all;
+}
+
+.material-lot-line {
+  color: var(--ui-primary-strong);
+  font-size: 22rpx;
+  word-break: break-all;
+}
+
+.supplier-lot-line {
+  word-break: break-all;
 }
 
 .bom-line {

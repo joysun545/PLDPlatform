@@ -9,7 +9,8 @@
   <block wx:elif="{{detail}}">
     <view class="hero-card">
       <view class="hero-head">
-        <text class="flow-type">{{detail.flow_type_name}}</text>
+        <text class="flow-type" wx:if="{{detail.actions.can_receive}}">接收上级发货</text>
+        <text class="flow-type" wx:else>{{detail.flow_type_name}}</text>
         <text class="status-pill">{{detail.status_name}}</text>
       </view>
       <text class="flow-no">{{detail.flow_no}}</text>

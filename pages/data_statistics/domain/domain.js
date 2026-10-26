@@ -57,21 +57,32 @@ function flattenResponsibilityTree(sourceRoot) {
     const displayScope = node.display_scope === 'OWN' ? 'OWN' : 'TOTAL';
     const ownInventory = own.market_inventory_device_count || 0;
     const ownActivated = own.activated_device_count || 0;
+    const ownInstalled = own.installed_device_count || 0;
     const totalInventory = total.market_inventory_device_count || 0;
     const totalActivated = total.activated_device_count || 0;
+    const totalInstalled = total.installed_device_count || 0;
     const isResponsibility = node.node_type === 'RESPONSIBILITY_ACCOUNT';
+    const isMerchantOrganization = node.node_type === 'ORGANIZATION' && !node.role_code;
+    const hasChildren = children.length > 0;
+    const hasSubordinateOrganizations = node.has_subordinate_organizations === true;
     rows.push({
       id: node.node_id, nodeType: node.node_type,
       name: node.name || '未命名节点', roleCode: node.role_code || '',
+      isMerchantOrganization,
       depth, indent: Math.min(depth, 7) * 24, parentIds, expanded: false,
-      hasChildren: children.length > 0,
+      hasChildren,
+      hasSubordinateOrganizations,
       displayScope,
-      showOrganizationInventory: node.show_organization_inventory === true,
-      ownInventory, ownActivated, totalInventory, totalActivated,
+      showOrganizationInventory: node.show_organization_inventory === true && isMerchantOrganization && hasSubordinateOrganizations,
+      showInstallationCount: isMerchantOrganization,
+      ownInventory, ownActivated, ownInstalled,
+      totalInventory, totalActivated, totalInstalled,
       primaryInventory: totalInventory,
       primaryActivated: totalActivated,
-      inventoryLabel: isResponsibility ? '负责链路库存' : '链路库存',
-      activatedLabel: isResponsibility ? '负责链路激活' : '链路激活',
+      primaryInstalled: totalInstalled,
+      inventoryLabel: isResponsibility ? '负责链路库存' : (isMerchantOrganization ? (hasSubordinateOrganizations ? '链路库存' : '库存') : (hasChildren ? '链路库存' : '库存')),
+      activatedLabel: isMerchantOrganization && hasSubordinateOrganizations ? '链路激活' : '激活',
+      installedLabel: isMerchantOrganization && hasSubordinateOrganizations ? '链路安装' : '安装',
       totalTransit: total.in_transit_device_count || 0,
       totalReturn: total.return_or_recall_device_count || 0,
       totalDevices: total.market_device_count || 0

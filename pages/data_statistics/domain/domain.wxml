@@ -46,12 +46,13 @@
               <view class="tree-node-type">{{item.nodeType === 'RESPONSIBILITY_ACCOUNT' ? '责任账号' : '组织节点'}}<text wx:if="{{item.roleCode}}"> · {{item.roleCode}}</text></view>
             </view>
           </view>
-          <view class="tree-level">{{item.hasChildren ? '可展开' : '末级'}}</view>
+          <view class="tree-level">{{item.hasChildren ? (item.expanded ? '收起' : '展开') : (item.isMerchantOrganization && item.hasSubordinateOrganizations ? '下级暂无流转数据' : '末级')}}</view>
         </view>
         <view class="flow-total-cards">
           <view class="flow-total-card inventory-card"><view class="flow-number">{{item.primaryInventory}}</view><view class="flow-label">{{item.inventoryLabel}}</view></view>
           <view class="flow-total-card organization-card" wx:if="{{item.showOrganizationInventory}}"><view class="flow-number">{{item.ownInventory}}</view><view class="flow-label">组织库存</view></view>
           <view class="flow-total-card activated-card"><view class="flow-number">{{item.primaryActivated}}</view><view class="flow-label">{{item.activatedLabel}}</view></view>
+          <view class="flow-total-card inventory-card" wx:if="{{item.showInstallationCount}}"><view class="flow-number">{{item.primaryInstalled}}</view><view class="flow-label">{{item.installedLabel}}</view></view>
         </view>
         <view class="tree-node-scope" wx:if="{{item.totalTransit}}">
           <text>当前链路在途 {{item.totalTransit}} 台</text>

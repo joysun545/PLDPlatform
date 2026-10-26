@@ -157,8 +157,10 @@
             <text class="material-name">{{item.material_name}}</text>
             <text class="material-code">{{item.material_code}}</text>
           </view>
+          <text class="bom-line material-lot-line">厂家收货批次号：{{item.factory_receipt_batch_code_text || '暂无记录'}}</text>
           <text class="bom-line">规格：{{item.spec_name || '未指定'}}</text>
           <text class="bom-line">供应商：{{item.supplier_name || '未指定'}}</text>
+          <text class="bom-line supplier-lot-line">供应商生产批次号：{{item.supplier_production_batch_code_text || '-'}}</text>
           <text class="bom-line" wx:if="{{item.remark}}">备注：{{item.remark}}</text>
         </view>
       </block>

@@ -9,7 +9,13 @@ const DOMAIN_META = {
 
 const METRIC_NAMES = {
   produced_device_count: '生产设备', inventory_device_count: '当前库存',
-  received_device_count: '入库设备', order_plan_count: '订单计划',
+  received_device_count: '入库设备', order_plan_count: '有效计划设备',
+  order_plan_pending_production_device_count: '计划未完成生产',
+  order_plan_produced_pending_outbound_device_count: '生产完成待出库',
+  order_plan_outbounded_pending_ship_device_count: '已出库待确认发货',
+  order_plan_shipped_device_count: '累计已发货',
+  order_plan_shipped_pending_accounting_device_count: '发货待下账',
+  order_plan_accounted_device_count: '物权已转移',
   channel_inventory_device_count: '链路库存',
   organization_inventory_device_count: '组织库存',
   installed_device_count: '已安装', activated_device_count: '已激活',
