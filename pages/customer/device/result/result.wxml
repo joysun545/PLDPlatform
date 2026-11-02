@@ -15,111 +15,168 @@
       </view>
       <text class="model-name">{{device.product_model.name}}</text>
       <text class="model-code">{{device.product_model.code}}</text>
-      <text class="device-sn">{{device.sn}}</text>
+      <text class="device-sn">生命周期编码：{{device.lifecycle_code || '-'}}</text>
+      <text wx:if="{{device.physical_device_code}}" class="device-sn">设备编码：{{device.physical_device_code}}</text>
     </view>
 
     <button class="list-btn" bindtap="goDeviceList">‹ 返回我的设备清单</button>
 
     <view class="card" wx:if="{{parameters.length}}">
-      <view class="card-title">设备参数</view>
-      <view class="row" wx:for="{{parameters}}" wx:key="label">
-        <text class="label">{{item.label}}</text>
-        <text class="value">{{item.value}}{{item.unit || ''}}</text>
+      <view class="fold-header" bindtap="toggleInfoSection" data-key="parametersExpanded">
+        <view class="card-title">设备参数</view>
+        <text class="fold-toggle">{{parametersExpanded ? '收起' : '展开'}}</text>
       </view>
+      <block wx:if="{{parametersExpanded}}">
+        <view class="row" wx:for="{{parameters}}" wx:key="label">
+          <text class="label">{{item.label}}</text>
+          <text class="value">{{item.value}}{{item.unit || ''}}</text>
+        </view>
+
+      </block>
     </view>
 
     <view class="card" wx:if="{{production}}">
-      <view class="card-title">生产与配套信息</view>
-      <view class="row"><text class="label">生产厂家</text><text class="value">{{production.manufacturer || '-'}}</text></view>
-      <view class="row"><text class="label">生产批次</text><text class="value">{{production.batch_no || '-'}}</text></view>
-      <view class="row"><text class="label">生产日期</text><text class="value">{{production.production_date_text || '-'}}</text></view>
-      <view class="row"><text class="label">BOM版本</text><text class="value">{{production.bom_version || '-'}}</text></view>
-      <view class="row" wx:if="{{asset && asset.source_organization}}"><text class="label">来源商家</text><text class="value">{{asset.source_organization}}</text></view>
+      <view class="fold-header" bindtap="toggleInfoSection" data-key="productionExpanded">
+        <view class="card-title">生产与配套信息</view>
+        <text class="fold-toggle">{{productionExpanded ? '收起' : '展开'}}</text>
+      </view>
+      <block wx:if="{{productionExpanded}}">
+        <view class="row"><text class="label">生产厂家</text><text class="value">{{production.manufacturer || '-'}}</text></view>
+        <view class="row"><text class="label">生产批次</text><text class="value">{{production.batch_no || '-'}}</text></view>
+        <view class="row"><text class="label">生产日期</text><text class="value">{{production.production_date_text || '-'}}</text></view>
+        <view class="row"><text class="label">BOM版本</text><text class="value">{{production.bom_version || '-'}}</text></view>
+        <view class="row" wx:if="{{asset && asset.source_organization}}"><text class="label">来源商家</text><text class="value">{{asset.source_organization}}</text></view>
+
+      </block>
     </view>
 
     <view class="card">
-      <view class="card-title">用户身份</view>
-      <view class="row"><text class="label">用户组织</text><text class="value">{{customer.organization_name}}</text></view>
-      <view class="row"><text class="label">账号身份</text><text class="value">{{customer.role_name}}</text></view>
-      <view class="row"><text class="label">所在区域</text><text class="value">{{customer.region || '-'}}</text></view>
-      <view class="row" wx:if="{{customer.profile.contact_name}}"><text class="label">联系人</text><text class="value">{{customer.profile.contact_name}}</text></view>
-      <view class="row" wx:if="{{customer.profile.phone}}"><text class="label">联系电话</text><text class="value">{{customer.profile.phone}}</text></view>
+      <view class="fold-header" bindtap="toggleInfoSection" data-key="identityExpanded">
+        <view class="card-title">用户身份</view>
+        <text class="fold-toggle">{{identityExpanded ? '收起' : '展开'}}</text>
+      </view>
+      <block wx:if="{{identityExpanded}}">
+        <view class="row"><text class="label">用户组织</text><text class="value">{{customer.organization_name}}</text></view>
+        <view class="row"><text class="label">账号身份</text><text class="value">{{customer.role_name}}</text></view>
+        <view class="row"><text class="label">所在区域</text><text class="value">{{customer.region || '-'}}</text></view>
+        <view class="row" wx:if="{{customer.profile.contact_name}}"><text class="label">联系人</text><text class="value">{{customer.profile.contact_name}}</text></view>
+        <view class="row" wx:if="{{customer.profile.phone}}"><text class="label">联系电话</text><text class="value">{{customer.profile.phone}}</text></view>
+
+      </block>
     </view>
 
     <view class="card">
-      <view class="card-title">装车与设备状态</view>
-      <view class="row"><text class="label">安装状态</text><text class="value accent">{{device.status_summary.install_status_name}}</text></view>
-      <view class="row"><text class="label">激活状态</text><text class="value accent">{{device.status_summary.activation_status_name}}</text></view>
-      <view class="row" wx:if="{{device.installation.organization}}"><text class="label">安装服务商</text><text class="value">{{device.installation.organization.name}}</text></view>
-      <view class="row" wx:if="{{device.installation.installed_at_text}}"><text class="label">装车时间</text><text class="value">{{device.installation.installed_at_text}}</text></view>
-      <view class="row" wx:if="{{region && region.owner}}"><text class="label">区域服务主体</text><text class="value">{{region.owner.name}}</text></view>
+      <view class="fold-header" bindtap="toggleInfoSection" data-key="statusExpanded">
+        <view class="card-title">装车与设备状态</view>
+        <text class="fold-toggle">{{statusExpanded ? '收起' : '展开'}}</text>
+      </view>
+      <block wx:if="{{statusExpanded}}">
+        <view class="row"><text class="label">安装状态</text><text class="value accent">{{device.status_summary.install_status_name}}</text></view>
+        <view class="row"><text class="label">激活状态</text><text class="value accent">{{device.status_summary.activation_status_name}}</text></view>
+        <view class="row" wx:if="{{device.installation.organization}}"><text class="label">安装服务商</text><text class="value">{{device.installation.organization.name}}</text></view>
+        <view class="row" wx:if="{{device.installation.installed_at_text}}"><text class="label">装车时间</text><text class="value">{{device.installation.installed_at_text}}</text></view>
+        <view class="row" wx:if="{{region && region.owner}}"><text class="label">区域服务主体</text><text class="value">{{region.owner.name}}</text></view>
+
+      </block>
     </view>
 
     <view class="card document-card">
-      <view class="card-title-row">
+      <view class="fold-header" bindtap="toggleInfoSection" data-key="documentsExpanded">
+        <view class="card-title-row">
         <view class="card-title">设备必读资料</view>
         <text class="read-progress" wx:if="{{documentGate}}">{{documentGate.all_read ? '已全部阅读' : '请依次阅读'}}</text>
       </view>
-      <text class="document-message" wx:if="{{documentGate}}">{{documentGate.message}}</text>
-      <view class="document-list" wx:if="{{documents.length}}">
-        <view class="document-row" wx:for="{{documents}}" wx:key="id" data-id="{{item.id}}" bindtap="openDocument">
-          <view class="document-icon">{{index + 1}}</view>
-          <view class="document-main">
-            <text class="document-title">{{item.title}}</text>
-            <text class="document-version">当前版本 v{{item.version}}</text>
-          </view>
-          <text class="read-state {{item.is_read ? 'done' : ''}}">{{item.is_read ? '已读' : '阅读'}} ›</text>
-        </view>
+        <text class="fold-toggle">{{documentsExpanded ? '收起' : '展开'}}</text>
       </view>
-      <view class="document-empty" wx:else>该型号资料尚未配置完整，请联系厂家。</view>
+      <block wx:if="{{documentsExpanded}}">
+        <text class="document-message" wx:if="{{documentGate}}">{{documentGate.message}}</text>
+        <view class="document-list" wx:if="{{documents.length}}">
+          <view class="document-row" wx:for="{{documents}}" wx:key="id" data-id="{{item.id}}" bindtap="openDocument">
+            <view class="document-icon">{{index + 1}}</view>
+            <view class="document-main">
+              <text class="document-title">{{item.title}}</text>
+              <text class="document-version">当前版本 v{{item.version}}</text>
+            </view>
+            <text class="read-state {{item.is_read ? 'done' : ''}}">{{item.is_read ? '已读' : '阅读'}} ›</text>
+          </view>
+        </view>
+        <view class="document-empty" wx:else>该型号资料尚未配置完整，请联系厂家。</view>
+
+      </block>
     </view>
 
     <view class="card telemetry-card" wx:if="{{telemetry && telemetry.capable}}">
-      <view class="card-title-row">
+      <view class="fold-header" bindtap="toggleInfoSection" data-key="telemetryExpanded">
+        <view class="card-title-row">
         <view class="card-title">设备运行数据</view>
         <text class="telemetry-status">{{telemetry.status === 'AVAILABLE' ? '已连接' : '待接入'}}</text>
       </view>
-      <view class="metric-grid" wx:if="{{telemetry.metrics.length}}">
-        <view class="metric" wx:for="{{telemetry.metrics}}" wx:key="code">
-          <text class="metric-label">{{item.name}}</text>
-          <text class="metric-value">{{item.value}}{{item.unit || ''}}</text>
-        </view>
+        <text class="fold-toggle">{{telemetryExpanded ? '收起' : '展开'}}</text>
       </view>
-      <text class="telemetry-message" wx:else>{{telemetry.message}}</text>
-      <text class="module-line" wx:if="{{telemetry.module}}">通讯模组：{{telemetry.module.material_name}} {{telemetry.module.spec_name}}</text>
+      <block wx:if="{{telemetryExpanded}}">
+        <view class="metric-grid" wx:if="{{telemetry.metrics.length}}">
+          <view class="metric" wx:for="{{telemetry.metrics}}" wx:key="code">
+            <text class="metric-label">{{item.name}}</text>
+            <text class="metric-value">{{item.value}}{{item.unit || ''}}</text>
+          </view>
+        </view>
+        <text class="telemetry-message" wx:else>{{telemetry.message}}</text>
+        <text class="module-line" wx:if="{{telemetry.module}}">通讯模组：{{telemetry.module.material_name}} {{telemetry.module.spec_name}}</text>
+
+      </block>
     </view>
 
     <view class="card lifecycle-card">
-      <view class="card-title">生命周期记录</view>
-      <view class="timeline" wx:if="{{lifecycle.length}}">
-        <view class="timeline-item" wx:for="{{lifecycle}}" wx:key="id">
-          <view class="timeline-dot"></view>
-          <view class="timeline-main">
-            <view class="timeline-head">
-              <text class="timeline-title">{{item.event_type_name}}</text>
-              <text class="timeline-time">{{item.created_at_text}}</text>
+      <view class="fold-header" bindtap="toggleInfoSection" data-key="lifecycleExpanded">
+        <view class="card-title">生命周期记录</view>
+        <text class="fold-toggle">{{lifecycleExpanded ? '收起' : '展开'}}</text>
+      </view>
+      <block wx:if="{{lifecycleExpanded}}">
+        <view class="timeline" wx:if="{{lifecycle.length}}">
+          <view class="timeline-item" wx:for="{{lifecycle}}" wx:key="id">
+            <view class="timeline-dot"></view>
+            <view class="timeline-main">
+              <view class="timeline-head">
+                <text class="timeline-title">{{item.event_type_name}}</text>
+                <text class="timeline-time">{{item.created_at_text}}</text>
+              </view>
+              <text class="timeline-route" wx:if="{{item.from_organization || item.to_organization}}">{{item.from_organization || '-'}} → {{item.to_organization || '-'}}</text>
+              <text class="timeline-meta">{{item.organization || ''}}{{item.operator ? ' · ' + item.operator : ''}}</text>
             </view>
-            <text class="timeline-route" wx:if="{{item.from_organization || item.to_organization}}">{{item.from_organization || '-'}} → {{item.to_organization || '-'}}</text>
-            <text class="timeline-meta">{{item.organization || ''}}{{item.operator ? ' · ' + item.operator : ''}}</text>
           </view>
         </view>
-      </view>
-      <view class="document-empty" wx:else>暂无生命周期事件。</view>
+        <view class="document-empty" wx:else>暂无生命周期事件。</view>
+
+      </block>
     </view>
 
     <view class="activate-card" wx:if="{{baseCanActivate}}">
       <view class="card-title">激活设备</view>
       <text class="activate-tip" wx:if="{{documentGate && documentGate.gate_required && !documentGate.all_read}}">请先阅读并确认上面的三篇必读资料，再激活设备。</text>
-      <text class="activate-tip" wx:else>请确认当前装车车辆。激活后设备将正式进入使用状态，并开始建立用户服务档案。</text>
-      <text class="field-label">车辆牌号</text>
-      <input class="vehicle-input" value="{{vehicleNo}}" bindinput="onVehicleNoInput" placeholder="例如：渝A12345" />
+      <text class="activate-tip" wx:else>请选择一种设备绑定方式。激活后设备将正式进入使用状态，并开始建立用户服务档案。</text>
+      <radio-group class="activation-methods" bindchange="onActivationMethodChange">
+        <label class="activation-option"><radio value="VEHICLE_PLATE" checked="{{activationMethod === 'VEHICLE_PLATE'}}"/><text>绑定车牌号</text></label>
+        <label class="activation-option"><radio value="DEVICE_CODE" checked="{{activationMethod === 'DEVICE_CODE'}}"/><text>扫描设备本体二维码绑定设备编码</text></label>
+      </radio-group>
+      <block wx:if="{{activationMethod === 'VEHICLE_PLATE'}}">
+        <text class="field-label">车辆牌号</text>
+        <input class="vehicle-input" value="{{vehicleNo}}" bindinput="onVehicleNoInput" placeholder="例如：渝A12345" />
+      </block>
+      <view class="device-code-scan" wx:elif="{{activationMethod === 'DEVICE_CODE'}}">
+        <text class="field-label">设备编码二维码</text>
+        <text class="activate-tip">请扫描厂家预先生成并贴在设备本体上的二维码。系统会核对编码登记、所属厂家和占用状态；验证通过后才能激活绑定。</text>
+        <text class="scanned-code" wx:if="{{physicalDeviceCode}}">已验证：{{physicalDeviceCode}}</text>
+        <text class="activate-tip" wx:if="{{verifyingDeviceCode}}">正在核验设备编码…</text>
+        <button class="scan-code-btn" disabled="{{activating || verifyingDeviceCode}}" bindtap="scanPhysicalDeviceCode">{{verifyingDeviceCode ? '正在验证设备编码' : (physicalDeviceCode ? '重新扫描设备编码' : '扫描并验证设备编码')}}</button>
+      </view>
       <button class="activate-btn" loading="{{activating}}" disabled="{{activating || !canActivate}}" bindtap="confirmActivation">{{canActivate ? '确认激活' : '阅读完成后可激活'}}</button>
     </view>
 
     <view class="activated-card" wx:if="{{isActivated}}">
       <text class="activated-title">设备已经激活</text>
       <text>该设备已进入您的设备档案，后续售后和服务记录将围绕这台设备建立。</text>
-      <text class="vehicle-line" wx:if="{{vehicleNo}}">使用车辆：{{vehicleNo}}</text>
+      <text class="vehicle-line" wx:if="{{activationMethod === 'VEHICLE_PLATE' && vehicleNo}}">使用车辆：{{vehicleNo}}</text>
+      <text class="vehicle-line" wx:if="{{activationMethod === 'DEVICE_CODE' && physicalDeviceCode}}">设备编码：{{physicalDeviceCode}}</text>
       <button class="aftersale-btn" wx:if="{{canApplyAftersale}}" bindtap="goAftersale">申请售后</button>
     </view>
 

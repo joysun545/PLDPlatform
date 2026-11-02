@@ -27,6 +27,17 @@
       <view class="summary-row note-row" wx:if="{{plan.remark}}"><text>备注</text><text>{{plan.remark}}</text></view>
     </view>
 
+    <view class="section-card" wx:if="{{plan.accessoryItems.length}}">
+      <view class="section-head">
+        <text class="section-title">订单配件计划</text>
+        <text class="section-subtitle">单独占用配件库存，不计入设备数量；随首个设备发货批次发出</text>
+      </view>
+      <view class="shipment-item-row accessory-shipment-item" wx:for="{{plan.accessoryItems}}" wx:key="key">
+        <text>{{item.materialName}} · {{item.specName}} · {{item.modelName}}</text>
+        <text>{{item.quantityText}} {{item.stateText}}</text>
+      </view>
+    </view>
+
     <view class="warning-card" wx:if="{{errorMessage}}">
       <text>{{errorMessage}}</text>
       <button class="text-button" bindtap="reload">重试</button>
@@ -208,6 +219,9 @@
           <view class="shipment-item-row" wx:for="{{subShipment.items}}" wx:for-item="shipmentItem" wx:key="key">
             <text>{{shipmentItem.productName}}</text><text>{{shipmentItem.quantityText}} {{shipmentItem.stateText}}</text>
           </view>
+          <view class="shipment-item-row accessory-shipment-item" wx:for="{{subShipment.accessoryItems}}" wx:for-item="accessoryItem" wx:key="key">
+            <text>{{accessoryItem.materialName}} · {{accessoryItem.modelName}}</text><text>{{accessoryItem.quantityText}} {{accessoryItem.stateText}}</text>
+          </view>
           <view class="inline-action-area" wx:if="{{subShipment.actions.length}}">
             <button
               wx:for="{{subShipment.actions}}"
@@ -312,6 +326,9 @@
         <button wx:if="{{shipment.logisticsDocument}}" class="document-link" data-shipment-id="{{shipment.id}}" bindtap="previewShipmentDocument" disabled="{{downloadingDocumentId}}">查看物流凭证</button>
         <view class="shipment-item-row" wx:for="{{shipment.items}}" wx:for-item="shipmentItem" wx:key="key">
           <text>{{shipmentItem.productName}}</text><text>{{shipmentItem.quantityText}} {{shipmentItem.stateText}}</text>
+        </view>
+        <view class="shipment-item-row accessory-shipment-item" wx:for="{{shipment.accessoryItems}}" wx:for-item="accessoryItem" wx:key="key">
+          <text>{{accessoryItem.materialName}} · {{accessoryItem.modelName}}</text><text>{{accessoryItem.quantityText}} {{accessoryItem.stateText}}</text>
         </view>
         <view class="inline-action-area" wx:if="{{shipment.actions.length}}">
           <button

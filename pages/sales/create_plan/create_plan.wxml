@@ -29,6 +29,17 @@
       <view class="summary-row"><text>计划总数</text><text>{{createdPlan.total_quantity}} 台</text></view>
     </view>
 
+    <view class="card" wx:if="{{createdPlan.accessory_items.length}}">
+      <text class="card-title">配件计划（不计入设备台数）</text>
+      <view class="created-item" wx:for="{{createdPlan.accessory_items}}" wx:key="id">
+        <view class="created-item-head">
+          <text>{{item.material_name}} · {{item.material_spec_name}}</text>
+          <text>× {{item.quantity}} {{item.unit}}</text>
+        </view>
+        <text class="code-line">适配：{{item.category_name}} · {{item.product_model_name}}</text>
+      </view>
+    </view>
+
     <view class="card">
       <text class="card-title">型号批次与生命周期编码</text>
       <view class="created-item" wx:for="{{createdPlan.items}}" wx:key="id">
@@ -363,7 +374,81 @@
     </view>
 
     <view class="card" wx:if="{{selectedMerchant.configured && selectedBrand && !channelEditing}}">
-      <text class="section-number">04</text>
+      <view class="card-title-row">
+        <view>
+          <text class="section-number">04</text>
+          <text class="card-title">配件计划</text>
+        </view>
+        <button class="add-button" bindtap="addAccessoryRow">＋ 添加</button>
+      </view>
+      <text class="helper">只显示本厂家已维护的“物料规格—适配型号”关系。配件数量单独预占厂家物料库存，不计入设备台数或生产 BOM；订单首次发货时随首个设备批次发出。</text>
+
+      <view class="product-row" wx:for="{{accessoryRows}}" wx:key="key">
+        <view class="product-row-head">
+          <text>配件 {{index + 1}}</text>
+          <text class="remove-link" data-key="{{item.key}}" bindtap="removeAccessoryRow">删除</text>
+        </view>
+
+        <text class="field-label">适用产品品类</text>
+        <picker
+          range="{{accessoryCategories}}"
+          range-key="name"
+          value="{{item.categoryIndex}}"
+          data-key="{{item.key}}"
+          bindchange="onAccessoryCategoryChange"
+          disabled="{{accessoryCategories.length === 0}}"
+        >
+          <view class="picker-field {{item.categoryIndex < 0 ? 'placeholder' : ''}}">
+            {{item.categoryIndex >= 0 ? accessoryCategories[item.categoryIndex].name : (accessoryCategories.length ? '请选择适用产品品类' : '暂无已配置配件适配关系')}}
+            <text class="picker-arrow">⌄</text>
+          </view>
+        </picker>
+
+        <text class="field-label">配件物料名称与规格</text>
+        <picker
+          range="{{item.specs}}"
+          range-key="display_name"
+          value="{{item.specIndex}}"
+          data-key="{{item.key}}"
+          bindchange="onAccessorySpecChange"
+          disabled="{{item.categoryIndex < 0 || item.specs.length === 0}}"
+        >
+          <view class="picker-field {{item.specIndex < 0 ? 'placeholder' : ''}}">
+            {{item.specIndex >= 0 ? item.specs[item.specIndex].display_name : (item.categoryIndex >= 0 ? '请选择配件物料' : '请先选择适用品类')}}
+            <text class="picker-arrow">⌄</text>
+          </view>
+        </picker>
+
+        <text class="field-label">适配产品型号</text>
+        <picker
+          range="{{item.models}}"
+          range-key="name"
+          value="{{item.modelIndex}}"
+          data-key="{{item.key}}"
+          bindchange="onAccessoryModelChange"
+          disabled="{{item.specIndex < 0 || item.models.length === 0}}"
+        >
+          <view class="picker-field {{item.modelIndex < 0 ? 'placeholder' : ''}}">
+            {{item.modelIndex >= 0 ? item.models[item.modelIndex].name : (item.specIndex >= 0 ? '请选择适配型号' : '请先选择配件物料')}}
+            <text class="picker-arrow">⌄</text>
+          </view>
+        </picker>
+
+        <text class="availability-note" wx:if="{{item.selectedSpec}}">厂家当前可用：{{item.selectedSpec.available_quantity}} {{item.selectedSpec.unit}}</text>
+        <text class="field-label">配件数量</text>
+        <input
+          class="input-field quantity"
+          type="digit"
+          value="{{item.quantity}}"
+          placeholder="最多三位小数"
+          data-key="{{item.key}}"
+          bindinput="onAccessoryQuantityInput"
+        />
+      </view>
+    </view>
+
+    <view class="card" wx:if="{{selectedMerchant.configured && selectedBrand && !channelEditing}}">
+      <text class="section-number">05</text>
       <text class="card-title">订单备注</text>
       <textarea
         class="textarea-field"

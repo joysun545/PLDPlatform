@@ -660,3 +660,10 @@ button::after {
   font-size: 21rpx;
   word-break: break-all;
 }
+
+.availability-note {
+  display: block;
+  margin-top: 12rpx;
+  color: #637168;
+  font-size: 22rpx;
+}

@@ -43,6 +43,11 @@ Page({
     showDeviceDetail: false,
     showOwnership: false,
     showTraceability: false,
+    isInstallationOperator: false,
+    baseInfoExpanded: false,
+    regionInfoExpanded: false,
+    ownershipExpanded: false,
+    deviceDetailExpanded: false,
     traceExpanded: false,
     canInstall: false,
     canCreateCustomerInvitation: false,
@@ -113,11 +118,35 @@ Page({
       chain: '设备链路信息'
     };
     const isActivated = state.activation_status === 'ACTIVATED';
-    const isPendingActivation = (
-      state.install_status === 'INSTALLED' && !isActivated
-    );
     const relationNames = payload.viewer_relation_names || [];
     const customerInvitation = payload.customer_invitation || null;
+    const invitationStatus = customerInvitation ? customerInvitation.status : '';
+    const invitationExpired = Boolean(
+      invitationStatus === 'EXPIRED' ||
+      invitationStatus === 'CANCELLED' ||
+      (invitationStatus === 'PENDING' &&
+        Number(customerInvitation.remaining_seconds) <= 0)
+    );
+    const isAwaitingCustomerAcceptance = (
+      state.install_status === 'INSTALLED' &&
+      !isActivated &&
+      invitationStatus !== 'ACCEPTED'
+    );
+    const isPendingActivation = (
+      state.install_status === 'INSTALLED' &&
+      !isActivated &&
+      invitationStatus === 'ACCEPTED'
+    );
+    let displayInstallStatusName = state.install_status_name ||
+      (state.install_status === 'INSTALLED' ? '已安装' : '未安装');
+    let displayDeviceStatusName = state.status_name ||
+      (state.status === 'INSTALLED' ? '已安装' : '设备状态');
+    if (isAwaitingCustomerAcceptance) {
+      displayInstallStatusName = invitationExpired
+        ? '邀请已过期'
+        : (invitationStatus === 'PENDING' ? '待用户接受' : '待生成邀请');
+      displayDeviceStatusName = displayInstallStatusName;
+    }
 
     this.setData({
       loading: false,
@@ -144,10 +173,19 @@ Page({
       showTraceability: (
         capabilities.includes('view_traceability') && !!payload.traceability
       ),
+      isInstallationOperator: (
+        capabilities.includes('install_device') ||
+        capabilities.includes('create_customer_invitation')
+      ),
       canInstall: capabilities.includes('install_device'),
       canCreateCustomerInvitation: capabilities.includes(
         'create_customer_invitation'
       ),
+      isAwaitingCustomerAcceptance,
+      isCustomerInvitationExpired: invitationExpired,
+      hasCustomerInvitation: !!customerInvitation,
+      displayInstallStatusName,
+      displayDeviceStatusName,
       isPendingActivation,
       isActivated
     });
@@ -210,6 +248,18 @@ Page({
     });
   },
 
+  toggleInfoSection(event) {
+    const key = event.currentTarget.dataset.key;
+    const allowedKeys = [
+      'baseInfoExpanded',
+      'regionInfoExpanded',
+      'ownershipExpanded',
+      'deviceDetailExpanded'
+    ];
+    if (!allowedKeys.includes(key)) return;
+    this.setData({ [key]: !this.data[key] });
+  },
+
   toggleTraceability() {
     this.setData({ traceExpanded: !this.data.traceExpanded });
   },
@@ -219,7 +269,7 @@ Page({
     const device = this.data.device;
     wx.showModal({
       title: '确认完成装车',
-      content: `产品：${device.product_model.name}\n设备编号：${device.sn}\n请确认实物设备已经完成装车。`,
+      content: `产品：${device.product_model.name}\n生命周期编码：${device.lifecycle_code || '-'}\n请确认实物设备已经完成装车。`,
       confirmText: '确认装车',
       success: res => {
         if (res.confirm) this.collectLocationAndInstall();

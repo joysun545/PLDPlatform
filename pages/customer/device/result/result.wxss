@@ -25,6 +25,12 @@ page { background: #f3f6f8; color: #17202a; }
 .activate-tip { display: block; color: #65727d; font-size: 25rpx; line-height: 1.65; }
 .field-label { display: block; margin: 26rpx 0 12rpx; font-weight: 600; }
 .vehicle-input { height: 84rpx; padding: 0 22rpx; border: 1rpx solid #d7e1e6; border-radius: 12rpx; background: #fafcfd; }
+.activation-methods { display: flex; flex-direction: column; gap: 18rpx; margin-top: 24rpx; padding: 20rpx; border-radius: 14rpx; background: var(--ui-primary-pale); }
+.activation-option { display: flex; align-items: center; gap: 10rpx; min-height: 54rpx; color: var(--ui-ink); font-size: 25rpx; }
+.activation-option radio { transform: scale(.9); }
+.device-code-scan { margin-top: 8rpx; }
+.scanned-code { display: block; margin-top: 18rpx; color: var(--ui-primary); font-family: monospace; word-break: break-all; }
+.scan-code-btn { margin-top: 18rpx; color: var(--ui-primary); background: var(--ui-primary-soft); border-radius: var(--ui-control-radius); }
 .activate-btn { margin-top: 24rpx; height: 88rpx; line-height: 88rpx; color: #fff; background: var(--ui-primary-strong); border-radius: 14rpx; font-weight: 700; }
 .activate-btn[disabled] { color: #789187; background: #dbe8e2; }
 .activated-card { color: #176d47; background: #ebf9f1; line-height: 1.7; }
@@ -60,3 +66,9 @@ page { background: #f3f6f8; color: #17202a; }
 .timeline-meta { color: #929ca3; font-size: 21rpx; }
 .aftersale-btn { margin-top: 24rpx; color: #fff; background: #07a85c; border-radius: 14rpx; }
 .home-btn, .secondary-btn { margin: 28rpx 0 48rpx; color: #44515c; background: #fff; border-radius: 14rpx; }
+
+
+.fold-header { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; min-height: 44rpx; }
+.fold-header .card-title { margin-bottom: 0; }
+.fold-header .card-title-row { flex: 1; }
+.fold-toggle { flex-shrink: 0; color: var(--ui-primary); font-size: 24rpx; }

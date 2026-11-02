@@ -40,6 +40,24 @@ function emptyProductRow(key) {
   };
 }
 
+function emptyAccessoryRow(key) {
+  return {
+    key,
+    categoryIndex: -1,
+    categoryId: '',
+    categoryName: '',
+    specs: [],
+    specIndex: -1,
+    materialSpecId: '',
+    selectedSpec: null,
+    models: [],
+    modelIndex: -1,
+    productModelId: '',
+    productModelName: '',
+    quantity: '1'
+  };
+}
+
 function normalizeBomOptions(productModel, bomOptionsByModel) {
   if (!productModel) return [];
   const optionBucket = bomOptionsByModel[productModel.id] ||
@@ -179,6 +197,7 @@ Page({
     selectedMerchant: null,
     brands: [],
     catalogCategories: [],
+    accessoryCategories: [],
     categories: [],
     bomOptionsByModel: {},
     bomRecommendationLoading: false,
@@ -192,6 +211,8 @@ Page({
 
     productRows: [emptyProductRow(1)],
     nextRowKey: 2,
+    accessoryRows: [],
+    nextAccessoryRowKey: 1,
     remark: '',
     clientRequestId: newClientRequestId(),
     createdPlan: null,
@@ -256,6 +277,7 @@ Page({
           merchants: data.direct_merchants || [],
           brands: data.brands || [],
           catalogCategories: data.categories || [],
+          accessoryCategories: data.accessory_categories || [],
           bomOptionsByModel: data.bom_options_by_product_model ||
             data.available_boms_by_product_model || data.boms_by_product_model || {}
         });
@@ -287,7 +309,9 @@ Page({
       regionDraft: merchant.region || '',
       brandIndex,
       createdPlan: null,
-      bomRecommendationError: ''
+      bomRecommendationError: '',
+      accessoryRows: [],
+      nextAccessoryRowKey: this.data.nextAccessoryRowKey + 1
     });
 
     if (merchant.configured && brandIndex >= 0) {
@@ -436,6 +460,7 @@ Page({
         const data = body.data;
         this.setData({
           catalogCategories: data.categories || this.data.catalogCategories,
+          accessoryCategories: data.accessory_categories || this.data.accessoryCategories,
           bomOptionsByModel: data.bom_options_by_product_model ||
             data.available_boms_by_product_model || data.boms_by_product_model ||
             this.data.bomOptionsByModel,
@@ -465,6 +490,92 @@ Page({
     this.setData({
       productRows: this.data.productRows.concat(row),
       nextRowKey: this.data.nextRowKey + 1
+    });
+  },
+
+  addAccessoryRow() {
+    const row = emptyAccessoryRow(this.data.nextAccessoryRowKey);
+    this.setData({
+      accessoryRows: this.data.accessoryRows.concat(row),
+      nextAccessoryRowKey: this.data.nextAccessoryRowKey + 1
+    });
+  },
+
+  removeAccessoryRow(e) {
+    const key = Number(e.currentTarget.dataset.key);
+    this.setData({ accessoryRows: this.data.accessoryRows.filter(row => row.key !== key) });
+  },
+
+  onAccessoryCategoryChange(e) {
+    const key = Number(e.currentTarget.dataset.key);
+    const categoryIndex = Number(e.detail.value);
+    const category = this.data.accessoryCategories[categoryIndex];
+    if (!category) return;
+    this.setData({
+      accessoryRows: this.data.accessoryRows.map(row => row.key === key
+        ? {
+            ...row,
+            categoryIndex,
+            categoryId: category.id,
+            categoryName: category.name,
+            specs: category.specs || [],
+            specIndex: -1,
+            materialSpecId: '',
+            selectedSpec: null,
+            models: [],
+            modelIndex: -1,
+            productModelId: '',
+            productModelName: ''
+          }
+        : row)
+    });
+  },
+
+  onAccessorySpecChange(e) {
+    const key = Number(e.currentTarget.dataset.key);
+    const specIndex = Number(e.detail.value);
+    this.setData({
+      accessoryRows: this.data.accessoryRows.map(row => {
+        if (row.key !== key) return row;
+        const selectedSpec = row.specs[specIndex];
+        if (!selectedSpec) return row;
+        return {
+          ...row,
+          specIndex,
+          materialSpecId: selectedSpec.id,
+          selectedSpec,
+          models: selectedSpec.models || [],
+          modelIndex: -1,
+          productModelId: '',
+          productModelName: ''
+        };
+      })
+    });
+  },
+
+  onAccessoryModelChange(e) {
+    const key = Number(e.currentTarget.dataset.key);
+    const modelIndex = Number(e.detail.value);
+    this.setData({
+      accessoryRows: this.data.accessoryRows.map(row => {
+        if (row.key !== key) return row;
+        const productModel = row.models[modelIndex];
+        if (!productModel) return row;
+        return {
+          ...row,
+          modelIndex,
+          productModelId: productModel.id,
+          productModelName: productModel.name
+        };
+      })
+    });
+  },
+
+  onAccessoryQuantityInput(e) {
+    const key = Number(e.currentTarget.dataset.key);
+    const quantity = e.detail.value;
+    this.setData({
+      accessoryRows: this.data.accessoryRows.map(row => row.key === key ? { ...row, quantity } : row)
     });
   },
 
@@ -845,6 +956,32 @@ Page({
       if (seen[row.productModelId]) return '同一个产品型号不能重复添加';
       seen[row.productModelId] = true;
     }
+    const accessorySeen = {};
+    const accessoryRequiredBySpec = {};
+    const accessoryAvailabilityBySpec = {};
+    for (let index = 0; index < this.data.accessoryRows.length; index += 1) {
+      const row = this.data.accessoryRows[index];
+      if (!row.categoryId) return `请选择第${index + 1}项配件的适用品类`;
+      if (!row.materialSpecId) return `请选择第${index + 1}项配件物料`;
+      if (!row.productModelId) return `请选择第${index + 1}项配件适配型号`;
+      const quantity = Number(row.quantity);
+      if (!Number.isFinite(quantity) || quantity <= 0 || Math.abs(quantity * 1000 - Math.round(quantity * 1000)) > 0.0001) {
+        return `第${index + 1}项配件数量必须大于0且最多三位小数`;
+      }
+      const key = `${row.materialSpecId}:${row.productModelId}`;
+      if (accessorySeen[key]) return '同一物料规格和适配型号不能重复添加';
+      accessorySeen[key] = true;
+      const specId = String(row.materialSpecId);
+      accessoryRequiredBySpec[specId] = (accessoryRequiredBySpec[specId] || 0) + Math.round(quantity * 1000);
+      accessoryAvailabilityBySpec[specId] = Number(row.selectedSpec && row.selectedSpec.available_milli) || 0;
+    }
+    for (const specId in accessoryRequiredBySpec) {
+      if (accessoryRequiredBySpec[specId] > accessoryAvailabilityBySpec[specId]) {
+        const row = this.data.accessoryRows.find(item => String(item.materialSpecId) === specId);
+        const name = row && row.selectedSpec ? row.selectedSpec.display_name : '所选配件';
+        return `配件“${name}”厂家库存不足`;
+      }
+    }
     return '';
   },
 
@@ -883,7 +1020,13 @@ Page({
             }));
           }
           return item;
-        })
+        }),
+        accessories: this.data.accessoryRows.map(row => ({
+          category_id: row.categoryId,
+          material_spec_id: row.materialSpecId,
+          product_model_id: row.productModelId,
+          quantity: row.quantity
+        }))
       },
       success: res => {
         const body = res.data || {};
@@ -929,6 +1072,8 @@ Page({
       categories: [],
       productRows: [emptyProductRow(this.data.nextRowKey)],
       nextRowKey: this.data.nextRowKey + 1,
+      accessoryRows: [],
+      nextAccessoryRowKey: this.data.nextAccessoryRowKey + 1,
       remark: '',
       clientRequestId: newClientRequestId(),
       createdPlan: null,

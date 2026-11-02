@@ -6,18 +6,34 @@
   <block wx:elif="{{context}}">
     <view class="hero">
       <text class="eyebrow">一机一码 · 售后服务</text>
-      <text>{{context.device.product_model}}｜{{context.device.sn}}</text>
+      <text>{{context.device.product_model}}｜{{context.device.lifecycle_code || '-'}}</text>
     </view>
 
-    <view class="card grid">
-      <view><text>设备型号</text><text class="strong">{{context.device.product_model}}</text></view>
-      <view><text>设备编码</text><text class="strong">{{context.device.sn}}</text></view>
-      <view><text>激活时间</text><text class="strong">{{context.activation.activated_at || '尚未激活'}}</text></view>
-      <view><text>质保期限</text><text class="strong">{{context.warranty.summary}}</text></view>
+    <view class="card presence-gate" wx:if="{{presenceRequired && !presenceVerified}}">
+      <text class="section-title">先扫码确认设备在身边</text>
+      <text class="tip">请扫描激活时绑定的设备本体二维码。核验一致后即可填写售后申请。</text>
+      <text class="presence-message">{{presenceMessage}}</text>
+      <button class="secondary" loading="{{presenceScanning}}" disabled="{{presenceScanning}}" bindtap="scanBoundDeviceCode">重新扫描设备编码</button>
+      <button class="presence-back" bindtap="goBack">返回设备详情</button>
+    </view>
+
+    <block wx:if="{{!presenceRequired || presenceVerified}}">
+    <view class="card">
+      <view class="row fold-heading" data-field="equipmentExpanded" bindtap="toggleSection">
+        <text class="section-title">设备与质保信息</text>
+        <text class="link">{{equipmentExpanded ? '收起' : '展开'}}</text>
+      </view>
+      <view wx:if="{{equipmentExpanded}}" class="grid">
+        <view><text>设备型号</text><text class="strong">{{context.device.product_model}}</text></view>
+        <view><text>生命周期编码</text><text class="strong">{{context.device.lifecycle_code || '-'}}</text></view>
+        <view wx:if="{{context.device.physical_device_code}}"><text>设备编码</text><text class="strong">{{context.device.physical_device_code}}</text></view>
+        <view><text>激活时间</text><text class="strong">{{context.activation.activated_at || '尚未激活'}}</text></view>
+        <view><text>质保期限</text><text class="strong">{{context.warranty.summary}}</text></view>
+      </view>
     </view>
 
     <view class="card">
-      <view class="row" bindtap="toggleBom">
+      <view class="row fold-heading" bindtap="toggleBom">
         <text class="section-title">关键配套物料 BOM</text>
         <text class="link">{{bomExpanded ? '收起' : '展开'}}</text>
       </view>
@@ -31,33 +47,57 @@
     </view>
 
     <view class="card">
-      <text class="section-title">一、确认真实位置</text>
-      <text class="tip">提交前必须确认当前GPS位置，并补充现场名称或详细地址。</text>
-      <button class="secondary" bindtap="obtainLocation">获取当前位置</button>
-      <view wx:if="{{location}}" class="location-ready">
-        <text>GPS：{{location.latitude}}, {{location.longitude}}</text>
-        <text>{{locationConfirmed ? '已确认真实位置' : '待填写并确认'}}</text>
+      <view class="row fold-heading" data-field="locationExpanded" bindtap="toggleSection">
+        <text class="section-title">一、确认真实位置</text>
+        <text class="link">{{locationExpanded ? '收起' : '展开'}}</text>
       </view>
-      <input class="field" value="{{locationName}}" bindinput="onLocationName" placeholder="现场名称，例如：重庆市渝北区某服务区" />
-      <input class="field" value="{{locationAddress}}" bindinput="onLocationAddress" placeholder="详细地址（建议填写）" />
-      <button class="confirm-location" disabled="{{!location}}" bindtap="confirmLocation">{{locationConfirmed ? '位置已确认' : '确认此真实位置'}}</button>
+      <block wx:if="{{locationExpanded}}">
+        <text class="tip">提交前必须确认当前GPS位置，并补充现场名称或详细地址。</text>
+        <button class="secondary" bindtap="obtainLocation">获取当前位置</button>
+        <view wx:if="{{location}}" class="location-ready">
+          <text>GPS：{{location.latitude}}, {{location.longitude}}</text>
+          <text>{{locationConfirmed ? '已确认真实位置' : '待填写并确认'}}</text>
+        </view>
+        <input class="field" value="{{locationName}}" bindinput="onLocationName" placeholder="现场名称，例如：重庆市渝北区某服务区" />
+        <input class="field" value="{{locationAddress}}" bindinput="onLocationAddress" placeholder="详细地址（建议填写）" />
+        <button class="confirm-location" disabled="{{!location}}" bindtap="confirmLocation">{{locationConfirmed ? '位置已确认' : '确认此真实位置'}}</button>
+      </block>
+    </view>
+
+    <view class="card plate-proof-card" wx:if="{{activationMethod === 'VEHICLE_PLATE'}}">
+      <view class="row fold-heading" data-field="plateExpanded" bindtap="toggleSection">
+        <text class="section-title">二、确认车辆与设备在身边</text>
+        <text class="link">{{plateExpanded ? '收起' : '展开'}}</text>
+      </view>
+      <block wx:if="{{plateExpanded}}">
+        <text class="tip">请使用相机实时拍摄一张能清楚看见车辆牌号的照片，作为设备在场证明。</text>
+        <image wx:if="{{platePhotoPath}}" class="plate-preview" src="{{platePhotoPath}}" mode="aspectFit" />
+        <text wx:if="{{platePhotoUploaded}}" class="plate-uploaded">车牌实时照片已上传</text>
+        <button class="secondary" loading="{{platePhotoUploading}}" disabled="{{submitting || platePhotoUploading}}" bindtap="capturePlatePhoto">{{platePhotoUploaded ? '重新拍摄车牌照片' : '打开相机拍摄车牌照片'}}</button>
+      </block>
     </view>
 
     <view class="card">
-      <text class="section-title">二、故障描述</text>
-      <text class="tip">请拍摄故障现象。轻点取景框拍照，长按录像；录像会同步录入现场语音。</text>
-      <aftersale-media-uploader
-        files="{{media}}"
-        max-count="{{remainingCount}}"
-        disabled="{{submitting}}"
-        bindchange="onMediaChange"
-        bindretry="onMediaRetry"
-      ></aftersale-media-uploader>
-      <text wx:if="{{existingMedia.length}}" class="muted">草稿中已有 {{existingMedia.length}} 个附件；本次可继续追加。</text>
-      <textarea class="description" maxlength="1000" value="{{faultDescription}}" bindinput="onFaultDescription" placeholder="请描述故障现象、发生条件、已尝试的处理方式及当前状态"></textarea>
+      <view class="row fold-heading" data-field="faultExpanded" bindtap="toggleSection">
+        <text class="section-title">{{activationMethod === 'VEHICLE_PLATE' ? '三、故障描述' : '二、故障描述'}}</text>
+        <text class="link">{{faultExpanded ? '收起' : '展开'}}</text>
+      </view>
+      <block wx:if="{{faultExpanded}}">
+        <text class="tip">请拍摄故障现象。轻点取景框拍照，长按录像；录像会同步录入现场语音。</text>
+        <aftersale-media-uploader
+          files="{{media}}"
+          max-count="{{remainingCount}}"
+          disabled="{{submitting}}"
+          bindchange="onMediaChange"
+          bindretry="onMediaRetry"
+        ></aftersale-media-uploader>
+        <text wx:if="{{existingMedia.length}}" class="muted">草稿中已有 {{existingMedia.length}} 个附件；本次可继续追加。</text>
+        <textarea class="description" maxlength="1000" value="{{faultDescription}}" bindinput="onFaultDescription" placeholder="请描述故障现象、发生条件、已尝试的处理方式及当前状态"></textarea>
+      </block>
     </view>
 
     <button class="submit" loading="{{submitting}}" disabled="{{submitting}}" bindtap="submit">提交售后申请</button>
+    </block>
   </block>
 </view>
 

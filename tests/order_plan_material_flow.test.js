@@ -83,6 +83,14 @@ test('create page selects the default BOM and submits it to the material-flow en
     categoryId: 3,
     models: [{ id: 13, name: '测试型号' }]
   }];
+  page.data.accessoryRows = [{
+    key: 1,
+    categoryId: 3,
+    materialSpecId: 31,
+    productModelId: 13,
+    quantity: '2.5',
+    selectedSpec: { available_milli: 5000, display_name: '测试配件规格' }
+  }];
 
   page.onModelChange({ currentTarget: { dataset: { key: 1 } }, detail: { value: '0' } });
   assert.equal(page.data.productRows[0].sourceBomId, 21);
@@ -92,6 +100,43 @@ test('create page selects the default BOM and submits it to the material-flow en
   assert.ok(request);
   assert.match(request.url, /\/sales\/order-plans\/material-flow\/$/);
   assert.equal(request.data.items[0].source_bom_id, 21);
+  assert.deepEqual(JSON.parse(JSON.stringify(request.data.accessories)), [{
+    category_id: 3,
+    material_spec_id: 31,
+    product_model_id: 13,
+    quantity: '2.5'
+  }]);
+});
+
+test('accessory stock validation aggregates the same spec across different compatible models', () => {
+  const app = {
+    globalData: { role: 'factory_sales', apiBase: 'https://example.invalid/pldp/api' },
+    authHeader: () => ({})
+  };
+  const page = loadPage(
+    'pages/sales/create_plan/create_plan.js',
+    app,
+    { request() {}, showToast() {}, showModal() {} }
+  );
+  page.data.selectedMerchant = { id: 8, configured: true };
+  page.data.selectedBrand = { id: 9 };
+  page.data.productRows = [{
+    categoryId: 3,
+    productModelId: 13,
+    sourceBomId: 21,
+    quantity: '1',
+    materialEditorLoaded: false
+  }];
+  page.data.accessoryRows = [13, 14].map((productModelId, index) => ({
+    key: index + 1,
+    categoryId: 3,
+    materialSpecId: 31,
+    productModelId,
+    quantity: '0.75',
+    selectedSpec: { available_milli: 1000, display_name: '测试配件规格' }
+  }));
+
+  assert.match(page.validatePlan(), /厂家库存不足/);
 });
 
 test('detail page renders only backend-provided actions and posts the declared action code', () => {

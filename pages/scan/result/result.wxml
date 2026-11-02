@@ -15,7 +15,7 @@
     <view class="hero-card">
       <view class="hero-top">
         <text class="mode-badge">{{viewModeName}}</text>
-        <text class="status-badge">{{device.status_summary.status_name}}</text>
+        <text class="status-badge">{{displayDeviceStatusName || device.status_summary.status_name}}</text>
       </view>
       <text class="model-name">{{device.product_model.name}}</text>
       <text class="model-code">{{device.product_model.code}}</text>
@@ -25,121 +25,158 @@
     </view>
 
     <view class="info-card">
-      <view class="card-title">设备基础信息</view>
-      <view class="info-row">
-        <text class="label">设备序列号</text>
-        <text class="value mono">{{device.sn}}</text>
+      <view class="info-fold-header" bindtap="toggleInfoSection" data-key="baseInfoExpanded" wx:if="{{isInstallationOperator}}">
+        <view class="card-title">设备基础信息</view>
+        <text class="fold-toggle">{{baseInfoExpanded ? '收起' : '展开'}}</text>
       </view>
-      <view class="info-row">
-        <text class="label">产品品类</text>
-        <text class="value">{{device.product_model.category}}</text>
-      </view>
-      <view class="info-row">
-        <text class="label">生产厂家</text>
-        <text class="value">{{device.manufacturer}}</text>
-      </view>
-      <view class="info-row" wx:if="{{device.product_model.brand}}">
-        <text class="label">品牌</text>
-        <text class="value">{{device.product_model.brand}}</text>
-      </view>
-      <view class="status-grid">
-        <view class="status-cell">
-          <text class="status-label">安装</text>
-          <text class="status-value">{{device.status_summary.install_status_name}}</text>
+      <view class="card-title" wx:else>设备基础信息</view>
+      <block wx:if="{{!isInstallationOperator || baseInfoExpanded}}">
+        <view class="info-row">
+          <text class="label">生命周期编码</text>
+          <text class="value mono">{{device.lifecycle_code || '-'}}</text>
         </view>
-        <view class="status-cell">
-          <text class="status-label">激活</text>
-          <text class="status-value">{{device.status_summary.activation_status_name}}</text>
+        <view class="info-row">
+          <text class="label">产品品类</text>
+          <text class="value">{{device.product_model.category}}</text>
         </view>
-      </view>
+        <view class="info-row">
+          <text class="label">生产厂家</text>
+          <text class="value">{{device.manufacturer}}</text>
+        </view>
+        <view class="info-row" wx:if="{{device.product_model.brand}}">
+          <text class="label">品牌</text>
+          <text class="value">{{device.product_model.brand}}</text>
+        </view>
+        <view class="status-grid">
+          <view class="status-cell">
+            <text class="status-label">安装</text>
+            <text class="status-value">{{displayInstallStatusName || device.status_summary.install_status_name}}</text>
+          </view>
+          <view class="status-cell">
+            <text class="status-label">激活</text>
+            <text class="status-value">{{device.status_summary.activation_status_name}}</text>
+          </view>
+        </view>
+
+      </block>
     </view>
 
     <view class="info-card" wx:if="{{showRegion}}">
-      <view class="card-title">区域服务信息</view>
-      <view class="info-row">
-        <text class="label">所属区域</text>
-        <text class="value">{{region.name || '暂未划分区域'}}</text>
+      <view class="info-fold-header" bindtap="toggleInfoSection" data-key="regionInfoExpanded" wx:if="{{isInstallationOperator}}">
+        <view class="card-title">区域服务信息</view>
+        <text class="fold-toggle">{{regionInfoExpanded ? '收起' : '展开'}}</text>
       </view>
-      <view class="info-row" wx:if="{{region.owner}}">
-        <text class="label">区域属主</text>
-        <text class="value">{{region.owner.name}}</text>
-      </view>
-      <view class="info-row" wx:else>
-        <text class="label">区域属主</text>
-        <text class="value">暂未建立区域属主</text>
-      </view>
+      <view class="card-title" wx:else>区域服务信息</view>
+      <block wx:if="{{!isInstallationOperator || regionInfoExpanded}}">
+        <view class="info-row">
+          <text class="label">所属区域</text>
+          <text class="value">{{region.name || '暂未划分区域'}}</text>
+        </view>
+        <view class="info-row" wx:if="{{region.owner}}">
+          <text class="label">区域属主</text>
+          <text class="value">{{region.owner.name}}</text>
+        </view>
+        <view class="info-row" wx:else>
+          <text class="label">区域属主</text>
+          <text class="value">暂未建立区域属主</text>
+        </view>
+
+      </block>
     </view>
 
     <view class="info-card" wx:if="{{showOwnership}}">
-      <view class="card-title">设备属主关系</view>
-      <view class="relation-highlight">
-        <text class="relation-caption">我与这台设备</text>
-        <text class="relation-value">{{viewerRelationSummary}}</text>
+      <view class="info-fold-header" bindtap="toggleInfoSection" data-key="ownershipExpanded" wx:if="{{isInstallationOperator}}">
+        <view class="card-title">设备属主关系</view>
+        <text class="fold-toggle">{{ownershipExpanded ? '收起' : '展开'}}</text>
       </view>
-      <view class="info-row">
-        <text class="label">当前直接属主</text>
-        <text class="value">{{ownership.direct_owner.name || '-'}}</text>
-      </view>
-      <view class="info-row" wx:if="{{ownership.regional_owner}}">
-        <text class="label">区域属主</text>
-        <text class="value">{{ownership.regional_owner.name}}</text>
-      </view>
+      <view class="card-title" wx:else>设备属主关系</view>
+      <block wx:if="{{!isInstallationOperator || ownershipExpanded}}">
+        <view class="relation-highlight">
+          <text class="relation-caption">我与这台设备</text>
+          <text class="relation-value">{{viewerRelationSummary}}</text>
+        </view>
+        <view class="info-row">
+          <text class="label">当前直接属主</text>
+          <text class="value">{{ownership.direct_owner.name || '-'}}</text>
+        </view>
+        <view class="info-row" wx:if="{{ownership.regional_owner}}">
+          <text class="label">区域属主</text>
+          <text class="value">{{ownership.regional_owner.name}}</text>
+        </view>
 
-      <view class="sub-title" wx:if="{{ownershipPath.length}}">组织流转链路</view>
-      <view class="path-list">
-        <view class="path-item" wx:for="{{ownershipPath}}" wx:key="id">
-          <view class="path-axis">
-            <view class="path-dot"></view>
-            <view class="path-line" wx:if="{{!item.isLast}}"></view>
-          </view>
-          <view class="path-content">
-            <text class="path-name">{{item.name}}</text>
-            <text class="path-meta">{{item.type_name}} · {{item.region || '未填写区域'}}</text>
+        <view class="sub-title" wx:if="{{ownershipPath.length}}">组织流转链路</view>
+        <view class="path-list">
+          <view class="path-item" wx:for="{{ownershipPath}}" wx:key="id">
+            <view class="path-axis">
+              <view class="path-dot"></view>
+              <view class="path-line" wx:if="{{!item.isLast}}"></view>
+            </view>
+            <view class="path-content">
+              <text class="path-name">{{item.name}}</text>
+              <text class="path-meta">{{item.type_name}} · {{item.region || '未填写区域'}}</text>
+            </view>
           </view>
         </view>
-      </view>
 
-      <block wx:if="{{upstreamAccountOwners.length}}">
-        <view class="sub-title">链路建立账号</view>
-        <view class="account-owner" wx:for="{{upstreamAccountOwners}}" wx:key="identity_id">
-          <text>{{item.nickname}}</text>
-          <text class="account-role">{{item.role_name}}</text>
-        </view>
+        <block wx:if="{{upstreamAccountOwners.length}}">
+          <view class="sub-title">链路建立账号</view>
+          <view class="account-owner" wx:for="{{upstreamAccountOwners}}" wx:key="identity_id">
+            <text>{{item.nickname}}</text>
+            <text class="account-role">{{item.role_name}}</text>
+          </view>
+        </block>
+
       </block>
     </view>
 
     <view class="info-card" wx:if="{{showDeviceDetail}}">
-      <view class="card-title">设备当前状态</view>
-      <view class="pending-banner" wx:if="{{isPendingActivation}}">
-        设备已经完成装车，正在等待用户负责人激活
+      <view class="info-fold-header" bindtap="toggleInfoSection" data-key="deviceDetailExpanded" wx:if="{{isInstallationOperator}}">
+        <view class="card-title">设备当前状态</view>
+        <text class="fold-toggle">{{deviceDetailExpanded ? '收起' : '展开'}}</text>
       </view>
-      <view class="activated-banner" wx:if="{{isActivated}}">
-        设备已经由用户完成激活
-      </view>
-      <view class="info-row">
-        <text class="label">生产批次</text>
-        <text class="value mono">{{device.batch.batch_no}}</text>
-      </view>
-      <view class="info-row">
-        <text class="label">生产日期</text>
-        <text class="value">{{device.batch.production_date}}</text>
-      </view>
-      <view class="info-row">
-        <text class="label">设备状态</text>
-        <text class="value accent">{{device.state.status_name}}</text>
-      </view>
-      <view class="info-row" wx:if="{{device.current_organization}}">
-        <text class="label">当前所属组织</text>
-        <text class="value">{{device.current_organization.name}}</text>
-      </view>
-      <view class="info-row" wx:if="{{device.installation.installed_at_text}}">
-        <text class="label">装车时间</text>
-        <text class="value">{{device.installation.installed_at_text}}</text>
-      </view>
-      <view class="info-row" wx:if="{{device.installation.operator_name}}">
-        <text class="label">装车操作账号</text>
-        <text class="value">{{device.installation.operator_name}}</text>
-      </view>
+      <view class="card-title" wx:else>设备当前状态</view>
+      <block wx:if="{{!isInstallationOperator || deviceDetailExpanded}}">
+        <view class="pending-banner" wx:if="{{isAwaitingCustomerAcceptance && isCustomerInvitationExpired}}">
+          用户邀请已过期，设备接收尚未完成
+        </view>
+        <view class="pending-banner" wx:elif="{{isAwaitingCustomerAcceptance && hasCustomerInvitation}}">
+          等待用户负责人接受设备邀请
+        </view>
+        <view class="pending-banner" wx:elif="{{isAwaitingCustomerAcceptance}}">
+          用户邀请尚未生成
+        </view>
+        <view class="pending-banner" wx:elif="{{isPendingActivation}}">
+          用户负责人已接受设备，等待用户激活
+        </view>
+        <view class="activated-banner" wx:if="{{isActivated}}">
+          设备已经由用户完成激活
+        </view>
+        <view class="info-row">
+          <text class="label">生产批次</text>
+          <text class="value mono">{{device.batch.batch_no}}</text>
+        </view>
+        <view class="info-row">
+          <text class="label">生产日期</text>
+          <text class="value">{{device.batch.production_date}}</text>
+        </view>
+        <view class="info-row">
+          <text class="label">设备状态</text>
+          <text class="value accent">{{displayDeviceStatusName || device.state.status_name}}</text>
+        </view>
+        <view class="info-row" wx:if="{{device.current_organization}}">
+          <text class="label">当前所属组织</text>
+          <text class="value">{{device.current_organization.name}}</text>
+        </view>
+        <view class="info-row" wx:if="{{device.installation.installed_at_text}}">
+          <text class="label">装车时间</text>
+          <text class="value">{{device.installation.installed_at_text}}</text>
+        </view>
+        <view class="info-row" wx:if="{{device.installation.operator_name}}">
+          <text class="label">装车操作账号</text>
+          <text class="value">{{device.installation.operator_name}}</text>
+        </view>
+
+      </block>
     </view>
 
     <view class="info-card trace-card" wx:if="{{showTraceability}}">
@@ -202,7 +239,7 @@
         <text class="modal-title">邀请用户负责人</text>
         <text class="modal-close" bindtap="closeInvitationModal">×</text>
       </view>
-      <text class="modal-device">{{device.product_model.name}} · {{device.sn}}</text>
+      <text class="modal-device">{{device.product_model.name}} · {{device.lifecycle_code}}</text>
 
       <view class="qr-wrap" wx:if="{{!invitationExpired}}">
         <image

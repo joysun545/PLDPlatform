@@ -498,3 +498,22 @@
 button::after {
   border: 0;
 }
+
+
+.info-fold-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+  min-height: 44rpx;
+}
+
+.info-fold-header .card-title {
+  margin-bottom: 0;
+}
+
+.fold-toggle {
+  flex-shrink: 0;
+  color: var(--ui-primary);
+  font-size: 24rpx;
+}

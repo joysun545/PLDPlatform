@@ -322,6 +322,15 @@ function normalizeShipments(rows, keyPrefix) {
         splitSourceId: item.production_subplan_item_id || item.order_plan_item_id || null,
         splitMaximum: Number(item.quantity || 0)
       })),
+      accessoryItems: asArray(row.accessory_items).map((item, itemIndex) => ({
+        ...item,
+        key: item.id || `${key}-accessory-${itemIndex}`,
+        materialName: item.material_name || item.material_spec_name || '配件物料',
+        specName: item.material_spec_name || '',
+        modelName: item.product_model_name || '',
+        quantityText: `${item.quantity || '0'} ${item.unit || ''}`.trim(),
+        stateText: item.status_name || ''
+      })),
       actions: normalizeActions(row.available_actions || row.actions, `${prefix}-${key}`)
     };
   });
@@ -376,6 +385,15 @@ function normalizePlan(raw) {
     brand: plan.brand || { name: plan.brand_name || '' },
     sales_manager: plan.sales_manager || { name: plan.sales_manager_name || '' },
     total_quantity: plan.total_quantity || plan.quantity || '--',
+    accessoryItems: asArray(plan.accessory_items).map((item, index) => ({
+      ...item,
+      key: item.id || `plan-accessory-${index}`,
+      materialName: item.material_name || item.material_spec_name || '配件物料',
+      specName: item.material_spec_name || '',
+      modelName: item.product_model_name || '',
+      quantityText: `${item.quantity || '0'} ${item.unit || ''}`.trim(),
+      stateText: item.status_name || ''
+    })),
     submittedText: formatDate(plan.submitted_at || plan.created_at)
   };
 }

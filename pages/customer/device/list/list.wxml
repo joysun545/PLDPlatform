@@ -41,7 +41,8 @@
         </view>
         <text class="status {{item.activation_status === 'ACTIVATED' ? 'activated' : ''}}">{{item.activation_status_name}}</text>
       </view>
-      <text class="sn">{{item.sn}}</text>
+      <text class="sn">生命周期编码：{{item.lifecycle_code || '-'}}</text>
+      <text wx:if="{{item.physical_device_code}}" class="sn">设备编码：{{item.physical_device_code}}</text>
       <view class="meta-grid">
         <view class="meta"><text class="meta-label">安装状态</text><text>{{item.install_status_name}}</text></view>
         <view class="meta"><text class="meta-label">使用车辆</text><text>{{item.vehicle_no || '未填写'}}</text></view>

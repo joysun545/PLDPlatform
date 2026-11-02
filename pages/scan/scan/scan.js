@@ -85,6 +85,11 @@ Page({
           return;
         }
 
+        if (qrText.startsWith('PLDP_DEVICE_CODE_LOGIN|')) {
+          this.approveDeviceCodeRegistryLogin(qrText);
+          return;
+        }
+
         if (qrText.startsWith('PLDP_PRINT_LOGIN|')) {
           this.approvePrintCenterLogin(qrText);
           return;
@@ -139,6 +144,58 @@ Page({
             wx.showModal({
               title: '打印中心已授权',
               content: `${data.organization_name || '当前厂家'} · ${data.role_name || '厂家成品库管'}。请返回电脑继续打印，完成后退出登录。`,
+              showCancel: false
+            });
+          },
+          fail: () => wx.showToast({ title: '网络请求失败，请查看电脑状态后重试', icon: 'none' }),
+          complete: () => {
+            wx.hideLoading();
+            this.finishScanning();
+          }
+        });
+      },
+      fail: () => this.finishScanning()
+    });
+  },
+
+  approveDeviceCodeRegistryLogin(qrText) {
+    const match = /^PLDP_DEVICE_CODE_LOGIN\|([a-f0-9]{64})$/.exec(qrText);
+    if (!match) {
+      this.finishScanning();
+      wx.showToast({ title: '设备编码发行页面登录二维码无效', icon: 'none' });
+      return;
+    }
+    wx.showModal({
+      title: '授权进入设备编码发行页面',
+      content: '允许当前电脑以你的厂家角色进入设备编码发行页面？该页面用于生成编码和第三方制作文件，不执行成品打印。',
+      confirmText: '确认授权',
+      success: result => {
+        if (!result.confirm) {
+          this.finishScanning();
+          return;
+        }
+        wx.showLoading({ title: '正在核验身份', mask: true });
+        const webBase = app.globalData.apiBase.replace(/\/api\/?$/, '');
+        wx.request({
+          url: `${webBase}/web/device-codes/api/login/approve/`,
+          method: 'POST',
+          header: app.authHeader('application/json'),
+          data: { token: match[1] },
+          success: res => {
+            const body = res.data || {};
+            if (res.statusCode === 401) app.reauthenticate();
+            if (res.statusCode < 200 || res.statusCode >= 300 || body.code !== 0) {
+              wx.showModal({
+                title: '授权未完成',
+                content: body.msg || '当前角色没有权限，或二维码已过期。请确认后返回网页刷新二维码。',
+                showCancel: false
+              });
+              return;
+            }
+            const data = body.data || {};
+            wx.showModal({
+              title: '设备编码发行页面已授权',
+              content: `${data.organization_name || '当前厂家'} · ${data.role_name || '厂家角色'}。请返回电脑继续操作，完成后退出登录。`,
               showCancel: false
             });
           },

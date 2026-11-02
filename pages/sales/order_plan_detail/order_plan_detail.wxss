@@ -561,6 +561,11 @@ page {
   text-align: right;
 }
 
+.accessory-shipment-item {
+  color: #176a46;
+  background: #f3faf6;
+}
+
 .shipment-form-card {
   border-color: #a9dfc3;
   background: #fbfefc;

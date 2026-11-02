@@ -26,6 +26,10 @@ Page({
     loading: true,
     error: '',
     bomExpanded: false,
+    equipmentExpanded: false,
+    locationExpanded: false,
+    plateExpanded: false,
+    faultExpanded: false,
     faultDescription: '',
     locationName: '',
     locationAddress: '',
@@ -35,7 +39,16 @@ Page({
     existingMedia: [],
     remainingCount: 9,
     applicationId: null,
-    submitting: false
+    submitting: false,
+    activationMethod: 'VEHICLE_PLATE',
+    presenceRequired: false,
+    presenceVerified: false,
+    presenceScanning: false,
+    presenceMessage: '',
+    deviceCodeVerificationToken: '',
+    platePhotoPath: '',
+    platePhotoUploaded: false,
+    platePhotoUploading: false
   },
 
   onLoad(options) {
@@ -73,7 +86,18 @@ Page({
           });
           return;
         }
-        const existingMedia = (active && active.media) || [];
+        const activationMethod = (context.activation && context.activation.activation_method) || 'VEHICLE_PLATE';
+        const presenceRequired = activationMethod === 'DEVICE_CODE';
+        const existingApplicationMedia = (active && active.media) || [];
+        const plateEvidence = existingApplicationMedia.find(item => (
+          item.purpose === 'PLATE_PRESENCE_EVIDENCE' && item.media_type === 'IMAGE'
+        ));
+        const existingMedia = existingApplicationMedia.filter(item => (
+          item.purpose !== 'PLATE_PRESENCE_EVIDENCE'
+        ));
+        // Device-code activation requires a fresh scan whenever this form is opened,
+        // including when resuming a saved draft.
+        const presenceVerified = !presenceRequired;
         const hasDraftCoordinates = !!(
           active &&
           active.location &&
@@ -87,6 +111,13 @@ Page({
         this.setData({
           context,
           loading: false,
+          activationMethod,
+          presenceRequired,
+          presenceVerified,
+          presenceMessage: presenceVerified ? '' : '需要扫描激活时绑定的设备编码，确认设备在身边。',
+          deviceCodeVerificationToken: '',
+          platePhotoUploaded: !!plateEvidence,
+          platePhotoPath: '',
           applicationId: active ? active.id : null,
           faultDescription: active ? (active.fault_description || '') : '',
           locationName: active && active.location ? (active.location.name || '') : '',
@@ -98,13 +129,53 @@ Page({
           locationConfirmed: !!(active && active.location && active.location.confirmed),
           existingMedia,
           remainingCount: Math.max(0, 9 - existingMedia.length)
+        }, () => {
+          if (presenceRequired && !presenceVerified) this.scanBoundDeviceCode();
         });
       })
       .catch(err => this.setData({ loading: false, error: err.message || '无法读取设备信息' }));
   },
 
+  scanBoundDeviceCode() {
+    if (this.data.presenceScanning || this.data.presenceVerified) return;
+    this.setData({ presenceScanning: true, presenceMessage: '请扫描设备本体二维码。' });
+    wx.scanCode({
+      scanType: ['qrCode'],
+      success: result => {
+        const scannedCode = String(result && result.result || '').trim();
+        if (!scannedCode) {
+          this.setData({ presenceScanning: false, presenceMessage: '没有读取到设备编码，请重新扫码。' });
+          return;
+        }
+        requestJson(
+          '/lifecycle/customer/devices/' + this.data.deviceId + '/after-sales/verify-device-code/',
+          'POST',
+          { device_code: scannedCode }
+        ).then(data => {
+          this.setData({
+            presenceScanning: false,
+            presenceVerified: true,
+            presenceMessage: '设备编码核验成功，设备已确认在身边。',
+            deviceCodeVerificationToken: data.verification_token || ''
+          });
+        }).catch(err => {
+          this.setData({ presenceScanning: false, presenceMessage: err.message || '设备编码核验失败，请重新扫码。' });
+        });
+      },
+      fail: () => {
+        this.setData({ presenceScanning: false, presenceMessage: '已取消扫码。继续申请前请重新扫描设备编码。' });
+      }
+    });
+  },
+
   toggleBom() {
     this.setData({ bomExpanded: !this.data.bomExpanded });
+  },
+
+  toggleSection(e) {
+    const field = e.currentTarget.dataset.field;
+    if (!field || !Object.prototype.hasOwnProperty.call(this.data, field)) return;
+    this.setData({ [field]: !this.data[field] });
   },
 
   onFaultDescription(e) {
@@ -163,6 +234,25 @@ Page({
     });
   },
 
+  capturePlatePhoto() {
+    if (this.data.submitting || this.data.platePhotoUploading) return;
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ['image'],
+      sourceType: ['camera'],
+      camera: 'back',
+      success: result => {
+        const file = result && result.tempFiles && result.tempFiles[0];
+        if (!file || !file.tempFilePath) {
+          wx.showToast({ title: '没有取得车牌照片，请重拍', icon: 'none' });
+          return;
+        }
+        this.setData({ platePhotoPath: file.tempFilePath, platePhotoUploaded: false });
+      },
+      fail: () => wx.showToast({ title: '未拍摄车牌照片', icon: 'none' })
+    });
+  },
+
   onMediaChange(e) {
     this.setData({ media: e.detail.files || [] });
   },
@@ -194,7 +284,8 @@ Page({
         location_address: this.data.locationAddress.trim(),
         location_latitude: location.latitude || '',
         location_longitude: location.longitude || '',
-        location_confirmed: this.data.locationConfirmed
+        location_confirmed: this.data.locationConfirmed,
+        device_code_verification_token: this.data.deviceCodeVerificationToken
       }
     );
   },
@@ -235,6 +326,38 @@ Page({
     });
   },
 
+  uploadPlatePhoto(applicationId) {
+    if (this.data.activationMethod !== 'VEHICLE_PLATE' || this.data.platePhotoUploaded || !this.data.platePhotoPath) {
+      return Promise.resolve();
+    }
+    this.setData({ platePhotoUploading: true });
+    return new Promise((resolve, reject) => {
+      wx.uploadFile({
+        url: app.globalData.apiBase + '/lifecycle/after-sales/applications/' + applicationId + '/media/',
+        filePath: this.data.platePhotoPath,
+        name: 'file',
+        header: app.authHeader(null),
+        formData: {
+          media_type: 'IMAGE',
+          purpose: 'PLATE_PRESENCE_EVIDENCE',
+          caption: '激活方式为车牌号时拍摄的实时在场照片'
+        },
+        success: res => {
+          let body = null;
+          try { body = JSON.parse(res.data || '{}'); } catch (err) {}
+          if (res.statusCode >= 200 && res.statusCode < 300 && body && body.code === 0) {
+            this.setData({ platePhotoUploaded: true, platePhotoPath: '' });
+            resolve();
+          } else {
+            reject(new Error((body && body.msg) || '车牌照片上传失败'));
+          }
+        },
+        fail: () => reject(new Error('车牌照片上传失败，请检查网络后重试')),
+        complete: () => this.setData({ platePhotoUploading: false })
+      });
+    });
+  },
+
   uploadAll(applicationId) {
     const next = index => {
       const item = this.data.media[index];
@@ -255,16 +378,29 @@ Page({
       wx.showToast({ title: '请先确认真实位置', icon: 'none' });
       return;
     }
+    if (this.data.presenceRequired && !this.data.presenceVerified) {
+      wx.showToast({ title: '请先扫描设备编码，确认设备在身边', icon: 'none' });
+      return;
+    }
     if (!this.data.media.length && !this.data.existingMedia.length) {
       wx.showToast({ title: '请至少拍摄或上传一张图片或一段视频', icon: 'none' });
+      return;
+    }
+    if (this.data.activationMethod === 'VEHICLE_PLATE' &&
+        !this.data.platePhotoUploaded && !this.data.platePhotoPath) {
+      wx.showToast({ title: '请拍摄并上传包含车牌号的实时照片', icon: 'none' });
       return;
     }
     this.setData({ submitting: true });
     this.saveDraft()
       .then(draft => {
         const applicationId = draft.id;
-        this.setData({ applicationId });
-        return this.uploadAll(applicationId).then(() => applicationId);
+        // The one-time verification proof is consumed by saveDraft. Preserve the
+        // saved server-side proof for upload retries without reusing this token.
+        this.setData({ applicationId, deviceCodeVerificationToken: '' });
+        return this.uploadAll(applicationId)
+          .then(() => this.uploadPlatePhoto(applicationId))
+          .then(() => applicationId);
       })
       .then(applicationId => requestJson(
         '/lifecycle/after-sales/applications/' + applicationId + '/submit/',
@@ -279,7 +415,25 @@ Page({
           });
         }, 350);
       })
-      .catch(err => wx.showToast({ title: err.message || '提交失败，请重试', icon: 'none' }))
+      .catch(err => {
+        const message = err.message || '提交失败，请重试';
+        if (this.data.presenceRequired && (
+          message.indexOf('请先扫描设备本体二维码') >= 0 ||
+          message.indexOf('设备编码核验已失效') >= 0 ||
+          message.indexOf('请重新扫描设备本体二维码') >= 0
+        )) {
+          this.setData({
+            presenceVerified: false,
+            deviceCodeVerificationToken: '',
+            presenceMessage: '设备编码核验已过期，请重新扫码。已填写的申请内容会保留。'
+          }, () => {
+            wx.showToast({ title: '请重新扫描设备编码', icon: 'none' });
+            this.scanBoundDeviceCode();
+          });
+          return;
+        }
+        wx.showToast({ title: message, icon: 'none' });
+      })
       .finally(() => this.setData({ submitting: false }));
   },
 

@@ -26,6 +26,10 @@ Page({
     region: null,
     ownership: null,
     vehicleNo: '',
+    activationMethod: 'VEHICLE_PLATE',
+    physicalDeviceCode: '',
+    verifyingDeviceCode: false,
+    activation: null,
     baseCanActivate: false,
     canActivate: false,
     isActivated: false,
@@ -33,7 +37,14 @@ Page({
     documentGate: null,
     documents: [],
     telemetry: null,
-    telemetryLoading: false
+    telemetryLoading: false,
+    parametersExpanded: false,
+    productionExpanded: false,
+    identityExpanded: false,
+    statusExpanded: false,
+    documentsExpanded: false,
+    telemetryExpanded: false,
+    lifecycleExpanded: false
   },
 
   onLoad(options) {
@@ -109,6 +120,10 @@ Page({
     const state = device.state || device.status_summary || {};
     const capabilities = scan.capabilities || [];
     const actions = payload.actions || {};
+    const activation = payload.activation || null;
+    const activationMethod = activation && activation.activation_method
+      ? activation.activation_method
+      : (this.data.activationMethod || 'VEHICLE_PLATE');
     const baseCanActivate = capabilities.includes('activate_device') &&
       actions.can_activate !== false;
     const gate = this.data.documentGate;
@@ -126,7 +141,14 @@ Page({
       customer,
       region: scan.region || null,
       ownership: scan.ownership || null,
-      vehicleNo: profile.vehicle_no || this.data.vehicleNo || '',
+      vehicleNo: activation && activation.vehicle_no
+        ? activation.vehicle_no
+        : (profile.vehicle_no || this.data.vehicleNo || ''),
+      activationMethod,
+      physicalDeviceCode: activation && activation.physical_device_code
+        ? activation.physical_device_code
+        : (device.physical_device_code || ''),
+      activation,
       baseCanActivate,
       canActivate: baseCanActivate && (!gate || gate.activation_allowed !== false),
       isActivated: state.activation_status === 'ACTIVATED',
@@ -169,6 +191,21 @@ Page({
     });
   },
 
+  toggleInfoSection(event) {
+    const key = event.currentTarget.dataset.key;
+    const allowedKeys = [
+      'parametersExpanded',
+      'productionExpanded',
+      'identityExpanded',
+      'statusExpanded',
+      'documentsExpanded',
+      'telemetryExpanded',
+      'lifecycleExpanded'
+    ];
+    if (!allowedKeys.includes(key)) return;
+    this.setData({ [key]: !this.data[key] });
+  },
+
   openDocument(e) {
     const documentId = Number(e.currentTarget.dataset.id);
     if (!documentId) return;
@@ -181,6 +218,57 @@ Page({
     this.setData({ vehicleNo: e.detail.value });
   },
 
+  onActivationMethodChange(e) {
+    const method = e.detail.value === 'DEVICE_CODE' ? 'DEVICE_CODE' : 'VEHICLE_PLATE';
+    this.setData({ activationMethod: method, physicalDeviceCode: '' });
+  },
+
+  scanPhysicalDeviceCode() {
+    if (this.data.activating || this.data.verifyingDeviceCode) return;
+    wx.scanCode({
+      scanType: ['qrCode'],
+      success: result => {
+        const code = String(result && result.result || '').trim();
+        if (!code) {
+          wx.showToast({ title: '没有读取到设备编码', icon: 'none' });
+          return;
+        }
+        this.setData({ verifyingDeviceCode: true, physicalDeviceCode: '' });
+        wx.request({
+          url: `${app.globalData.apiBase}/lifecycle/customer/devices/${this.data.deviceId}/activation-code/verify/`,
+          method: 'POST',
+          header: app.authHeader(),
+          data: { device_code: code },
+          success: response => {
+            if (response.statusCode === 401) {
+              app.reauthenticate();
+              wx.showToast({ title: '登录已失效，请重新进入', icon: 'none' });
+              return;
+            }
+            const payload = response.data && response.data.data;
+            if (response.data && response.data.code === 0 && payload && payload.verified) {
+              this.setData({ physicalDeviceCode: payload.device_code || '' });
+              wx.showToast({ title: '设备编码验证通过', icon: 'success' });
+              return;
+            }
+            this.setData({ physicalDeviceCode: '' });
+            wx.showModal({
+              title: '设备编码验证失败',
+              content: (response.data && response.data.msg) || '该编码未登记或不可用于此设备，请联系厂家核实。',
+              showCancel: false
+            });
+          },
+          fail: () => {
+            this.setData({ physicalDeviceCode: '' });
+            wx.showToast({ title: '设备编码验证请求失败，请重试', icon: 'none' });
+          },
+          complete: () => this.setData({ verifyingDeviceCode: false })
+        });
+      },
+      fail: () => wx.showToast({ title: '未完成扫码，可重试或选择车牌号方式', icon: 'none' })
+    });
+  },
+
   confirmActivation() {
     if (this.data.activating) return;
     if (!this.data.canActivate) {
@@ -191,17 +279,36 @@ Page({
       });
       return;
     }
-    const vehicleNo = this.data.vehicleNo.trim();
-    if (!vehicleNo) {
+    const activationMethod = this.data.activationMethod || 'VEHICLE_PLATE';
+    const vehicleNo = activationMethod === 'VEHICLE_PLATE'
+      ? this.data.vehicleNo.trim()
+      : '';
+    const physicalDeviceCode = activationMethod === 'DEVICE_CODE'
+      ? this.data.physicalDeviceCode.trim()
+      : '';
+    if (activationMethod === 'VEHICLE_PLATE' && !vehicleNo) {
       wx.showToast({ title: '请填写车辆牌号', icon: 'none' });
       return;
     }
+    if (activationMethod === 'DEVICE_CODE' && !physicalDeviceCode) {
+      wx.showToast({ title: '请先扫描设备编码二维码', icon: 'none' });
+      return;
+    }
+    const bindingText = activationMethod === 'DEVICE_CODE'
+      ? `设备编码：${physicalDeviceCode}`
+      : `车辆：${vehicleNo}`;
     wx.showModal({
       title: '确认激活设备',
-      content: `设备：${this.data.device.sn}\n车辆：${vehicleNo}\n激活后将正式进入使用状态。`,
+      content: `生命周期编码：${this.data.device.lifecycle_code || '-'}\n${bindingText}\n激活后将正式进入使用状态。`,
       confirmText: '确认激活',
       success: res => {
-        if (res.confirm) this.collectLocationAndActivate(vehicleNo);
+        if (res.confirm) {
+          this.collectLocationAndActivate(
+            activationMethod,
+            vehicleNo,
+            physicalDeviceCode
+          );
+        }
       }
     });
   },
@@ -216,27 +323,34 @@ Page({
     wx.redirectTo({ url: '/pages/customer/device/list/list' });
   },
 
-  collectLocationAndActivate(vehicleNo) {
+  collectLocationAndActivate(activationMethod, vehicleNo, physicalDeviceCode) {
     wx.getLocation({
       type: 'gcj02',
       success: location => {
         this.activateDevice(
+          activationMethod,
           vehicleNo,
+          physicalDeviceCode,
           `${location.latitude},${location.longitude}`
         );
       },
-      fail: () => this.activateDevice(vehicleNo, '')
+      fail: () => this.activateDevice(activationMethod, vehicleNo, physicalDeviceCode, '')
     });
   },
 
-  activateDevice(vehicleNo, location) {
+  activateDevice(activationMethod, vehicleNo, physicalDeviceCode, location) {
     this.setData({ activating: true });
     wx.showLoading({ title: '正在激活设备...', mask: true });
     wx.request({
       url: `${app.globalData.apiBase}/lifecycle/customer/devices/${this.data.deviceId}/activate/`,
       method: 'POST',
       header: app.authHeader(),
-      data: { vehicle_no: vehicleNo, location: location || '' },
+      data: {
+        activation_method: activationMethod,
+        vehicle_no: vehicleNo || '',
+        physical_device_code: physicalDeviceCode || '',
+        location: location || ''
+      },
       success: res => {
         if (res.statusCode === 401) {
           app.reauthenticate();

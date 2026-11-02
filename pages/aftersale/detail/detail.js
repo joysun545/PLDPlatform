@@ -40,6 +40,22 @@ Page({
     error: '',
     detail: null,
     bomExpanded: false,
+    summaryExpanded: false,
+    reportExpanded: false,
+    dispatchExpanded: false,
+    triageExpanded: true,
+    applicantShipmentExpanded: true,
+    repairReceiptExpanded: true,
+    repairCompleteExpanded: true,
+    returnShipmentExpanded: true,
+    applicantConfirmExpanded: true,
+    thirdPartyMaterialShipmentExpanded: true,
+    thirdPartyExpenseExpanded: true,
+    thirdPartyFaultMaterialReturnExpanded: true,
+    factoryCloseExpanded: true,
+    finalResultExpanded: false,
+    lifecycleHistoryExpanded: false,
+    afterSalesHistoryExpanded: false,
     mediaFiles: [],
     actionMedia: [],
     submitting: false,
@@ -49,6 +65,10 @@ Page({
       route: '',
       candidates: [],
       candidateIndex: -1,
+      preliminaryMaterials: [],
+      preliminaryMaterialOptions: [],
+      stationRecommendationMessage: '',
+      stationRecommendationsLoading: false,
       diagnosisNote: '',
       repairPlan: '',
       thirdPartyName: '',
@@ -138,6 +158,12 @@ Page({
     this.setData({ bomExpanded: !this.data.bomExpanded });
   },
 
+  toggleSection(e) {
+    const field = e.currentTarget.dataset.field;
+    if (!field || !Object.prototype.hasOwnProperty.call(this.data, field)) return;
+    this.setData({ [field]: !this.data[field] });
+  },
+
   getTriageOptions() {
     return (this.data.detail && this.data.detail.triage_options) || {
       preliminary_fault_types: [],
@@ -147,7 +173,37 @@ Page({
   },
 
   onTriageFault(e) {
-    this.setData({ 'triage.faultIndex': Number(e.detail.value) });
+    const faultIndex = Number(e.detail.value);
+    const fault = (this.getTriageOptions().preliminary_fault_types || [])[faultIndex];
+    const isComponentSuspected = fault && fault.value === 'COMPONENT_SUSPECTED';
+    const selected = isComponentSuspected ? this.data.triage.preliminaryMaterials : [];
+    const preliminaryMaterialOptions = isComponentSuspected
+      ? (((this.data.detail && this.data.detail.bom && this.data.detail.bom.items) || []).map(item => {
+        const value = String(item.bom_item_id || item.material_id || '');
+        return { ...item, selection_value: value, selected: selected.includes(value) };
+      }))
+      : [];
+    this.setData({
+      'triage.faultIndex': faultIndex,
+      'triage.isComponentSuspected': Boolean(isComponentSuspected),
+      'triage.preliminaryMaterials': selected,
+      'triage.preliminaryMaterialOptions': preliminaryMaterialOptions
+    });
+    if (this.data.triage.route === 'SERVICE_STATION') this.loadStationRecommendations();
+  },
+
+  onTriageMaterials(e) {
+    const selected = (e.detail.value || []).map(String);
+    const options = (this.data.triage.preliminaryMaterialOptions || []).map(item => ({
+      ...item,
+      selected: selected.includes(String(item.selection_value))
+    }));
+    this.setData({
+      'triage.preliminaryMaterials': selected,
+      'triage.preliminaryMaterialOptions': options,
+      'triage.candidateIndex': -1
+    });
+    if (this.data.triage.route === 'SERVICE_STATION') this.loadStationRecommendations();
   },
 
   onTriageNote(e) {
@@ -162,17 +218,92 @@ Page({
     const routeIndex = Number(e.detail.value);
     const options = this.getTriageOptions();
     const route = (options.routes || [])[routeIndex] || {};
-    const candidates = (options.candidates || []).filter(item => item.route === route.value);
+    const candidates = route.value === 'SERVICE_STATION'
+      ? []
+      : (options.candidates || []).filter(item => item.route === route.value);
+    if (route.value !== 'SERVICE_STATION') {
+      this._stationRecommendationsRequest = (this._stationRecommendationsRequest || 0) + 1;
+    }
     this.setData({
       'triage.routeIndex': routeIndex,
       'triage.route': route.value || '',
       'triage.candidates': candidates,
-      'triage.candidateIndex': -1
+      'triage.candidateIndex': -1,
+      'triage.stationRecommendationMessage': route.value === 'SERVICE_STATION'
+        ? '正在按厂家、物料库存和距离筛选服务站…'
+        : '',
+      'triage.stationRecommendationsLoading': route.value === 'SERVICE_STATION'
+    });
+    if (route.value === 'SERVICE_STATION') this.loadStationRecommendations();
+  },
+
+  loadStationRecommendations() {
+    const triage = this.data.triage;
+    if (triage.route !== 'SERVICE_STATION') return Promise.resolve();
+    const requestId = (this._stationRecommendationsRequest || 0) + 1;
+    this._stationRecommendationsRequest = requestId;
+    const options = this.getTriageOptions();
+    const fault = (options.preliminary_fault_types || [])[triage.faultIndex];
+    if (!fault) {
+      this.setData({
+        'triage.candidates': [],
+        'triage.candidateIndex': -1,
+        'triage.stationRecommendationsLoading': false,
+        'triage.stationRecommendationMessage': '请先选择初步故障认定，再按物料库存和距离筛选服务站。'
+      });
+      return Promise.resolve();
+    }
+    if (fault.value === 'COMPONENT_SUSPECTED' && !triage.preliminaryMaterials.length) {
+      this.setData({
+        'triage.candidates': [],
+        'triage.candidateIndex': -1,
+        'triage.stationRecommendationsLoading': false,
+        'triage.stationRecommendationMessage': '请先勾选可能需要更换的BOM物料，再查看库存匹配的服务站。'
+      });
+      return Promise.resolve();
+    }
+    const query = [
+      'dispatch_route=SERVICE_STATION',
+      'preliminary_fault_type=' + encodeURIComponent(fault ? fault.value : ''),
+      'preliminary_materials=' + encodeURIComponent((triage.preliminaryMaterials || []).join(','))
+    ].join('&');
+    this.setData({
+      'triage.stationRecommendationsLoading': true,
+      'triage.stationRecommendationMessage': '正在按厂家、物料库存和距离筛选服务站…'
+    });
+    return apiRequest(
+      '/lifecycle/after-sales/applications/' + this.data.applicationId + '/triage-options/?' + query
+    ).then(result => {
+      if (requestId !== this._stationRecommendationsRequest) return;
+      this.setData({
+        'triage.candidates': result.service_station_recommendations || [],
+        'triage.candidateIndex': -1,
+        'triage.stationRecommendationMessage': result.service_station_recommendation_message || '暂无符合条件的服务站。',
+        'triage.stationRecommendationsLoading': false
+      });
+    }).catch(error => {
+      if (requestId !== this._stationRecommendationsRequest) return;
+      this.setData({
+        'triage.candidates': [],
+        'triage.candidateIndex': -1,
+        'triage.stationRecommendationMessage': error.message || '服务站筛选失败，请稍后重试。',
+        'triage.stationRecommendationsLoading': false
+      });
     });
   },
 
   onTriageCandidate(e) {
     this.setData({ 'triage.candidateIndex': Number(e.detail.value) });
+  },
+
+  callServiceStation(e) {
+    const index = Number(e.currentTarget.dataset.index);
+    const candidate = (this.data.triage.candidates || [])[index];
+    if (!candidate || !candidate.phone) {
+      wx.showToast({ title: '该服务站未登记联系电话', icon: 'none' });
+      return;
+    }
+    wx.makePhoneCall({ phoneNumber: candidate.phone });
   },
 
   onTriageThirdInput(e) {
@@ -298,10 +429,23 @@ Page({
     }
     const data = {
       preliminary_fault_type: fault.value,
+      preliminary_fault_materials: triage.preliminaryMaterials || [],
       diagnosis_note: triage.diagnosisNote.trim(),
       repair_plan: triage.repairPlan.trim(),
       dispatch_route: route.value
     };
+    if (route.value === 'SERVICE_STATION') {
+      const candidate = triage.candidates[triage.candidateIndex];
+      if (!candidate) {
+        wx.showToast({ title: '请先联系并确认一家推荐服务站', icon: 'none' });
+        return;
+      }
+      if (fault.value === 'COMPONENT_SUSPECTED' && !triage.preliminaryMaterials.length) {
+        wx.showToast({ title: '请勾选可能需要更换的BOM物料', icon: 'none' });
+        return;
+      }
+      data.service_station_application_id = candidate.station_application_id;
+    }
     if (['ORIGINAL_INSTALLER', 'MERCHANT_ELECTRICIAN', 'FACTORY_AFTERSALES'].includes(route.value)) {
       const candidate = triage.candidates[triage.candidateIndex];
       if (!candidate) {
@@ -332,7 +476,11 @@ Page({
     this.runAction({
       endpoint: '/triage/',
       data,
-      success: route.value === 'REMOTE' ? '远程排障已结案' : '判断与派单已完成'
+      success: route.value === 'REMOTE'
+        ? '远程排障已结案'
+        : route.value === 'SERVICE_STATION'
+          ? '已通知厂家与服务站'
+          : '判断与派单已完成'
     });
   },
 
