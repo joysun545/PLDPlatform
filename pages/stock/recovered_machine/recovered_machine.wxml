@@ -1,0 +1,1 @@
+<theme-shell><view class="page"><text wx:if="{{error}}">{{error}}</text><view class="card" wx:for="{{items}}" wx:key="device_sn" data-id="{{item.application_id}}" bindtap="open"><text>{{item.kind}} · {{item.status}}</text><text>{{item.device_sn}} · {{item.model}}</text><text>查看来源售后及维修凭证</text></view></view></theme-shell>

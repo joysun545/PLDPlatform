@@ -1,0 +1,27 @@
+<theme-shell title-eyebrow="换新补发计划" title-subtitle="销售安排 · 成品库管发货">
+<view class="page">
+  <view class="card"><text>厂家物流确认收旧机后即可安排补发，无需等待售后归因结案。补发不计正常销售数量或应收。</text></view>
+  <view class="card" wx:if="{{error}}"><text>{{error}}</text><button bindtap="load">刷新</button></view>
+  <view class="card" wx:if="{{loading}}">正在查询…</view>
+  <view class="card" wx:if="{{canCreate}}">
+    <text>独立补发 · 零新订单</text>
+    <picker wx:if="{{merchants.length}}" range="{{merchants}}" range-key="name" value="{{merchantIndex}}" bindchange="chooseMerchant">{{merchants[merchantIndex].name}}</picker>
+    <text wx:else>暂无可单独安排的直属商家待补发需求。</text>
+    <button wx:if="{{merchants.length}}" disabled="{{submitting}}" bindtap="create">生成该商家的换新补发计划</button>
+  </view>
+  <view class="card" wx:if="{{plan}}">
+    <text>{{plan.code}} · {{plan.merchant}}</text>
+    <text>{{plan.normal_order_id ? '随正常订单补发' : '独立补发：正常销售数量为零'}} · {{plan.replacement_quantity}} 台 · {{plan.status}}</text>
+    <text wx:if="{{plan.normal_order_id}}">正常订单批次完成物流后，由成品库管扫码配机并关联本订单批次，单独记录补发出库。</text>
+    <view class="row" wx:for="{{plan.items}}" wx:key="leg_id">
+      <text>{{item.case_no}} · {{item.model}} → {{item.destination}} · {{item.status}}</text>
+      <button data-id="{{item.application_id}}" bindtap="openCase">{{item.can_ship ? '成品库管：扫码配机并物流发货' : '查看补发进度'}}</button>
+    </view>
+    <button wx:if="{{plan.can_cancel}}" disabled="{{submitting}}" bindtap="cancel">取消未发货计划，释放待补发</button>
+  </view>
+  <view wx:if="{{!plan}}">
+    <view class="card" wx:for="{{plans}}" wx:key="id"><text>{{item.code}} · {{item.merchant}} · 补发{{item.replacement_quantity}}台 · {{item.status}}</text><button data-id="{{item.id}}" bindtap="openPlan">查看计划</button></view>
+    <view class="card" wx:if="{{!plans.length && !loading}}">暂无补发计划。待安排需求 {{pendingCount}} 台。</view>
+  </view>
+</view>
+</theme-shell>

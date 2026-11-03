@@ -152,10 +152,11 @@
 
     <view class="activate-card" wx:if="{{baseCanActivate}}">
       <view class="card-title">激活设备</view>
+      <text class="activate-tip" wx:if="{{activation.required_activation_method}}">换新设备请重新扫描新机设备编码。售后激活起算时间沿用首次：{{activation.inherited_first_activation_at}}</text>
       <text class="activate-tip" wx:if="{{documentGate && documentGate.gate_required && !documentGate.all_read}}">请先阅读并确认上面的三篇必读资料，再激活设备。</text>
       <text class="activate-tip" wx:else>请选择一种设备绑定方式。激活后设备将正式进入使用状态，并开始建立用户服务档案。</text>
       <radio-group class="activation-methods" bindchange="onActivationMethodChange">
-        <label class="activation-option"><radio value="VEHICLE_PLATE" checked="{{activationMethod === 'VEHICLE_PLATE'}}"/><text>绑定车牌号</text></label>
+        <label class="activation-option"><radio value="VEHICLE_PLATE" disabled="{{!!activation.required_activation_method}}" checked="{{activationMethod === 'VEHICLE_PLATE'}}"/><text>绑定车牌号</text></label>
         <label class="activation-option"><radio value="DEVICE_CODE" checked="{{activationMethod === 'DEVICE_CODE'}}"/><text>扫描设备本体二维码绑定设备编码</text></label>
       </radio-group>
       <block wx:if="{{activationMethod === 'VEHICLE_PLATE'}}">

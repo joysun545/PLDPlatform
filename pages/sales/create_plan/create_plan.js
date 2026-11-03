@@ -187,6 +187,8 @@ function withInventorySplit(row) {
 }
 
 Page({
+  openReplacementSupplyPlans(){wx.navigateTo({url:'/pages/sales/replacement_supply/replacement_supply'});},
+
   data: {
     loading: true,
     submitting: false,

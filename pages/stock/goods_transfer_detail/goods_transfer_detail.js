@@ -115,6 +115,8 @@ Page({
     });
   },
 
+  openReplacementDemand(e) {wx.navigateTo({url:'/pages/aftersale/detail/detail?application_id='+Number(e.currentTarget.dataset.id)});},
+
   retryLoad() {
     this.loadDetail();
   },

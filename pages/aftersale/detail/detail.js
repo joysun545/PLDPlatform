@@ -57,7 +57,9 @@ Page({
     lifecycleHistoryExpanded: false,
     afterSalesHistoryExpanded: false,
     mediaFiles: [],
+    factoryReturnRoute:'DIRECT',
     actionMedia: [],
+    oldReturnDeviceMedia: [], oldReturnLogisticsMedia: [],
     submitting: false,
     triage: {
       faultIndex: -1,
@@ -69,6 +71,8 @@ Page({
       preliminaryMaterialOptions: [],
       stationRecommendationMessage: '',
       stationRecommendationsLoading: false,
+      originalInstallerCheck: null,
+      originalInstallerLoading: false,
       diagnosisNote: '',
       repairPlan: '',
       thirdPartyName: '',
@@ -79,9 +83,34 @@ Page({
     shipmentCompany: '',
     shipmentTrackingNo: '',
     receiptNote: '',
-    repairSummary: '',
+    repairActionMode: 'COMPLETE',
+    onsiteServiceMode: '',
+    recoveryNote: '',
+    disassemblyRows: [],
+    replacementExecutionMode: 'LOCAL',
+    replacementNote: '',
+    replacementCompany: '',
+    replacementTracking: '',
+    replacementShipmentId: '',
+    replacementShipmentOptions: [{id:'',label:'单独补发，不关联销售批次'}],
+    replacementShipmentIndex: 0,
+    replacementHandoverMethod: 'SHIPMENT',
+    escalationRequested: 'REPLACEMENT',
+    escalationHolder: 'EXECUTOR',
+    escalationReason: '',
+    escalationAddress: '',
+    escalationNote: '',
+    escalationHandoverMethod: 'SHIPMENT',
+    escalationHandoverNote: '',
+    escalationCompany: '',
+    escalationTracking: '',
+    escalationReceipt: '',
+    escalationNewSN: '',
+    escalationDeliveryNote: '',
+    repairSummary: '', 
     repairMaterialReplaced: false,
     repairMaterials: [],
+    repairQuantityRows: [],
     actualProcessedAt: localDateTime(),
     returnCompany: '',
     returnTrackingNo: '',
@@ -128,8 +157,14 @@ Page({
       .then(detail => {
         const dispatch = detail.dispatch || {};
         const currentTriage = this.data.triage;
+        const replacementOptions=[{id:'',label:(detail.replacement_flow || {}).supply_normal_order_id ? '请选择本订单已发货批次' : '单独补发，不关联销售批次'}].concat((detail.replacement_flow || {}).shared_shipments || []);
+        const previousCarrier=silent ? this.data.replacementShipmentId : '';
+        const replacementIndex=Math.max(0,replacementOptions.findIndex(row=>String(row.id || '')===String(previousCarrier || '')));
         const nextData = {
           detail,
+          disassemblyRows: ((detail.bom || {}).items || []).map(item=>Object.assign({},item,{actualQuantity:((this.data.disassemblyRows || []).find(row=>row.bom_item_id===item.bom_item_id)||{}).actualQuantity || ''})),
+          replacementShipmentOptions:replacementOptions,
+          replacementShipmentIndex:replacementIndex, replacementShipmentId:String(replacementOptions[replacementIndex].id || ''),
           mediaFiles: (detail.media || []).map(item => ({
             ...item,
             key: String(item.id),
@@ -146,7 +181,9 @@ Page({
         };
         // Returning from the album/file picker can trigger onShow(). Preserve
         // the files selected for the current action during a silent refresh.
-        if (!silent) nextData.actionMedia = [];
+        if (!silent) Object.assign(nextData,{actionMedia:[],oldReturnDeviceMedia:[],oldReturnLogisticsMedia:[]});
+        if ((detail.dispatch || {}).route === 'FACTORY_AFTERSALES') nextData.replacementExecutionMode = 'FACTORY';
+        if (!silent || !(detail.actions || {}).can_escalation_request) nextData.repairActionMode = 'COMPLETE';
         this.setData(nextData);
       })
       .catch(err => {
@@ -190,6 +227,7 @@ Page({
       'triage.preliminaryMaterialOptions': preliminaryMaterialOptions
     });
     if (this.data.triage.route === 'SERVICE_STATION') this.loadStationRecommendations();
+    if (this.data.triage.route === 'ORIGINAL_INSTALLER') this.loadOriginalInstallerCheck();
   },
 
   onTriageMaterials(e) {
@@ -204,6 +242,7 @@ Page({
       'triage.candidateIndex': -1
     });
     if (this.data.triage.route === 'SERVICE_STATION') this.loadStationRecommendations();
+    if (this.data.triage.route === 'ORIGINAL_INSTALLER') this.loadOriginalInstallerCheck();
   },
 
   onTriageNote(e) {
@@ -225,6 +264,8 @@ Page({
       this._stationRecommendationsRequest = (this._stationRecommendationsRequest || 0) + 1;
     }
     this.setData({
+      'triage.originalInstallerCheck': null,
+      'triage.originalInstallerLoading': false,
       'triage.routeIndex': routeIndex,
       'triage.route': route.value || '',
       'triage.candidates': candidates,
@@ -234,7 +275,69 @@ Page({
         : '',
       'triage.stationRecommendationsLoading': route.value === 'SERVICE_STATION'
     });
+    this._installerCheckRequest = (this._installerCheckRequest || 0) + 1;
     if (route.value === 'SERVICE_STATION') this.loadStationRecommendations();
+    if (route.value === 'ORIGINAL_INSTALLER') this.loadOriginalInstallerCheck();
+  },
+
+  loadOriginalInstallerCheck() {
+    const triage = this.data.triage;
+    if (triage.route !== 'ORIGINAL_INSTALLER') return Promise.resolve();
+    const requestId = (this._installerCheckRequest || 0) + 1;
+    this._installerCheckRequest = requestId;
+    const applicationId = this.data.applicationId;
+    const fault = (this.getTriageOptions().preliminary_fault_types || [])[triage.faultIndex];
+    this.setData({'triage.originalInstallerCheck': null, 'triage.originalInstallerLoading': true,
+      'triage.candidates': [], 'triage.candidateIndex': -1});
+    const query = 'dispatch_route=ORIGINAL_INSTALLER&preliminary_fault_type=' + encodeURIComponent(fault ? fault.value : '') +
+      '&preliminary_materials=' + encodeURIComponent((triage.preliminaryMaterials || []).join(','));
+    return apiRequest('/lifecycle/after-sales/applications/' + applicationId + '/triage-options/?' + query)
+      .then(result => {
+        if (requestId !== this._installerCheckRequest || this.data.triage.route !== 'ORIGINAL_INSTALLER' || this.data.applicationId !== applicationId) return;
+        const check = result.original_installer_check || {status:'ERROR', message:'未取得原装车库存校验结果，请重新选择处理路径。'};
+        const ready = check.status === 'READY' && check.original_installer;
+        this.setData({'triage.originalInstallerCheck':check, 'triage.originalInstallerLoading':false,
+          'triage.candidates':ready ? [check.original_installer] : [], 'triage.candidateIndex':ready ? 0 : -1});
+      }).catch(error => {
+        if (requestId !== this._installerCheckRequest || this.data.triage.route !== 'ORIGINAL_INSTALLER') return;
+        this.setData({'triage.originalInstallerLoading':false,
+          'triage.originalInstallerCheck':{status:'ERROR', message:error.message || '库存校验失败，请重试。'}});
+      });
+  },
+
+  confirmOriginalInstallerFallback() {
+    if (this.data.submitting || this.data.triage.originalInstallerLoading) return;
+    const triage = this.data.triage;
+    const check = triage.originalInstallerCheck;
+    const fault = (this.getTriageOptions().preliminary_fault_types || [])[triage.faultIndex];
+    if (triage.route !== 'ORIGINAL_INSTALLER' || !check || check.status !== 'MISSING_PARTS' || !check.nearest_station || !check.confirmation_token || !fault) return;
+    if (!triage.diagnosisNote.trim() || !triage.repairPlan.trim()) {
+      wx.showToast({title:'请先填写故障认定依据和维修方案',icon:'none'}); return;
+    }
+    const station = check.nearest_station;
+    const requestId = this._installerCheckRequest;
+    const applicationId = this.data.applicationId;
+    const data = {preliminary_fault_type:fault.value, preliminary_fault_materials:(triage.preliminaryMaterials || []).slice(),
+      diagnosis_note:triage.diagnosisNote.trim(),repair_plan:triage.repairPlan.trim(),dispatch_route:'SERVICE_STATION',
+      service_station_application_id:station.station_application_id,
+      original_installer_fallback_confirmed:true,original_installer_fallback_token:check.confirmation_token};
+    wx.showModal({title:'确认改派最近服务站',
+      content:check.message + '\n推荐：' + station.organization + '（' + station.distance_label + '）。确认后才发出维修任务。',
+      confirmText:'确认改派',cancelText:'暂不改派',
+      success:res => {
+        if (!res.confirm || this.data.submitting) return;
+        if (requestId !== this._installerCheckRequest || this.data.applicationId !== applicationId || this.data.triage.route !== 'ORIGINAL_INSTALLER') {
+          wx.showToast({title:'选择已变化，请重新校验',icon:'none'}); return;
+        }
+        this.runAction({endpoint:'/triage/',data,success:'已确认改派最近服务站'});
+      }
+    });
+  },
+
+  callFallbackStation() {
+    const check = this.data.triage.originalInstallerCheck;
+    const station = check && check.nearest_station;
+    if (station && station.phone) wx.makePhoneCall({phoneNumber:station.phone});
   },
 
   loadStationRecommendations() {
@@ -328,7 +431,7 @@ Page({
     const actionMedia = this.data.actionMedia.slice();
     if (!actionMedia[index]) return;
     actionMedia[index] = { ...actionMedia[index], ...patch };
-    this.setData({ actionMedia });
+    this.setData({ actionMedia,oldReturnDeviceMedia:actionMedia.filter(x=>x.oldReturnKind==='DEVICE'),oldReturnLogisticsMedia:actionMedia.filter(x=>x.oldReturnKind==='LOGISTICS') });
   },
 
   uploadActionOne(purpose, item, index) {
@@ -344,7 +447,7 @@ Page({
           media_type: item.media_type,
           purpose,
           duration_seconds: item.duration_seconds || '',
-          caption: ''
+          caption: item.oldReturnKind || ''
         },
         success: res => {
           let body = null;
@@ -386,11 +489,21 @@ Page({
     if (this.data.submitting) return;
     this.setData({ submitting: true });
     this.uploadActionMedia(options.purpose)
-      .then(() => apiRequest(
+      .then(() => {
+        if (options.data.factory_transport_upload) {
+          options.data.document_ids=this.data.actionMedia.map(x=>x.serverMediaId);
+          delete options.data.factory_transport_upload;
+        }
+        if (options.data.old_return_upload) {
+          options.data.device_image_ids=this.data.actionMedia.filter(x=>x.oldReturnKind==='DEVICE').map(x=>x.serverMediaId);
+          options.data.logistics_document_ids=this.data.actionMedia.filter(x=>x.oldReturnKind==='LOGISTICS').map(x=>x.serverMediaId);
+          delete options.data.old_return_upload;
+        }
+        return apiRequest(
         '/lifecycle/after-sales/applications/' + this.data.applicationId + options.endpoint,
         'POST',
         options.data
-      ))
+      ); })
       .then(() => {
         wx.showToast({ title: options.success || '操作已完成', icon: 'success' });
         this.setData({ actionMedia: [] });
@@ -446,6 +559,10 @@ Page({
       }
       data.service_station_application_id = candidate.station_application_id;
     }
+    if (route.value === 'ORIGINAL_INSTALLER' && (triage.originalInstallerLoading ||
+        !triage.originalInstallerCheck || triage.originalInstallerCheck.status !== 'READY')) {
+      wx.showToast({title:'原装车库存校验未通过，请查看提示',icon:'none'}); return;
+    }
     if (['ORIGINAL_INSTALLER', 'MERCHANT_ELECTRICIAN', 'FACTORY_AFTERSALES'].includes(route.value)) {
       const candidate = triage.candidates[triage.candidateIndex];
       if (!candidate) {
@@ -468,6 +585,7 @@ Page({
       data.third_party_phone = triage.thirdPartyPhone.trim();
       data.third_party_address = triage.thirdPartyAddress.trim();
     }
+    if (route.value === 'FACTORY_AFTERSALES') data.factory_transport_version=1;
     if (route.value === 'REMOTE') {
       const finalData = this.finalPayload();
       if (!finalData) return;
@@ -521,7 +639,223 @@ Page({
   },
 
   onRepairMaterials(e) {
-    this.setData({ repairMaterials: e.detail.value || [] });
+    const selected = e.detail.value || [];
+    const previous = {};
+    (this.data.repairQuantityRows || []).forEach(row => { previous[row.key] = row.quantity; });
+    const items = ((this.data.detail || {}).bom || {}).items || [];
+    const rows = items.filter(item => selected.includes(String(item.bom_item_id || item.material_id)))
+      .map(item => ({ key: String(item.bom_item_id || item.material_id),
+        bom_item_id: item.bom_item_id, material_id: item.material_id,
+        name: [item.material_name, item.specification_name].filter(Boolean).join(' '),
+        quantity: previous[String(item.bom_item_id || item.material_id)] || '' }));
+    this.setData({ repairMaterials: selected, repairQuantityRows: rows });
+  },
+
+  onRepairQuantity(e) {
+    const rows = (this.data.repairQuantityRows || []).map(row => row.key === String(e.currentTarget.dataset.key)
+      ? Object.assign({}, row, {quantity: e.detail.value}) : row);
+    this.setData({repairQuantityRows: rows});
+  },
+
+  showUnableRepair() {
+    if (this.data.submitting || !((this.data.detail || {}).actions || {}).can_escalation_request) return;
+    this.setData({repairActionMode: 'UNABLE'});
+  },
+
+  showRepairComplete() {
+    if (this.data.submitting) return;
+    this.setData({repairActionMode: 'COMPLETE', repairCompleteExpanded: true});
+  },
+
+  onEscalationChoice(e) {
+    const allowed = ['escalationRequested', 'escalationHolder', 'escalationHandoverMethod', 'replacementExecutionMode','replacementHandoverMethod','onsiteServiceMode','factoryReturnRoute'];
+    if (allowed.includes(e.currentTarget.dataset.field)) this.setData({[e.currentTarget.dataset.field]: e.detail.value});
+  },
+
+  escalationAction(action, data, purpose) {
+    this.runAction({endpoint: '/escalation/', purpose,
+      data: Object.assign({action}, data), success: '售后处理变更已提交'});
+  },
+
+  submitUnableRepair() {
+    if (!this.data.escalationReason.trim()) return wx.showToast({title:'请填写无法维修原因',icon:'none'});
+    wx.showModal({title:'确认无法维修', content:'提交后暂停当前维修，等待厂家确认换新或返厂，不再退回您继续维修。',
+      success: res => {if (res.confirm) this.escalationAction('REQUEST', {
+        requested:this.data.escalationRequested, holder:this.data.escalationHolder,
+        reason:this.data.escalationReason.trim(),factory_return_route:this.data.factoryReturnRoute}, 'REPAIR_EVIDENCE');}});
+  },
+
+  submitEscalationDecision(e) {
+    if (!this.data.escalationAddress.trim()) return wx.showToast({title:'请填写厂家接收地址、联系人和电话',icon:'none'});
+    const decision=e.currentTarget.dataset.decision;
+    wx.showModal({title:decision==='REPLACEMENT'?'同意售后换新':'确认转返厂维修',
+      content:decision==='REPLACEMENT'?'确认换新方式，后续按渠道逐段发出和签收；用户换机与退旧补发分别跟踪。':'通知原任务接收方安排返厂，由厂家维修。',
+      success:res=>{if(res.confirm) this.escalationAction('DECIDE', {decision,
+        receiving_address:this.data.escalationAddress.trim(), note:this.data.escalationNote.trim(),
+        replacement_flow_version:3, factory_transport_version:1,execution_mode:this.data.replacementExecutionMode});}});
+  },
+
+  submitEscalationHandover() {
+    if (!this.data.escalationHandoverNote.trim()) return wx.showToast({title:'请填写交接说明',icon:'none'});
+    if (this.data.escalationHandoverMethod==='SHIPMENT' && (!this.data.escalationCompany.trim() || !this.data.escalationTracking.trim()))
+      return wx.showToast({title:'请填写物流公司和单号',icon:'none'});
+    this.escalationAction('HANDOVER', {handover_method:this.data.escalationHandoverMethod,
+      handover_note:this.data.escalationHandoverNote.trim(), logistics_company:this.data.escalationCompany.trim(),
+      tracking_no:this.data.escalationTracking.trim()}, 'APPLICANT_SHIPMENT_DOCUMENT');
+  },
+
+  submitEscalationReceipt() {
+    const es=(this.data.detail || {}).escalation || {};
+    const direct=es.requires_replacement_flow_v6 && es.decision==='FACTORY_REPAIR';
+    if (!direct && !this.data.escalationReceipt.trim()) return wx.showToast({title:'请填写厂家收件检查说明',icon:'none'});
+    this.escalationAction('RECEIVE',{receipt_note:this.data.escalationReceipt.trim() || '已线下核对实物并取货',confirmed:true});
+  },
+
+  enableCurrentReplacementFlow() {
+    wx.showModal({title:'按现行换新方式办理',content:'当前没有实物交接记录，将重建尚未执行的退旧、补机待办，保留原审批记录。',success:r=>{if(r.confirm)this.escalationAction('UPGRADE_REPLACEMENT_PROTOCOL',{});}});
+  },
+
+  confirmOnsiteService() {
+    if (!this.data.onsiteServiceMode) return wx.showToast({title:'请选择上门服务或店内服务',icon:'none'});
+    this.escalationAction('CONFIRM_REPLACEMENT_SERVICE',{service_mode:this.data.onsiteServiceMode});
+  },
+
+  onOldReturnDeviceMedia(e) {
+    const files=(e.detail.files || []).map(x=>Object.assign({},x,{oldReturnKind:'DEVICE'}));
+    this.setData({oldReturnDeviceMedia:files,actionMedia:files.concat(this.data.oldReturnLogisticsMedia)});
+  },
+  onOldReturnLogisticsMedia(e) {
+    const files=(e.detail.files || []).map(x=>Object.assign({},x,{oldReturnKind:'LOGISTICS'}));
+    this.setData({oldReturnLogisticsMedia:files,actionMedia:this.data.oldReturnDeviceMedia.concat(files)});
+  },
+  sendOldReplacementLeg(e) {
+    if (this.data.submitting) return;
+    if (!this.data.oldReturnDeviceMedia.length || !this.data.oldReturnLogisticsMedia.length)
+      return wx.showToast({title:'请分别添加物流单和设备图片',icon:'none'});
+    if (this.data.oldReturnDeviceMedia.some(x=>x.media_type!=='IMAGE') || this.data.oldReturnLogisticsMedia.some(x=>!['IMAGE','DOCUMENT'].includes(x.media_type)))
+      return wx.showToast({title:'设备须为图片，物流单须为图片或单据',icon:'none'});
+    this.escalationAction('SEND_REPLACEMENT_LEG',{leg_id:Number(e.currentTarget.dataset.id),old_return_upload:true,confirmed:true},'REPAIR_RETURN_SHIPMENT_DOCUMENT');
+  },
+
+  oldMachineAction(e) {
+    if (this.data.submitting) return;
+    const action=e.currentTarget.dataset.action;
+    const legId=Number(e.currentTarget.dataset.id || 0);
+    if(action==='SEND_REPLACEMENT_LEG') return this.sendOldReplacementLeg(e);
+    wx.showModal({title:action==='SEND_REPLACEMENT_LEG'?'确认旧机已交出':(action==='FACTORY_PICKUP'?'确认物流已取货':'确认已线下核对接收'),
+      content:'请实际核对设备后确认；接收后可暂存，退回上级需另行操作。',
+      success:r=>{if(r.confirm)this.escalationAction(action,{leg_id:legId,confirmed:true,note:'已线下核对实物'});}});
+  },
+
+  recoveryDecide(e) {
+    if (!this.data.recoveryNote.trim()) return wx.showToast({title:'请填写旧机研判说明',icon:'none'});
+    this.escalationAction('RECOVERY_DECIDE',{decision:e.currentTarget.dataset.decision,note:this.data.recoveryNote.trim()});
+  },
+
+  recoveryRepairComplete(e) {
+    if (!this.data.recoveryNote.trim()) return wx.showToast({title:'请填写修复说明',icon:'none'});
+    this.escalationAction('RECOVERY_REPAIR_COMPLETE',{stock_target:e.currentTarget.dataset.target,note:this.data.recoveryNote.trim()},'REPAIR_EVIDENCE');
+  },
+
+  onDisassemblyQuantity(e) {
+    const id=Number(e.currentTarget.dataset.id);
+    this.setData({disassemblyRows:this.data.disassemblyRows.map(row=>row.bom_item_id===id?Object.assign({},row,{actualQuantity:e.detail.value}):row)});
+  },
+
+  completeDisassembly() {
+    const parts=this.data.disassemblyRows.filter(row=>String(row.actualQuantity).trim()!=='').map(row=>({bom_item_id:row.bom_item_id,quantity:row.actualQuantity}));
+    if (!parts.length) return wx.showToast({title:'请填写实际拆下退料数量',icon:'none'});
+    this.escalationAction('RECOVERY_DISASSEMBLY_COMPLETE',{parts,note:this.data.recoveryNote.trim()},'REPAIR_EVIDENCE');
+  },
+
+  sendWarrantyPart(e) {
+    this.escalationAction('SEND_WARRANTY_PART',Object.assign(this.replacementLogistics(),{part_id:Number(e.currentTarget.dataset.id)}),'REPAIR_RETURN_SHIPMENT_DOCUMENT');
+  },
+
+  startFactoryTransport() {
+    wx.showModal({title:'接入厂家物流返件',content:'保留已发生的寄送记录，后续由厂家物流收货、售后处理归因、物流发回。',success:r=>{if(r.confirm)this.escalationAction('START_FACTORY_TRANSPORT',{});}});
+  },
+  factoryTransportPrepare() {
+    if(this.data.submitting)return;
+    wx.scanCode({onlyFromCamera:true,scanType:['qrCode'],success:r=>this.escalationAction('FACTORY_TRANSPORT_PREPARE_SWAP',{qr_text:r.result}),fail:()=>wx.showToast({title:'未完成扫码',icon:'none'})});
+  },
+  factoryTransportSend(e) {
+    if(this.data.submitting)return;
+    if(!this.data.replacementCompany.trim() || !this.data.replacementTracking.trim() || !this.data.actionMedia.length)
+      return wx.showToast({title:'请填写物流并添加本段凭证',icon:'none'});
+    this.escalationAction('FACTORY_TRANSPORT_SEND',{direction:e.currentTarget.dataset.direction,index:Number(e.currentTarget.dataset.index),factory_transport_upload:true,
+      logistics_company:this.data.replacementCompany.trim(),tracking_no:this.data.replacementTracking.trim()},'REPAIR_RETURN_SHIPMENT_DOCUMENT');
+  },
+  factoryTransportReceive(e) {
+    if(this.data.submitting)return;
+    const d=e.currentTarget.dataset;
+    wx.showModal({title:'确认实物已收到',content:'请实际核对设备后确认。本操作会记录接收人及时间。',success:r=>{if(r.confirm)this.escalationAction(d.action || 'FACTORY_TRANSPORT_RECEIVE',{direction:d.direction,index:Number(d.index),confirmed:true});}});
+  },
+
+  openReplacementSupplyPlans() {wx.navigateTo({url:'/pages/sales/replacement_supply/replacement_supply'});},
+
+  openRecoveredStock() {wx.navigateTo({url:'/pages/stock/recovered_machine/recovered_machine'});},
+
+  chooseReplacementShipment(e) {
+    const index=Number(e.detail.value);
+    const row=this.data.replacementShipmentOptions[index];
+    if (row) this.setData({replacementShipmentIndex:index,replacementShipmentId:String(row.id || '')});
+  },
+
+  replacementLogistics() {
+    return {handover_method:((this.data.detail || {}).replacement_flow || {}).factory_logistics_only ? 'SHIPMENT' : this.data.replacementHandoverMethod,
+      note:this.data.replacementNote.trim(), logistics_company:this.data.replacementCompany.trim(),
+      tracking_no:this.data.replacementTracking.trim(), shipment_id:this.data.replacementShipmentId.trim() || null};
+  },
+
+  scanReplacementStock() {
+    if (this.data.submitting) return;
+    if ((this.data.detail || {}).replacement_flow && this.data.detail.replacement_flow.protocol_version===6 && this.data.detail.replacement_flow.mode==='LOCAL') {
+      wx.scanCode({onlyFromCamera:true,scanType:['qrCode'],success:res=>this.escalationAction('SCAN_SWAP',{qr_text:res.result}),
+        fail:()=>wx.showToast({title:'未完成扫码',icon:'none'})});
+      return;
+    }
+    wx.scanCode({onlyFromCamera:true,scanType:['qrCode'],success:res=>{
+      this.escalationAction('SCAN_SWAP',Object.assign(this.replacementLogistics(),{qr_text:res.result}), 'REPAIR_RETURN_SHIPMENT_DOCUMENT');
+    },fail:()=>wx.showToast({title:'未完成扫码',icon:'none'})});
+  },
+
+  sendReplacementLeg(e) {
+    if (this.data.submitting) return;
+    const id=Number(e.currentTarget.dataset.id);
+    const leg=(((this.data.detail || {}).replacement_flow || {}).legs || []).find(x=>x.id===id);
+    if(leg && leg.direction==='OLD') return this.sendOldReplacementLeg(e);
+    wx.scanCode({onlyFromCamera:true,scanType:['qrCode'],success:res=>{
+      this.escalationAction('SEND_REPLACEMENT_LEG',Object.assign(this.replacementLogistics(),{leg_id:id,qr_text:res.result}),
+        this.data.replacementShipmentId.trim() ? null : 'REPAIR_RETURN_SHIPMENT_DOCUMENT');
+    },fail:()=>wx.showToast({title:'未完成扫码',icon:'none'})});
+  },
+
+  receiveReplacementLeg(e) {
+    if (this.data.submitting) return;
+    const leg=((this.data.detail.replacement_flow || {}).legs || []).find(x=>x.id===Number(e.currentTarget.dataset.id));
+    if (!leg) return;
+    if (!this.data.replacementNote.trim()) return wx.showToast({title:'请填写签收核对说明',icon:'none'});
+    const finish=qr=>wx.showModal({title:'确认签收',content:leg.from_name+' → '+leg.to_name+'，设备：'+leg.device_sn,
+      success:res=>{if(res.confirm) this.escalationAction('RECEIVE_REPLACEMENT_LEG',{leg_id:leg.id,confirmed:true,
+        receipt_note:this.data.replacementNote.trim(),qr_text:qr},'REPAIR_RETURN_SHIPMENT_DOCUMENT');}});
+    if (leg.direction==='USER') wx.scanCode({onlyFromCamera:true,scanType:['qrCode'],success:r=>finish(r.result)});
+    else finish('');
+  },
+
+  submitReplacementDelivery() {
+    if (!this.data.escalationNewSN.trim() || !this.data.escalationDeliveryNote.trim())
+      return wx.showToast({title:'请填写新设备SN及交付说明',icon:'none'});
+    this.escalationAction('DELIVER_REPLACEMENT', {new_device_sn:this.data.escalationNewSN.trim(),
+      delivery_note:this.data.escalationDeliveryNote.trim()}, 'REPAIR_RETURN_SHIPMENT_DOCUMENT');
+  },
+
+  submitReplacementConfirm() {
+    const es=(this.data.detail || {}).escalation || {};
+    if (this.data.escalationNewSN.trim()!==es.new_device_sn) return wx.showToast({title:'请填写实际收到的新设备SN并核对',icon:'none'});
+    wx.showModal({title:'确认换新收货',content:'确认实际收到新设备：'+es.new_device_sn+'？',
+      success:res=>{if(res.confirm) this.escalationAction('CONFIRM_REPLACEMENT',{
+        confirmed:true,new_device_sn:this.data.escalationNewSN.trim()});}});
   },
 
   submitRepairComplete() {
@@ -529,13 +863,21 @@ Page({
       wx.showToast({ title: '请填写处理说明', icon: 'none' });
       return;
     }
+    const rows = this.data.repairMaterialReplaced ? (this.data.repairQuantityRows || []) : [];
+    if (this.data.repairMaterialReplaced && (!rows.length || rows.some(row =>
+      !/^[0-9]+$/.test(String(row.quantity)) || Number(row.quantity) < 1 || Number(row.quantity) > 100000))) {
+      wx.showToast({title: '请填写每项实际更换件数', icon: 'none'});
+      return;
+    }
+    const replacementMaterials = rows.map(row => ({bom_item_id: row.bom_item_id,
+      material_id: row.material_id, replacement_quantity: Number(row.quantity)}));
     this.runAction({
       purpose: 'REPAIR_EVIDENCE',
       endpoint: '/repair-complete/',
       data: {
         repair_summary: this.data.repairSummary.trim(),
         repair_material_replaced: this.data.repairMaterialReplaced,
-        repair_materials: this.data.repairMaterials,
+        repair_materials: replacementMaterials,
         actual_processed_at: this.data.actualProcessedAt
       },
       success: '维修完成已提交'
@@ -621,6 +963,7 @@ Page({
   submitFactoryClose() {
     const data = this.finalPayload();
     if (!data) return;
+    if ((this.data.detail || {}).factory_transport) return this.escalationAction('FACTORY_TRANSPORT_FINALIZE',data);
     this.runAction({
       endpoint: '/factory-close/',
       data,

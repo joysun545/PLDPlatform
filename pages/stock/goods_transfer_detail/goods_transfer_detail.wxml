@@ -7,6 +7,7 @@
   </view>
 
   <block wx:elif="{{detail}}">
+    <view class="hero-card" wx:if="{{detail.pending_replacement_demands.length}}"><text>本段下发待补机 {{detail.pending_replacement_demands.length}} 台</text><view wx:for="{{detail.pending_replacement_demands}}" wx:key="application_id"><text>{{item.case_no}} · {{item.organization}} · {{item.model}}</text><button data-id="{{item.application_id}}" bindtap="openReplacementDemand">进入补机工作流</button></view></view>
     <view class="hero-card">
       <view class="hero-head">
         <text class="flow-type" wx:if="{{detail.actions.can_receive}}">接收上级发货</text>

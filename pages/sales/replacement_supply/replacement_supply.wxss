@@ -1,0 +1,1 @@
+.page{padding:24rpx}.card{padding:28rpx;margin-bottom:22rpx;background:var(--ui-card-bg,#fff);border-radius:24rpx}.card text{display:block;margin-bottom:18rpx;line-height:1.6}.row{padding:20rpx 0;border-top:1rpx solid #e8ecef}button{margin-top:16rpx}picker{padding:24rpx;background:#f3f6fa;border-radius:12rpx}

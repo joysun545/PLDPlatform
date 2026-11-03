@@ -28,6 +28,7 @@ Page({
     vehicleNo: '',
     activationMethod: 'VEHICLE_PLATE',
     physicalDeviceCode: '',
+    physicalDeviceCodeVerifiedHere: false,
     verifyingDeviceCode: false,
     activation: null,
     baseCanActivate: false,
@@ -145,9 +146,9 @@ Page({
         ? activation.vehicle_no
         : (profile.vehicle_no || this.data.vehicleNo || ''),
       activationMethod,
-      physicalDeviceCode: activation && activation.physical_device_code
-        ? activation.physical_device_code
-        : (device.physical_device_code || ''),
+      physicalDeviceCode: activation && activation.required_activation_method
+        ? (this.data.physicalDeviceCodeVerifiedHere ? this.data.physicalDeviceCode : '')
+        : (activation && activation.physical_device_code ? activation.physical_device_code : (device.physical_device_code || '')),
       activation,
       baseCanActivate,
       canActivate: baseCanActivate && (!gate || gate.activation_allowed !== false),
@@ -219,8 +220,12 @@ Page({
   },
 
   onActivationMethodChange(e) {
+    if ((this.data.activation || {}).required_activation_method) {
+      wx.showToast({title:'换新设备请重新扫描设备编码激活售后',icon:'none'});
+      return;
+    }
     const method = e.detail.value === 'DEVICE_CODE' ? 'DEVICE_CODE' : 'VEHICLE_PLATE';
-    this.setData({ activationMethod: method, physicalDeviceCode: '' });
+    this.setData({ activationMethod: method, physicalDeviceCode: '', physicalDeviceCodeVerifiedHere:false });
   },
 
   scanPhysicalDeviceCode() {
@@ -233,7 +238,7 @@ Page({
           wx.showToast({ title: '没有读取到设备编码', icon: 'none' });
           return;
         }
-        this.setData({ verifyingDeviceCode: true, physicalDeviceCode: '' });
+        this.setData({ verifyingDeviceCode: true, physicalDeviceCode: '', physicalDeviceCodeVerifiedHere:false });
         wx.request({
           url: `${app.globalData.apiBase}/lifecycle/customer/devices/${this.data.deviceId}/activation-code/verify/`,
           method: 'POST',
@@ -247,7 +252,7 @@ Page({
             }
             const payload = response.data && response.data.data;
             if (response.data && response.data.code === 0 && payload && payload.verified) {
-              this.setData({ physicalDeviceCode: payload.device_code || '' });
+              this.setData({ physicalDeviceCode: payload.device_code || '', physicalDeviceCodeVerifiedHere:true });
               wx.showToast({ title: '设备编码验证通过', icon: 'success' });
               return;
             }
@@ -271,6 +276,9 @@ Page({
 
   confirmActivation() {
     if (this.data.activating) return;
+    if ((this.data.activation || {}).required_activation_method && !this.data.physicalDeviceCodeVerifiedHere) {
+      wx.showToast({title:'请重新扫描并验证新机设备编码',icon:'none'});return;
+    }
     if (!this.data.canActivate) {
       const gate = this.data.documentGate;
       wx.showToast({

@@ -49,15 +49,18 @@
     "pages/quality_trace/recall_detail/recall_detail",
     "pages/quality_trace/recall_disposition/recall_disposition",
     "pages/quality_trace/recall_handover_accept/recall_handover_accept",
-    "pages/quality_trace/recall_task_detail/recall_task_detail"
-    ,"pages/data_statistics/dashboard/dashboard"
-    ,"pages/data_statistics/domain/domain"
-    ,"pages/material_inventory/list/list"
-    ,"pages/material_inventory/order_delivery_receipt/order_delivery_receipt"
-    ,"pages/material_inventory/detail/detail"
-    ,"pages/material_inventory/form/form"
-    ,"pages/material_inventory/warranty_list/warranty_list"
-    ,"pages/theme/setting/setting"
+    "pages/quality_trace/recall_task_detail/recall_task_detail",
+    "pages/data_statistics/dashboard/dashboard",
+    "pages/data_statistics/domain/domain",
+    "pages/material_inventory/list/list",
+    "pages/material_inventory/order_delivery_receipt/order_delivery_receipt",
+    "pages/material_inventory/detail/detail",
+    "pages/material_inventory/form/form",
+    "pages/material_inventory/warranty_list/warranty_list",
+    "pages/theme/setting/setting",
+    "pages/aftersale/material_return/material_return",
+    "pages/stock/recovered_machine/recovered_machine",
+    "pages/sales/replacement_supply/replacement_supply"
   ],
   "window": {
     "backgroundTextStyle": "light",

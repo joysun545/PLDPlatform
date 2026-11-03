@@ -1,52 +1,157 @@
 {
-  "appid": "wxdabcfa47814a01ad",
-  "compileType": "miniprogram",
-  "libVersion": "trial",
-  "packOptions": {
-    "ignore": [],
-    "include": []
-  },
-  "setting": {
-    "urlCheck": false,
-    "es6": true,
-    "enhance": true,
-    "postcss": true,
-    "preloadBackgroundData": false,
-    "minified": true,
-    "newFeature": true,
-    "coverView": true,
-    "nodeModules": true,
-    "autoAudits": false,
-    "showShadowRootInWxmlPanel": true,
-    "scopeDataCheck": false,
-    "uglifyFileName": false,
-    "checkInvalidKey": true,
-    "checkSiteMap": true,
-    "uploadWithSourceMap": true,
-    "compileHotReLoad": true,
-    "lazyloadPlaceholderEnable": false,
-    "useMultiFrameRuntime": true,
-    "useApiHook": true,
-    "useApiHostProcess": true,
-    "babelSetting": {
-      "ignore": [],
-      "disablePlugins": [],
-      "outputPath": ""
-    },
-    "enableEngineNative": false,
-    "bundle": false,
-    "useIsolateContext": true,
-    "useCompilerModule": true,
-    "userConfirmedUseCompilerModuleSwitch": false,
-    "userConfirmedBundleSwitch": false,
-    "packNpmManually": false,
-    "packNpmRelationList": [],
-    "minifyWXSS": true
-  },
-  "condition": {},
-  "editorSetting": {
-    "tabIndent": "auto",
-    "tabSize": 2
-  },
-  "simulatorPluginLibVersion": {}
+    "appid":  "wxdabcfa47814a01ad",
+    "compileType":  "miniprogram",
+    "libVersion":  "trial",
+    "packOptions":  {
+                        "include":  [
+
+                                    ],
+                        "ignore":  [
+                                       {
+                                           "type":  "folder",
+                                           "value":  "tests"
+                                       },
+                                       {
+                                           "type":  "folder",
+                                           "value":  "backups"
+                                       },
+                                       {
+                                           "type":  "folder",
+                                           "value":  ".git"
+                                       },
+                                       {
+                                           "type":  "file",
+                                           "value":  "components/aftersale-media-uploader/index.js.before_aftersales_r7_20260827_102902"
+                                       },
+                                       {
+                                           "type":  "file",
+                                           "value":  "components/aftersale-media-uploader/index.js.before_aftersales_r8_20260827_104300"
+                                       },
+                                       {
+                                           "type":  "file",
+                                           "value":  "components/aftersale-media-uploader/index.wxml.before_aftersales_r8_20260827_104300"
+                                       },
+                                       {
+                                           "type":  "file",
+                                           "value":  "components/aftersale-media-uploader/index.wxss.before_aftersales_r8_20260827_104300"
+                                       },
+                                       {
+                                           "type":  "file",
+                                           "value":  "pages/aftersale/detail/detail.js.before_aftersales_r7_20260827_102902"
+                                       },
+                                       {
+                                           "type":  "file",
+                                           "value":  "pages/aftersale/detail/detail.js.before_aftersales_r8_20260827_104300"
+                                       },
+                                       {
+                                           "type":  "file",
+                                           "value":  "pages/aftersale/detail/detail.wxml.before_aftersales_r6_20260827_095312"
+                                       },
+                                       {
+                                           "type":  "file",
+                                           "value":  "pages/aftersale/list/list.js.before_aftersales_r9_20260827_120138"
+                                       },
+                                       {
+                                           "type":  "file",
+                                           "value":  "pages/home/index/index.js.before_aftersales_r9_20260827_120138"
+                                       },
+                                       {
+                                           "type":  "file",
+                                           "value":  "pages/home/index/index.js.before_aftersales_supplier_quality_r11_20260827_152714"
+                                       },
+                                       {
+                                           "type":  "file",
+                                           "value":  "pages/home/index/index.js.before_quality_trace_roles_r13721_20260828_101438"
+                                       },
+                                       {
+                                           "type":  "file",
+                                           "value":  "pages/home/index/index.wxml.before_aftersales_supplier_quality_r11_20260827_152714"
+                                       },
+                                       {
+                                           "type":  "file",
+                                           "value":  "pages/sales/order_plan_list/order_plan_list.js.before_supplier_batch_r12_20260827_190305"
+                                       },
+                                       {
+                                           "type":  "file",
+                                           "value":  "pages/sales/order_plan_list/order_plan_list.json.before_supplier_batch_r12_20260827_190305"
+                                       },
+                                       {
+                                           "type":  "file",
+                                           "value":  "pages/sales/order_plan_list/order_plan_list.wxml.before_supplier_batch_r12_20260827_190305"
+                                       },
+                                       {
+                                           "type":  "file",
+                                           "value":  "pages/sales/order_plan_list/order_plan_list.wxss.before_supplier_batch_r12_20260827_190305"
+                                       },
+                                       {
+                                           "type":  "file",
+                                           "value":  "pages/supply_chain/aftersale_quality_notice/aftersale_quality_notice.js.before_aftersales_supplier_quality_r11_20260827_152714"
+                                       },
+                                       {
+                                           "type":  "file",
+                                           "value":  "pages/supply_chain/aftersale_quality_notice/aftersale_quality_notice.json.before_aftersales_supplier_quality_r11_20260827_152714"
+                                       },
+                                       {
+                                           "type":  "file",
+                                           "value":  "pages/supply_chain/aftersale_quality_notice/aftersale_quality_notice.wxml.before_aftersales_supplier_quality_r11_20260827_152714"
+                                       },
+                                       {
+                                           "type":  "file",
+                                           "value":  "pages/supply_chain/aftersale_quality_notice/aftersale_quality_notice.wxss.before_aftersales_supplier_quality_r11_20260827_152714"
+                                       }
+                                   ]
+                    },
+    "setting":  {
+                    "urlCheck":  false,
+                    "es6":  true,
+                    "enhance":  true,
+                    "postcss":  true,
+                    "preloadBackgroundData":  false,
+                    "minified":  true,
+                    "newFeature":  true,
+                    "coverView":  true,
+                    "nodeModules":  true,
+                    "autoAudits":  false,
+                    "showShadowRootInWxmlPanel":  true,
+                    "scopeDataCheck":  false,
+                    "uglifyFileName":  false,
+                    "checkInvalidKey":  true,
+                    "checkSiteMap":  true,
+                    "uploadWithSourceMap":  true,
+                    "compileHotReLoad":  true,
+                    "lazyloadPlaceholderEnable":  false,
+                    "useMultiFrameRuntime":  true,
+                    "useApiHook":  true,
+                    "useApiHostProcess":  true,
+                    "babelSetting":  {
+                                         "ignore":  [
+
+                                                    ],
+                                         "disablePlugins":  [
+
+                                                            ],
+                                         "outputPath":  ""
+                                     },
+                    "enableEngineNative":  false,
+                    "bundle":  false,
+                    "useIsolateContext":  true,
+                    "useCompilerModule":  true,
+                    "userConfirmedUseCompilerModuleSwitch":  false,
+                    "userConfirmedBundleSwitch":  false,
+                    "packNpmManually":  false,
+                    "packNpmRelationList":  [
+
+                                            ],
+                    "minifyWXSS":  true
+                },
+    "condition":  {
+
+                  },
+    "editorSetting":  {
+                          "tabIndent":  "auto",
+                          "tabSize":  2
+                      },
+    "simulatorPluginLibVersion":  {
+
+                                  }
 }

@@ -23,3 +23,20 @@ miniprogram_npm/
 dist/
 backups/
 *.order-material-flow-rollback
+
+# Local files and deployment archives
+/project.private.config.json
+/node_modules/
+/backups/
+/.env
+/.env.*
+!/.env.example
+*.before_*
+*.bak
+*.orig
+/*.zip
+/*.tar.gz
+/*.tgz
+/*.7z
+/*.rar
+/$output

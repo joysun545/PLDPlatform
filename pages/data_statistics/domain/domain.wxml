@@ -27,6 +27,26 @@
       <view class="empty" wx:if="{{warehouseLoading}}">正在加载批次清单…</view>
       <button wx:if="{{warehouseNextCursor && !warehouseLoading}}" class="secondary wide" bindtap="moreWarehouseLots">加载更多</button>
     </view>
+    <view class="warehouse-panel" wx:if="{{showRepairBasis}}">
+      <view class="warehouse-title">维修与换件结算依据</view>
+      <view class="warehouse-subtitle">统计归属：{{repairBasisScopeTitle}}</view>
+      <view class="warehouse-subtitle">同一设备多次独立维修分别计台次；实际换件数量累计计件次。依据已具备不代表已付款或已结算。点击记录查看售后凭证。</view>
+      <view class="warehouse-lot" wx:for="{{basisRows}}" wx:key="application_id" data-id="{{item.application_id}}" bindtap="openRepairCase">
+        <view class="warehouse-lot-head"><view>{{item.case_no}}</view><view class="lot-status">{{item.status_name}}</view></view>
+        <view class="warehouse-code">设备SN：{{item.sn}} · 依据编号：{{item.basis_no}}</view>
+        <view class="warehouse-subtitle">维修组织：{{item.organization_name}} · 执行人：{{item.executor_name}}</view>
+        <view class="warehouse-subtitle">完工：{{item.repair_completed_at}}</view>
+        <view class="warehouse-subtitle">结果确认：{{item.confirmed_at}} · 确认方式：{{item.confirmation_mode}}</view>
+        <view class="warehouse-subtitle">厂家结案：{{item.closed_at}}</view>
+        <view class="warehouse-numbers" wx:if="{{item.status === 'READY'}}">维修 {{item.repair_visits}} 台次 · 换件 {{item.replacement_pieces}} 件次</view>
+        <view class="warehouse-subtitle" wx:if="{{item.materialsText}}">{{item.materialsText}}</view>
+        <view class="warehouse-error" wx:if="{{item.issuesText}}">{{item.issuesText}}</view>
+      </view>
+      <view class="empty" wx:if="{{!basisLoading && !basisError && !basisRows.length}}">当前授权范围暂无维修完成记录</view>
+      <view class="empty" wx:if="{{basisLoading}}">正在加载结算依据…</view>
+      <button class="secondary wide" wx:if="{{basisError}}" bindtap="retryRepairBasis">{{basisError}} · 重试</button>
+      <button class="secondary wide" wx:if="{{basisNextCursor && !basisLoading}}" bindtap="moreRepairBasis">加载更多依据</button>
+    </view>
     <view class="tree-panel" wx:if="{{hasResponsibilityTree}}">
       <view class="tree-title">产品流转链路</view>
       <view class="tree-subtitle">链路库存包含本组织及全部下级；组织库存只计算本组织。点击卡片逐级查看。</view>

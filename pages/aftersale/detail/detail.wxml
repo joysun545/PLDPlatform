@@ -90,7 +90,7 @@
         </picker>
         <view wx:if="{{triage.isComponentSuspected}}" class="suspected-materials">
           <text class="subheading">可能故障或需要更换的物料型号</text>
-          <text class="tip">请从设备提交时冻结的 BOM 中勾选。选择服务站时，系统会先核对服务站是否有这些型号的可用库存。</text>
+          <text class="tip">请从设备提交时冻结的 BOM 中勾选。选择原装车人员或服务站时，系统先核对对应组织是否有这些型号的可用库存。</text>
           <checkbox-group bindchange="onTriageMaterials">
             <label wx:for="{{triage.preliminaryMaterialOptions}}" wx:key="selection_value" class="check-row">
               <checkbox value="{{item.selection_value}}" checked="{{item.selected}}" />
@@ -104,6 +104,24 @@
         <picker range="{{detail.triage_options.routes}}" range-key="label" bindchange="onTriageRoute">
           <view class="picker">处理路径：{{triage.routeIndex >= 0 ? detail.triage_options.routes[triage.routeIndex].label : '请选择'}}</view>
         </picker>
+        <view wx:if="{{triage.route === 'ORIGINAL_INSTALLER'}}" class="station-selection">
+          <text class="subheading">原装车操作人与配件校验</text>
+          <text class="tip" wx:if="{{triage.originalInstallerLoading}}">正在追溯装车记录并核对组织配件库存…</text>
+          <block wx:elif="{{triage.originalInstallerCheck}}">
+            <text class="tip">{{triage.originalInstallerCheck.message}}</text>
+            <view wx:for="{{triage.originalInstallerCheck.stock_checks}}" wx:key="bom_item_id" class="candidate-info">
+              <text>{{item.material_name}} {{item.specification_name}}：{{item.available ? '有可用库存' : item.reason}}</text>
+            </view>
+            <view wx:if="{{triage.originalInstallerCheck.nearest_station}}" class="candidate-info">
+              <text>仅推荐最近的合格服务站：{{triage.originalInstallerCheck.nearest_station.organization}}</text>
+              <text>{{triage.originalInstallerCheck.nearest_station.distance_label}} · {{triage.originalInstallerCheck.nearest_station.contact_name}}</text>
+              <text>{{triage.originalInstallerCheck.nearest_station.address}}</text>
+              <text class="link" bindtap="callFallbackStation">联系服务站：{{triage.originalInstallerCheck.nearest_station.phone}}</text>
+              <button disabled="{{submitting || triage.originalInstallerLoading}}" bindtap="confirmOriginalInstallerFallback">确认改派最近服务站</button>
+            </view>
+          </block>
+          <text class="link" bindtap="loadOriginalInstallerCheck">重新校验</text>
+        </view>
         <view wx:if="{{triage.route === 'SERVICE_STATION'}}" class="station-selection">
           <text class="subheading">推荐售后服务站</text>
           <text class="tip">先按厂家和物料库存筛选，再按线下距离推荐。请电话联系确认后，在下方选择一家。</text>
@@ -175,7 +193,207 @@
       </block>
     </view>
 
-    <view class="card action" wx:if="{{detail.actions.can_repair_complete}}">
+    <view class="card" wx:if="{{detail.escalation.requested}}">
+      <text class="section-title">无法维修处理记录</text>
+      <view>申请：{{detail.escalation.requested === 'REPLACEMENT' ? '售后换新' : '返厂维修'}}</view>
+      <view>原因：{{detail.escalation.reason}}</view>
+      <view wx:if="{{detail.escalation.decision}}">厂家确认：{{detail.escalation.decision === 'REPLACEMENT' ? '售后换新' : '返厂维修'}}</view>
+      <view wx:if="{{detail.escalation.receiving_address}}">厂家接收信息：{{detail.escalation.receiving_address}}</view>
+      <view wx:if="{{detail.escalation.new_device_sn}}">换新设备SN：{{detail.escalation.new_device_sn}}</view>
+      <text class="tip" wx:if="{{detail.execution_stage === 'PENDING_ESCALATION'}}">待厂家售后经理确认，当前维修已暂停。</text>
+    </view>
+    <view class="card action" wx:if="{{detail.actions.can_escalation_request && repairActionMode === 'UNABLE'}}">
+      <view class="repair-action-heading"><text class="section-title">无法维修：申请厂家处理</text>
+        <button class="repair-mode-link" disabled="{{submitting}}" bindtap="showRepairComplete">返回确认维修完成</button></view>
+      <text class="tip">确认当前无法维修时，申请售后换新或返厂维修，由厂家确认后执行。</text>
+      <radio-group data-field="escalationRequested" bindchange="onEscalationChoice">
+        <label class="check-row"><radio value="REPLACEMENT" checked="{{escalationRequested === 'REPLACEMENT'}}"/>售后换新</label>
+        <label class="check-row"><radio value="FACTORY_REPAIR" checked="{{escalationRequested === 'FACTORY_REPAIR'}}"/>返厂维修</label>
+      </radio-group>
+      <radio-group wx:if="{{escalationRequested === 'FACTORY_REPAIR'}}" data-field="factoryReturnRoute" bindchange="onEscalationChoice">
+        <label class="check-row"><radio value="DIRECT" checked="{{factoryReturnRoute === 'DIRECT'}}"/>直接寄厂维修，厂家直接寄回用户</label>
+        <label class="check-row"><radio value="CHAIN" checked="{{factoryReturnRoute === 'CHAIN'}}"/>逐级返厂维修，修复后按原链路返回</label>
+      </radio-group>
+      <textarea data-field="escalationReason" value="{{escalationReason}}" bindinput="onRepairInput" placeholder="无法维修原因（必填）"/>
+
+      <aftersale-media-uploader files="{{actionMedia}}" max-count="9" allow-document="{{false}}" disabled="{{submitting}}" bindchange="onActionMediaChange" bindretry="onActionMediaRetry"/>
+      <button disabled="{{submitting}}" loading="{{submitting}}" bindtap="submitUnableRepair">提交无法维修申请</button>
+    </view>
+    <view class="card action" wx:if="{{detail.actions.can_escalation_decide}}">
+      <text class="section-title">厂家：确认处理方式</text>
+      <radio-group wx:if="{{detail.escalation.requested === 'REPLACEMENT'}}" data-field="replacementExecutionMode" bindchange="onEscalationChoice">
+        <label class="check-row"><radio value="LOCAL" checked="{{replacementExecutionMode === 'LOCAL'}}"/>原装车/服务站组织调用库存换新，沿渠道退旧补发</label>
+        <label class="check-row"><radio value="FACTORY" checked="{{replacementExecutionMode === 'FACTORY'}}"/>旧机沿链路返厂，由厂家售后经理换新（仅统计）</label>
+      </radio-group>
+      <textarea data-field="escalationAddress" value="{{escalationAddress}}" bindinput="onRepairInput" placeholder="厂家接收地址、联系人、联系电话（必填）"/>
+      <textarea data-field="escalationNote" value="{{escalationNote}}" bindinput="onRepairInput" placeholder="处理说明"/>
+      <button wx:if="{{detail.escalation.requested === 'REPLACEMENT'}}" data-decision="REPLACEMENT" disabled="{{submitting}}" bindtap="submitEscalationDecision">同意售后换新</button>
+      <button data-decision="FACTORY_REPAIR" disabled="{{submitting}}" bindtap="submitEscalationDecision">{{detail.escalation.requested === 'REPLACEMENT' ? '不同意换新，转返厂维修' : '确认返厂维修'}}</button>
+    </view>
+    <view class="card action" wx:if="{{detail.actions.can_escalation_handover}}">
+      <text class="section-title">实际持有人：交接原设备至厂家</text>
+      <radio-group data-field="escalationHandoverMethod" bindchange="onEscalationChoice">
+        <label class="check-row"><radio value="SHIPMENT" checked="{{escalationHandoverMethod === 'SHIPMENT'}}"/>物流寄送</label>
+        <label class="check-row"><radio value="IN_PERSON" checked="{{escalationHandoverMethod === 'IN_PERSON'}}"/>现场交接</label>
+      </radio-group>
+      <block wx:if="{{escalationHandoverMethod === 'SHIPMENT'}}">
+        <input class="field" data-field="escalationCompany" bindinput="onRepairInput" value="{{escalationCompany}}" placeholder="物流公司"/>
+        <input class="field" data-field="escalationTracking" bindinput="onRepairInput" value="{{escalationTracking}}" placeholder="物流单号"/>
+      </block>
+      <textarea data-field="escalationHandoverNote" value="{{escalationHandoverNote}}" bindinput="onRepairInput" placeholder="交接说明（必填）"/>
+      <aftersale-media-uploader files="{{actionMedia}}" max-count="9" allow-document="{{true}}" disabled="{{submitting}}" bindchange="onActionMediaChange" bindretry="onActionMediaRetry"/>
+      <button disabled="{{submitting}}" bindtap="submitEscalationHandover">上传凭证并确认交接</button>
+    </view>
+    <view class="card action" wx:if="{{detail.actions.can_escalation_receipt}}">
+      <text class="section-title">{{detail.escalation.requires_replacement_flow_v6 && detail.escalation.decision === 'FACTORY_REPAIR' ? '厂家物流：取货确认' : '厂家：确认收到原设备'}}</text>
+      <textarea data-field="escalationReceipt" value="{{escalationReceipt}}" bindinput="onRepairInput" placeholder="核对原设备SN、配件和外观，填写收件说明"/>
+      <button disabled="{{submitting}}" bindtap="submitEscalationReceipt">确认收到原设备</button>
+    </view>
+    <view class="card action" wx:if="{{detail.actions.can_replacement_deliver}}">
+      <text class="section-title">厂家：登记换新交付</text>
+      <text class="tip">先通过现有设备流转流程将同型号新设备交付本用户组织，再登记SN及交付凭证。新设备装车、绑定和激活仍按正常流程办理。</text>
+      <input class="field" data-field="escalationNewSN" value="{{escalationNewSN}}" bindinput="onRepairInput" placeholder="实际交付的新设备SN"/>
+      <textarea data-field="escalationDeliveryNote" value="{{escalationDeliveryNote}}" bindinput="onRepairInput" placeholder="换新交付说明（必填）"/>
+      <aftersale-media-uploader files="{{actionMedia}}" max-count="9" allow-document="{{true}}" disabled="{{submitting}}" bindchange="onActionMediaChange" bindretry="onActionMediaRetry"/>
+      <button disabled="{{submitting}}" bindtap="submitReplacementDelivery">登记新设备交付并通知用户</button>
+    </view>
+    <view class="card action" wx:if="{{detail.actions.can_replacement_confirm}}">
+      <text class="section-title">用户：确认换新收货</text>
+      <text>厂家登记的新设备SN：{{detail.escalation.new_device_sn}}</text>
+      <input class="field" data-field="escalationNewSN" value="{{escalationNewSN}}" bindinput="onRepairInput" placeholder="填写实际收到的新设备SN"/>
+      <button disabled="{{submitting}}" bindtap="submitReplacementConfirm">核对SN并确认收到换新设备</button>
+    </view>
+
+    <view class="card" wx:if="{{detail.can_start_factory_transport}}">
+      <text>本返厂单尚未发出返件，可接入厂家物流核验、处理归因及原路返件流程。</text><button bindtap="startFactoryTransport">接入厂家物流收货、原路返件</button>
+    </view>
+    <view class="card" wx:if="{{detail.factory_transport}}">
+      <text class="section-title">{{detail.factory_transport.kind === 'REPAIR' ? '返厂维修' : '直接返厂换新'}} · {{detail.factory_transport.route === 'CHAIN' ? '沿原链路往返' : '直接物流往返'}}</text>
+      <text>厂家物流先收货，售后处理并归因后，由物流发回。无需销售或成品库管办理补发。</text>
+      <text>本次{{detail.factory_transport.kind === 'REPLACEMENT' && detail.factory_transport.prepared_device_id ? '换新' : '维修'}}设备：{{detail.factory_transport.device_sn}}</text>
+      <button wx:if="{{detail.factory_transport.can_pickup}}" data-action="FACTORY_TRANSPORT_PICKUP" bindtap="factoryTransportReceive" disabled="{{submitting}}">厂家物流：核对已在厂设备并确认取货</button>
+      <button wx:if="{{detail.factory_transport.can_prepare}}" bindtap="factoryTransportPrepare" disabled="{{submitting}}">厂家售后：扫描库存新机，准备换新</button>
+      <text wx:if="{{detail.factory_transport.prepared_device_id}}">换新设备已准备，待归因后由厂家物流寄出。</text>
+      <view class="history-row" wx:for="{{detail.factory_transport.legs}}" wx:key="key">
+        <text>{{item.direction === 'inbound' ? '返厂' : '返件'}}：{{item.from_name}} → {{item.to_name}}</text>
+        <text>{{item.status === 'RECEIVED' ? '已确认收到' : (item.status === 'SENT' ? '物流在途' : '待发出')}}</text>
+        <text wx:if="{{item.logistics.tracking_no}}">{{item.logistics.logistics_company || item.logistics.company}} {{item.logistics.tracking_no}}</text>
+        <block wx:if="{{item.can_send}}">
+          <input class="field" value="{{replacementCompany}}" data-field="replacementCompany" bindinput="onRepairInput" placeholder="本段物流公司"/>
+          <input class="field" value="{{replacementTracking}}" data-field="replacementTracking" bindinput="onRepairInput" placeholder="本段物流单号"/>
+          <aftersale-media-uploader files="{{actionMedia}}" max-count="9" allow-document="{{true}}" disabled="{{submitting}}" bindchange="onActionMediaChange" bindretry="onActionMediaRetry"/>
+          <button data-direction="{{item.direction}}" data-index="{{item.index}}" bindtap="factoryTransportSend" disabled="{{submitting}}">上传物流凭证并确认本段发出</button>
+        </block>
+        <button wx:if="{{item.can_receive}}" data-direction="{{item.direction}}" data-index="{{item.index}}" bindtap="factoryTransportReceive" disabled="{{submitting}}">核对实物并确认收到</button>
+      </view>
+    </view>
+    <view class="card" wx:if="{{detail.replacement_flow.can_send_old}}">
+      <text class="section-title">旧机退回上级 · 上传凭证</text>
+      <text class="tip">无需扫描设备。分别上传本次物流单和旧机图片，再点击对应退回按钮；无需另填物流公司或单号。</text>
+      <text>物流单图片</text>
+      <aftersale-media-uploader files="{{oldReturnLogisticsMedia}}" max-count="4" allow-document="{{true}}" disabled="{{submitting}}" bindchange="onOldReturnLogisticsMedia"/>
+      <text>旧机设备图片</text>
+      <aftersale-media-uploader files="{{oldReturnDeviceMedia}}" max-count="4" allow-document="{{false}}" disabled="{{submitting}}" bindchange="onOldReturnDeviceMedia"/>
+    </view>
+    <view class="card" wx:if="{{!detail.factory_transport && detail.replacement_flow && detail.replacement_flow.protocol_version !== 6}}">
+      <button wx:if="{{detail.replacement_flow.can_upgrade_protocol}}" disabled="{{submitting}}" bindtap="enableCurrentReplacementFlow">按现行换新方式办理</button>
+      <text class="section-title">售后换新 · 退旧补发进度</text>
+      <button wx:if="{{detail.replacement_flow.can_confirm_factory_old}}" data-action="CONFIRM_FACTORY_OLD_RECEIPT" disabled="{{submitting}}" bindtap="oldMachineAction">厂家物流：确认历史退旧已实际收到</button>
+      <text wx:if="{{detail.replacement_flow.factory_logistics_only}}">厂家发出统一使用物流；补发由销售安排计划、成品库管出库，不等待售后归因。</text>
+      <button wx:if="{{detail.replacement_flow.factory_logistics_only}}" class="secondary" bindtap="openReplacementSupplyPlans">查看换新补发计划</button>
+      <view>用户换机：{{detail.replacement_flow.swapped ? '已签收替换' : '待换机交付'}}</view>
+      <view>旧机返厂：{{detail.replacement_flow.old_return_complete ? '逐段签收完成' : '仍在链路中'}}</view>
+      <view>组织补发：{{detail.replacement_flow.mode === 'FACTORY' ? '厂家换新无需补库' : (detail.replacement_flow.supply_complete ? '逐段签收完成' : '待补发/在途')}}</view>
+      <view>首次售后激活时间：{{detail.replacement_flow.first_activation_at}}</view>
+      <text class="tip">{{detail.replacement_flow.activation_method === 'VEHICLE_PLATE' ? '用户签收后自动承接车牌激活，可继续申请售后。' : '用户签收后须重新扫描新机设备编码二维码激活售后，时间沿用首次激活。'}}</text>
+      <block wx:if="{{detail.replacement_flow.needs_legacy_logistics}}">
+      <text class="tip">交接前填写本次信息并添加凭证，再点击对应发出或签收按钮。补发随单时只关联物流，不计销售数量和应收。</text>
+      <radio-group wx:if="{{!detail.replacement_flow.factory_logistics_only}}" data-field="replacementHandoverMethod" bindchange="onEscalationChoice">
+        <label class="check-row"><radio value="SHIPMENT" checked="{{replacementHandoverMethod === 'SHIPMENT'}}"/>物流</label>
+        <label class="check-row"><radio value="IN_PERSON" checked="{{replacementHandoverMethod === 'IN_PERSON'}}"/>现场交接</label>
+      </radio-group>
+      <input class="field" data-field="replacementCompany" value="{{replacementCompany}}" bindinput="onRepairInput" placeholder="物流公司"/>
+      <input class="field" data-field="replacementTracking" value="{{replacementTracking}}" bindinput="onRepairInput" placeholder="物流单号"/>
+      <text wx:if="{{detail.replacement_flow.supply_normal_order_id && replacementShipmentOptions.length === 1}}">随单补发：等待本订单正常批次完成物流后选择批次。</text>
+      <picker wx:if="{{replacementShipmentOptions.length > 1}}" class="picker" range="{{replacementShipmentOptions}}" range-key="label" value="{{replacementShipmentIndex}}" bindchange="chooseReplacementShipment">{{replacementShipmentOptions[replacementShipmentIndex].label}}</picker>
+      <textarea data-field="replacementNote" value="{{replacementNote}}" bindinput="onRepairInput" placeholder="本次交接或签收核对说明"/>
+      <aftersale-media-uploader files="{{actionMedia}}" max-count="9" allow-document="{{true}}" disabled="{{submitting}}" bindchange="onActionMediaChange" bindretry="onActionMediaRetry"/>
+      <button wx:if="{{detail.replacement_flow.can_scan_swap}}" disabled="{{submitting}}" bindtap="scanReplacementStock">扫描库存新机生命周期码并交付换新</button>
+      </block>
+      <view wx:for="{{detail.replacement_flow.legs}}" wx:key="id" class="history-row">
+        <text>{{item.direction === 'OLD' ? '退旧' : (item.direction === 'SUPPLY' ? '补发' : '交付用户')}} · 第{{item.sequence}}段 · {{item.from_name}} → {{item.to_name}}</text>
+        <text>设备：{{item.device_sn || '待厂家扫码配机'}} · {{item.status === 'RECEIVED' ? '已签收' : (item.status === 'SENT' ? '在途待签收' : '待发出')}}</text>
+        <text wx:if="{{item.logistics.tracking_no}}">{{item.logistics.company}}　{{item.logistics.tracking_no}}</text>
+        <button wx:if="{{item.can_send}}" data-id="{{item.id}}" disabled="{{submitting}}" bindtap="sendReplacementLeg">{{item.direction === 'OLD' ? '上传物流单和设备图片，确认退回上级' : '扫码并确认本段发出'}}</button>
+        <button wx:if="{{item.can_receive}}" data-id="{{item.id}}" disabled="{{submitting}}" bindtap="receiveReplacementLeg">核对并签收本段</button>
+      </view>
+    </view>
+    <view class="card" wx:if="{{!detail.factory_transport && detail.replacement_flow.protocol_version === 6}}">
+      <text class="section-title">换新交付、独立退旧与补发</text>
+      <button wx:if="{{detail.replacement_flow.factory_logistics_only}}" class="secondary" bindtap="openReplacementSupplyPlans">查看换新补发计划</button>
+      <view>换机：{{detail.replacement_flow.swapped ? '已交付替换' : '待交付'}}　退旧：{{detail.replacement_flow.old_return_complete ? '已回收' : '在途/暂存'}}</view>
+      <view>补发：{{detail.replacement_flow.mode === 'FACTORY' ? '直接返厂，不挂渠道补库' : (detail.replacement_flow.supply_complete ? '已补回组织' : '待补发/在途')}}</view>
+      <text class="tip">用户交付、旧机回收处置、组织补机各自跟踪，不会自动替你向上级退回。</text>
+      <block wx:if="{{detail.replacement_flow.mode === 'LOCAL'}}">
+        <view wx:if="{{detail.replacement_flow.can_confirm_service && !detail.replacement_flow.service_confirmed}}">
+          <text class="section-title">确认提供服务</text>
+          <radio-group data-field="onsiteServiceMode" bindchange="onEscalationChoice">
+            <label class="check-row"><radio value="HOME" checked="{{onsiteServiceMode === 'HOME'}}"/>上门服务</label>
+            <label class="check-row"><radio value="SHOP" checked="{{onsiteServiceMode === 'SHOP'}}"/>店内服务</label>
+          </radio-group>
+          <button disabled="{{submitting}}" bindtap="confirmOnsiteService">确认提供服务</button>
+        </view>
+        <text wx:if="{{detail.replacement_flow.service_confirmed}}">已确认：{{detail.replacement_flow.service_mode === 'HOME' ? '上门服务' : '店内服务'}}</text>
+        <button wx:if="{{detail.replacement_flow.can_scan_swap}}" disabled="{{submitting}}" bindtap="scanReplacementStock">扫描新机生命周期二维码，完成当面交付</button>
+        <text class="tip" wx:if="{{detail.replacement_flow.swapped}}">换新由服务操作人扫码确认，不需要用户另做线上签收。原车牌激活自动承接；原设备编码激活须用户扫描新机设备编码，时间沿用首次。</text>
+      </block>
+      <view class="history-row" wx:for="{{detail.replacement_flow.legs}}" wx:key="id">
+        <text>{{item.direction === 'OLD' ? '旧机退回' : (item.direction === 'SUPPLY' ? '补机下发' : '新机交付')}} · {{item.from_name}} → {{item.to_name}}</text>
+        <text>{{item.device_sn || '待扫码配机'}} · {{item.status === 'RECEIVED' ? (item.direction === 'USER' && detail.replacement_flow.mode === 'LOCAL' ? '操作人已扫码交付' : '已确认接收') : (item.status === 'SENT' ? '已交出待接收' : '暂存/待发出')}}</text>
+        <text wx:if="{{item.logistics.tracking_no}}">{{item.logistics.company}} {{item.logistics.tracking_no}}</text>
+        <text wx:if="{{item.logistics.shared_goods_flow_no}}">随下发计划：{{item.logistics.shared_goods_flow_no}}</text>
+        <block wx:if="{{item.direction === 'OLD'}}">
+          <button wx:if="{{item.can_send}}" data-id="{{item.id}}" data-action="SEND_REPLACEMENT_LEG" disabled="{{submitting}}" bindtap="sendOldReplacementLeg">上传物流单和设备图片，确认退回上级</button>
+          <button wx:if="{{item.can_receive && !item.is_factory_arrival}}" data-id="{{item.id}}" data-action="RECEIVE_REPLACEMENT_LEG" disabled="{{submitting}}" bindtap="oldMachineAction">{{item.to_name === '厂家' ? '物流取货确认' : '线下核对并确认接收'}}</button>
+        </block>
+        <block wx:else>
+          <button wx:if="{{item.can_send}}" data-id="{{item.id}}" disabled="{{submitting}}" bindtap="sendReplacementLeg">扫码确认本段补机发出</button>
+          <button wx:if="{{item.can_receive}}" data-id="{{item.id}}" disabled="{{submitting}}" bindtap="receiveReplacementLeg">核对并签收</button>
+        </block>
+      </view>
+      <button wx:if="{{detail.replacement_flow.can_pickup}}" data-action="FACTORY_PICKUP" disabled="{{submitting}}" bindtap="oldMachineAction">厂家物流经理：取货后确认</button>
+      <text class="section-title">旧机回收处置：{{detail.replacement_flow.recovery.state_name}}</text>
+      <block wx:if="{{detail.replacement_flow.can_diagnose || detail.replacement_flow.can_complete_repair || detail.replacement_flow.can_complete_disassembly}}">
+        <textarea value="{{recoveryNote}}" data-field="recoveryNote" bindinput="onRepairInput" placeholder="研判、维修或拆机说明"/>
+        <block wx:if="{{detail.replacement_flow.can_diagnose}}">
+          <button data-decision="REPAIR" disabled="{{submitting}}" bindtap="recoveryDecide">研判为维修</button>
+          <button data-decision="DISASSEMBLE" disabled="{{submitting}}" bindtap="recoveryDecide">研判为拆机，告知配套厂家</button>
+        </block>
+        <aftersale-media-uploader wx:if="{{detail.replacement_flow.can_complete_repair || detail.replacement_flow.can_complete_disassembly}}" files="{{actionMedia}}" max-count="9" allow-document="{{false}}" disabled="{{submitting}}" bindchange="onActionMediaChange" bindretry="onActionMediaRetry"/>
+        <block wx:if="{{detail.replacement_flow.can_complete_repair}}">
+          <button data-target="FINISHED" disabled="{{submitting}}" bindtap="recoveryRepairComplete">维修完成，入成品库待发</button>
+          <button data-target="TURNOVER" disabled="{{submitting}}" bindtap="recoveryRepairComplete">维修完成，入周转机库待用</button>
+        </block>
+        <block wx:if="{{detail.replacement_flow.can_complete_disassembly}}">
+          <view wx:for="{{disassemblyRows}}" wx:key="bom_item_id"><text>{{item.material_name}} · {{item.supplier_name}}</text><input class="field" type="digit" data-id="{{item.bom_item_id}}" value="{{item.actualQuantity}}" bindinput="onDisassemblyQuantity" placeholder="实际拆下退三包数量，未退留空"/></view>
+          <button disabled="{{submitting}}" bindtap="completeDisassembly">确认实际拆机退料，完成旧机处置</button>
+        </block>
+      </block>
+      <button wx:if="{{detail.viewer.is_factory_aftersales}}" class="secondary" bindtap="openRecoveredStock">查看成品／周转机库</button>
+      <view wx:for="{{detail.replacement_flow.material_returns}}" wx:key="id"><text>三包退料：{{item.material}} × {{item.quantity}} → {{item.supplier}} · {{item.status}}</text><button wx:if="{{item.can_send}}" data-id="{{item.id}}" disabled="{{submitting}}" bindtap="sendWarrantyPart">确认三包物料发出</button></view>
+      <block wx:if="{{detail.replacement_flow.needs_logistics_controls}}">
+        <text class="section-title">补机／三包退料／直接返厂换新交接</text>
+        <radio-group wx:if="{{!detail.replacement_flow.factory_logistics_only}}" data-field="replacementHandoverMethod" bindchange="onEscalationChoice"><label class="check-row"><radio value="SHIPMENT" checked="{{replacementHandoverMethod === 'SHIPMENT'}}"/>物流寄送</label><label class="check-row"><radio value="IN_PERSON" checked="{{replacementHandoverMethod === 'IN_PERSON'}}"/>现场交接</label></radio-group>
+        <input class="field" data-field="replacementCompany" value="{{replacementCompany}}" bindinput="onRepairInput" placeholder="物流公司"/>
+        <input class="field" data-field="replacementTracking" value="{{replacementTracking}}" bindinput="onRepairInput" placeholder="物流单号"/>
+        <textarea data-field="replacementNote" value="{{replacementNote}}" bindinput="onRepairInput" placeholder="本次发出或签收说明"/>
+        <text wx:if="{{detail.replacement_flow.supply_normal_order_id && replacementShipmentOptions.length === 1}}">随单补发：等待本订单正常批次完成物流后选择批次。</text>
+      <picker wx:if="{{replacementShipmentOptions.length > 1}}" class="picker" range="{{replacementShipmentOptions}}" range-key="label" value="{{replacementShipmentIndex}}" bindchange="chooseReplacementShipment">{{replacementShipmentOptions[replacementShipmentIndex].label}}</picker>
+        <aftersale-media-uploader files="{{actionMedia}}" max-count="9" allow-document="{{true}}" disabled="{{submitting}}" bindchange="onActionMediaChange" bindretry="onActionMediaRetry"/>
+        <button wx:if="{{detail.replacement_flow.mode === 'FACTORY' && detail.replacement_flow.can_scan_swap}}" disabled="{{submitting}}" bindtap="scanReplacementStock">厂家扫描新机并交付，等待用户签收</button>
+      </block>
+    </view>
+    <view class="card action" wx:if="{{detail.actions.can_repair_complete && (repairActionMode !== 'UNABLE' || !detail.actions.can_escalation_request)}}">
       <view class="row fold-heading" data-field="repairCompleteExpanded" bindtap="toggleSection"><text class="section-title">维修执行人：完成维修</text><text class="link">{{repairCompleteExpanded ? '收起' : '展开'}}</text></view>
       <block wx:if="{{repairCompleteExpanded}}">
         <text class="tip">上传维修前后图片或测试视频，并记录真实处理结果。</text>
@@ -185,8 +403,17 @@
         <checkbox-group wx:if="{{repairMaterialReplaced}}" bindchange="onRepairMaterials">
           <label class="check-row" wx:for="{{detail.bom.items}}" wx:key="material_id"><checkbox value="{{item.bom_item_id || item.material_id}}" />{{item.material_name}} {{item.specification_name}}</label>
         </checkbox-group>
+        <block wx:if="{{repairMaterialReplaced}}">
+          <view class="replacement-quantity" wx:for="{{repairQuantityRows}}" wx:key="key">
+            <text>{{item.name}} · 实际更换件数</text>
+            <input class="field" type="number" value="{{item.quantity}}" data-key="{{item.key}}" bindinput="onRepairQuantity" placeholder="填写实际件数，不是BOM配套数量" />
+          </view>
+        </block>
         <input class="field" value="{{actualProcessedAt}}" data-field="actualProcessedAt" bindinput="onRepairInput" placeholder="实际处理时间，例如 2026-08-26T14:30" />
-        <button loading="{{submitting}}" disabled="{{submitting}}" bindtap="submitRepairComplete">确认维修完成</button>
+        <view class="repair-action-buttons">
+          <button class="repair-complete-button" loading="{{submitting}}" disabled="{{submitting}}" bindtap="submitRepairComplete">确认维修完成</button>
+          <button wx:if="{{detail.actions.can_escalation_request}}" class="repair-mode-link" disabled="{{submitting}}" bindtap="showUnableRepair">无法维修</button>
+        </view>
       </block>
     </view>
 
@@ -243,8 +470,8 @@
       </block>
     </view>
 
-    <view class="card action" wx:if="{{detail.actions.can_factory_close}}">
-      <view class="row fold-heading" data-field="factoryCloseExpanded" bindtap="toggleSection"><text class="section-title">厂家售后经理：最终归因与结案</text><text class="link">{{factoryCloseExpanded ? '收起' : '展开'}}</text></view>
+    <view class="card action" wx:if="{{detail.actions.can_factory_close || detail.factory_transport.can_finalize}}">
+      <view class="row fold-heading" data-field="factoryCloseExpanded" bindtap="toggleSection"><text class="section-title">厂家售后经理：处理归因</text><text class="link">{{factoryCloseExpanded ? '收起' : '展开'}}</text></view>
       <block wx:if="{{factoryCloseExpanded}}">
         <picker range="{{detail.final_fault_types}}" range-key="label" bindchange="onFinalFault"><view class="picker">最终故障类型：{{finalForm.faultIndex >= 0 ? detail.final_fault_types[finalForm.faultIndex].label : '请选择'}}</view></picker>
         <picker range="{{detail.solution_types}}" range-key="label" bindchange="onFinalSolution"><view class="picker">最终解决方案：{{finalForm.solutionIndex >= 0 ? detail.solution_types[finalForm.solutionIndex].label : '请选择'}}</view></picker>
@@ -254,7 +481,7 @@
           <text wx:else class="tip">{{item.materialName}}尚未维护根因列表</text>
         </view>
         <textarea value="{{finalForm.solutionNote}}" bindinput="onFinalNote" placeholder="最终解决方案、责任归因及后续建议"></textarea>
-        <button loading="{{submitting}}" disabled="{{submitting}}" bindtap="submitFactoryClose">确认整个售后服务完成</button>
+        <button loading="{{submitting}}" disabled="{{submitting}}" bindtap="submitFactoryClose">{{detail.factory_transport ? '确认归因，交厂家物流返件' : '确认整个售后服务完成'}}</button>
       </block>
     </view>
 

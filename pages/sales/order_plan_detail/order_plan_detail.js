@@ -594,6 +594,8 @@ function parseSplitQuantity(value) {
 }
 
 Page({
+  openReplacementSupplyPlans(){wx.navigateTo({url:'/pages/sales/replacement_supply/replacement_supply?order_id='+this.data.plan.id});},
+
   data: {
     orderPlanId: null,
     loading: true,
@@ -697,6 +699,11 @@ Page({
     });
   },
 
+  openReplacementDemand(e) {
+    const id=Number(e.currentTarget.dataset.id);
+    if (id) wx.navigateTo({url:'/pages/aftersale/detail/detail?application_id='+id});
+  },
+
   applyDetail(payload) {
     const plan = normalizePlan(payload.plan || payload.order_plan || payload);
     const productionSubplans = normalizeSubplans(
@@ -757,6 +764,7 @@ Page({
       }
     }
     this.setData({
+      pendingReplacementDemands: payload.pending_replacement_demands || [],
       plan,
       viewer: payload.viewer || plan.viewer || null,
       timeline: normalizeTimeline(payload.timeline || plan.timeline || payload.flow_timeline),

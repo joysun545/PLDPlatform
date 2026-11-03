@@ -19,6 +19,7 @@
         <view class="metric-name">{{metric.name}}</view>
       </view>
     </view>
+    <view class="section-note" wx:if="{{item.repairBasisScopeTitle}}">维修及换件统计：{{item.repairBasisScopeTitle}}</view>
     <view class="section-note" wx:if="{{item.metric_note}}">口径说明：{{item.metric_note}}</view>
   </view>
 

@@ -8,6 +8,14 @@ const META = {
 };
 
 const LABELS = {
+  replacement_completed_count:'已完成用户换机台次（非结算）',
+  replacement_waiting_count:'待用户换机台次',
+  replacement_pending_supply_count:'链路待发补机台数',
+  replacement_open_return_count:'旧机未全部返厂台数',
+  repair_completed_visits: '已完工维修台次', repair_waiting_visits: '完工待确认／结案台次',
+  repair_basis_visits: '具备结算依据维修台次', replacement_basis_pieces: '结算依据换件件次',
+  repair_basis_review_visits: '结算依据待核对台次',
+
   produced_device_count:'生产设备', inventory_device_count:'市场库存', installed_device_count:'已安装', activated_device_count:'终端激活', installation_rate:'安装率', activation_rate:'激活率',
   material_batch_count:'物料批次', material_usage_count:'配套记录', material_covered_device_count:'配套设备量', material_fault_device_count:'故障关联设备',
   aftersales_case_count:'售后工单', aftersales_fault_device_count:'故障设备', aftersales_open_count:'未结案售后', activated_exposure_device_count:'已激活暴露设备', aftersales_fault_rate:'售后故障率',
@@ -102,6 +110,7 @@ function visibleTreeRows(rows) {
 Page({
   data: {
     domain:'', title:'统计专题', loading:true, error:'', metrics:[], charts:[], note:'',
+    repairBasisScopeTitle:'', showRepairBasis:false, basisRows:[], basisNextCursor:null, basisLoading:false, basisError:'',
     hasResponsibilityTree:false, treeNodes:[], treeSemantics:null,
     showWarehouseLots:false, warehouseLots:[], warehouseQuery:'', warehouseNextCursor:null, warehouseLoading:false, warehouseError:''
   },
@@ -128,7 +137,7 @@ Page({
           if(res.statusCode===401){app.reauthenticate();this.setData({loading:false,error:'登录已失效，请重新进入。'});return;}
           if(body.code!==0||!body.data){this.setData({loading:false,error:body.msg||'数据加载失败。'});return;}
           const data=body.data;
-          const metrics=this.data.domain==='FLOW'?[]:Object.keys(data.metrics||{}).map(code=>({code,name:LABELS[code]||code,value:data.metrics[code],unit:code.indexOf('rate')>=0?'%':''}));
+          const metrics=this.data.domain==='FLOW'?[]:Object.keys(data.metrics||{}).map(code=>({code,name:LABELS[code]||code,value:data.metrics[code],unit:code.indexOf('rate')>=0?'%':(code.endsWith('_visits')?'台次':(code.endsWith('_pieces')?'件次':''))}));
           const charts=this.data.domain==='FLOW'?[]:Object.keys(data.charts||{}).map(code=>{
             const source=data.charts[code]||[];
             const max=Math.max.apply(null,source.map(rowValue).concat([1]));
@@ -144,6 +153,8 @@ Page({
             treeNodes:visibleTreeRows(allTreeNodes),
             treeSemantics:data.tree_semantics||null
           });
+          this.setData({showRepairBasis: this.data.domain === 'AFTERSALES' && data.can_view_repair_basis === true, repairBasisScopeTitle:(data.repair_basis_scope || {}).title || ''});
+          if (this.data.showRepairBasis) this.loadRepairBasis(false);
           if (this.data.domain === 'MATERIAL' && (data.identity || {}).role_code === 'factory_material_stock') {
             this.setData({ showWarehouseLots: true });
             this.loadWarehouseLots(false);
@@ -155,6 +166,38 @@ Page({
         complete:()=>{this._domainLoading=false;done&&done();}
       });
     });
+  },
+  loadRepairBasis(append) {
+    if (append && (this.data.basisLoading || !this.data.basisNextCursor)) return;
+    const run = (this._basisRun || 0) + 1;
+    this._basisRun = run;
+    const identityKey = [app.globalData.openid, app.globalData.organization_id, app.globalData.role].join(':');
+    this.setData({basisLoading:true, basisError:'', ...(append ? {} : {basisRows:[], basisNextCursor:null})});
+    wx.request({
+      url:`${app.globalData.apiBase}/data-statistics/repair-basis/`, method:'GET', header:app.authHeader(),
+      data:{cursor:append?this.data.basisNextCursor:''},
+      success:res => {
+        if (run !== this._basisRun || identityKey !== [app.globalData.openid, app.globalData.organization_id, app.globalData.role].join(':')) return;
+        const body = res.data || {};
+        if (body.code !== 0 || !body.data) {
+          this.setData({basisLoading:false, basisError:body.msg||'结算依据加载失败'}); return;
+        }
+        const rows = (body.data.items || []).map(row => Object.assign({}, row, {
+          materialsText:(row.materials || []).map(item => [item.material_name, item.specification_name].filter(Boolean).join(' ') +
+            ' × ' + (item.replacement_quantity == null ? '数量待核对' : item.replacement_quantity + '件')).join('；'),
+          issuesText:(row.issues || []).join('；')
+        }));
+        this.setData({basisLoading:false, basisRows:append?this.data.basisRows.concat(rows):rows,
+          basisNextCursor:body.data.next_cursor||null});
+      },
+      fail:() => {if(run===this._basisRun)this.setData({basisLoading:false,basisError:'网络连接失败，请重试'});}
+    });
+  },
+  moreRepairBasis() { this.loadRepairBasis(true); },
+  retryRepairBasis() { this.loadRepairBasis(false); },
+  openRepairCase(e) {
+    const id = Number(e.currentTarget.dataset.id);
+    if (id > 0) wx.navigateTo({url:`/pages/aftersale/detail/detail?application_id=${id}`});
   },
   toggleTreeNode(event) {
     const id=event.currentTarget.dataset.id;

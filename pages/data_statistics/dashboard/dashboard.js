@@ -3,11 +3,15 @@ const app = getApp();
 const DOMAIN_META = {
   FLOW: { title: '产品流转', subtitle: '生产、库存、安装与激活', icon: '流' },
   MATERIAL: { title: '物料配套', subtitle: '物料批次、供应商与故障关联', icon: '料' },
-  AFTERSALES: { title: '售后服务', subtitle: '工单、故障率与结案状态', icon: '售' },
+  AFTERSALES: { title: '售后服务', subtitle: '工单、维修台次、换件件次与结算依据', icon: '售' },
   QUALITY: { title: '质量追溯', subtitle: '质量风险与召回执行结果', icon: '质' }
 };
 
 const METRIC_NAMES = {
+  repair_completed_visits: '已完工维修台次', repair_waiting_visits: '完工待确认／结案台次',
+  repair_basis_visits: '具备结算依据维修台次', replacement_basis_pieces: '结算依据换件件次',
+  repair_basis_review_visits: '结算依据待核对台次',
+
   produced_device_count: '生产设备', inventory_device_count: '当前库存',
   received_device_count: '入库设备', order_plan_count: '有效计划设备',
   order_plan_pending_production_device_count: '计划未完成生产',
@@ -42,9 +46,9 @@ function normalizeSection(section = {}) {
     code,
     name: METRIC_NAMES[code] || code,
     value: sourceMetrics[code],
-    unit: PERCENT_METRICS.includes(code) ? '%' : ''
+    unit: PERCENT_METRICS.includes(code) ? '%' : (code.endsWith('_visits') ? '台次' : (code.endsWith('_pieces') ? '件次' : ''))
   }));
-  return Object.assign({}, section, meta, { metrics });
+  return Object.assign({}, section, meta, { metrics, repairBasisScopeTitle:(section.repair_basis_scope || {}).title || '' });
 }
 
 Page({

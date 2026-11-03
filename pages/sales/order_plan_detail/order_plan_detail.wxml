@@ -1,4 +1,6 @@
 <theme-shell>
+<view class="card"><button bindtap="openReplacementSupplyPlans">查看本订单自动关联的换新补发计划</button></view>
+
 <view class="page">
   <view class="state-card" wx:if="{{loading}}">正在加载订单计划…</view>
   <view class="state-card error" wx:elif="{{errorMessage && !plan}}">
@@ -7,6 +9,15 @@
   </view>
 
   <block wx:elif="{{plan}}">
+    <view class="card" wx:if="{{pendingReplacementDemands.length}}">
+      <text class="section-title">本直属商家链路待补发换新机 {{pendingReplacementDemands.length}} 台</text>
+      <text>可单独补发，或与已发货正常批次共用物流；不计销售数量和应收。</text>
+      <view wx:for="{{pendingReplacementDemands}}" wx:key="application_id">
+        <text>{{item.case_no}} · {{item.organization}} · {{item.model}} × {{item.quantity}}</text>
+        <button class="secondary-button" data-id="{{item.application_id}}" bindtap="openReplacementDemand">进入换新补发工作流</button>
+      </view>
+    </view>
+
     <view class="hero-card">
       <view class="hero-top">
         <text class="eyebrow">订单计划协同</text>

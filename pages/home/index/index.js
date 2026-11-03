@@ -188,6 +188,7 @@ Page({
       this.updateUserInfo();
       this.updateButtons();
       this.updateServiceStationCapability(ok);
+      this.updateAftersalesCapability(ok);
       if (!ok || (app.globalData.role === 'tourist' && !app.globalData.is_platform_admin)) {
         this.setData({
           showInvite: false,
@@ -347,6 +348,28 @@ Page({
     wx.navigateTo({
       url: '/pages/theme/setting/setting',
       fail: () => wx.showToast({ title: '主题设置页面打开失败', icon: 'none' })
+    });
+  },
+
+  updateAftersalesCapability(loginReady) {
+    const run = (this._aftersalesCapabilityRun || 0) + 1;
+    this._aftersalesCapabilityRun = run;
+    if (!loginReady) return;
+    const identityKey = () => [app.globalData.openid, app.globalData.organization_id, app.globalData.role].join(':');
+    const key = identityKey();
+    wx.request({
+      url: `${app.globalData.apiBase}/data-statistics/aftersales-capabilities/`,
+      method: 'GET', header: app.authHeader(),
+      success: res => {
+        if (run !== this._aftersalesCapabilityRun || key !== identityKey()) return;
+        const body = res.data || {};
+        if (body.code !== 0) return;
+        const allowed = !!(body.data || {}).can_view_aftersales;
+        this.setData({
+          showAftersale: allowed,
+          showStats: this.data.showStats || !!(body.data || {}).can_view_repair_basis
+        });
+      }
     });
   },
 
