@@ -1,5 +1,4 @@
-<theme-shell>
-<view class="card"><button bindtap="openReplacementSupplyPlans">查看本订单自动关联的换新补发计划</button></view>
+<theme-shell business-context="{{true}}" root-organization="{{plan.root_organization || plan.factory}}">
 
 <view class="page">
   <view class="state-card" wx:if="{{loading}}">正在加载订单计划…</view>
@@ -9,15 +8,6 @@
   </view>
 
   <block wx:elif="{{plan}}">
-    <view class="card" wx:if="{{pendingReplacementDemands.length}}">
-      <text class="section-title">本直属商家链路待补发换新机 {{pendingReplacementDemands.length}} 台</text>
-      <text>可单独补发，或与已发货正常批次共用物流；不计销售数量和应收。</text>
-      <view wx:for="{{pendingReplacementDemands}}" wx:key="application_id">
-        <text>{{item.case_no}} · {{item.organization}} · {{item.model}} × {{item.quantity}}</text>
-        <button class="secondary-button" data-id="{{item.application_id}}" bindtap="openReplacementDemand">进入换新补发工作流</button>
-      </view>
-    </view>
-
     <view class="hero-card">
       <view class="hero-top">
         <text class="eyebrow">订单计划协同</text>
@@ -36,6 +26,28 @@
       <view class="summary-row"><text>计划总数</text><text>{{plan.total_quantity}} 台</text></view>
       <view class="summary-row" wx:if="{{plan.submittedText}}"><text>创建时间</text><text>{{plan.submittedText}}</text></view>
       <view class="summary-row note-row" wx:if="{{plan.remark}}"><text>备注</text><text>{{plan.remark}}</text></view>
+    </view>
+
+    <view class="section-card" wx:if="{{replacementSupplyItems.length && !refreshing && !errorMessage}}">
+      <view class="section-head">
+        <text class="section-title">随单换新补发</text>
+        <text class="section-subtitle">售后补发独立交接。正常设备入库、销售数量和应收按原订单核算。</text>
+      </view>
+      <view class="nested-batch-card" wx:for="{{replacementSupplyItems}}" wx:for-item="replacement" wx:key="id">
+        <view class="delivery-head">
+          <view><text class="nested-title">{{replacement.model}} × {{replacement.quantity}} 台</text><text class="row-note">售后单 {{replacement.case_no}}</text></view>
+          <text class="state-badge">{{replacement.status_name}}</text>
+        </view>
+        <text class="row-note" wx:if="{{replacement.device_sn}}">补发机 SN {{replacement.device_sn}}</text>
+        <text class="row-note" wx:if="{{!replacement.node_legs.length}}">{{replacement.from_name}} → {{replacement.to_name}}</text>
+        <text class="row-note" wx:if="{{replacement.carrier_label}}">关联物流 {{replacement.carrier_label}}</text>
+        <text class="row-note" wx:elif="{{replacement.shipment_sequence_no}}">关联正常发货批次第 {{replacement.shipment_sequence_no}} 批</text>
+        <text class="row-note" wx:for="{{replacement.node_legs}}" wx:for-item="leg" wx:key="id">{{leg.from_name}} → {{leg.to_name}} · {{leg.status_name}}</text>
+        <view class="inline-action-area" wx:if="{{replacement.link}}">
+          <button class="inline-action-button" wx:for="{{replacement.actions}}" wx:for-item="replacementAction" wx:key="leg_id" data-id="{{replacement.id}}" data-leg-id="{{replacementAction.leg_id}}" data-action-code="{{replacementAction.code}}" disabled="{{refreshing}}" bindtap="openReplacementSupplyItem">{{replacementAction.label}}</button>
+          <button wx:if="{{!replacement.actions.length}}" class="secondary-button" data-id="{{replacement.id}}" disabled="{{refreshing}}" bindtap="openReplacementSupplyItem">查看补发进度</button>
+        </view>
+      </view>
     </view>
 
     <view class="section-card" wx:if="{{plan.accessoryItems.length}}">

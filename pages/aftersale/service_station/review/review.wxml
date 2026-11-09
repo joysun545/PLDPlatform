@@ -1,4 +1,4 @@
-<theme-shell title-eyebrow="售后服务站审核" title-subtitle="查看申请资料，并向申请方和相关组织发送审核结果">
+<theme-shell title-eyebrow="售后服务站审核" title-subtitle="查看申请资料，并向申请方和相关组织发送审核结果" business-context="{{true}}" root-organization="{{rootOrganization}}">
   <view class="page">
     <view wx:if="{{loading}}" class="notice-card">正在读取申请资料…</view>
 

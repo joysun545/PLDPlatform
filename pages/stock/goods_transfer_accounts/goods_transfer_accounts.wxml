@@ -1,14 +1,15 @@
-<theme-shell>
+<theme-shell title="{{detail && !detail.financialDisabled ? '流转往来账' : '商品流转说明'}}" business-context="{{true}}" root-organization="{{detail.root_organization}}">
 <view class="page">
   <view class="state-card" wx:if="{{loading}}">正在加载流转往来账…</view>
   <view class="state-card error" wx:elif="{{errorMessage}}">
     <text>{{errorMessage}}</text>
     <button class="secondary-button" bindtap="retryLoad">重新加载</button>
+    <button class="secondary-button" wx:if="{{transferId}}" bindtap="openTransferDetail">查看商品流转</button>
   </view>
 
   <block wx:elif="{{detail}}">
     <view class="header-card">
-      <text class="eyebrow">商品流转上下级往来账</text>
+      <text class="eyebrow">{{detail.financialDisabled ? '商品流转单据说明' : '商品流转上下级往来账'}}</text>
       <view class="header-row">
         <text class="flow-no">{{detail.goods_transfer.flow_no}}</text>
         <text class="flow-type">{{detail.goods_transfer.flow_type_name}}</text>
@@ -17,6 +18,9 @@
       <text class="meta">指令组织：{{detail.goods_transfer.instruction_organization_name}}｜共{{detail.goods_transfer.device_count}}台</text>
     </view>
 
+    <view class="rule-tip" wx:if="{{detail.financialDisabled}}">{{detail.disabled_reason || detail.financial_message || '商家向下发货、调货不形成应收账款。货物流转与发货数量继续记录，货品清单仍按发货单上传。'}}</view>
+    <button class="secondary-button" wx:if="{{detail.financialDisabled}}" bindtap="openTransferDetail">查看商品流转与单据</button>
+    <block wx:if="{{!detail.financialDisabled}}">
     <view class="rule-tip">实物与物权已经完成流转。本页金额必须人工填写并由对方确认；调货只形成上下级账务，不形成平级商家结算。</view>
     <button class="secondary-button" bindtap="openTransferDetail">查看商品流转</button>
 
@@ -114,6 +118,7 @@
         </view>
       </view>
     </view>
+    </block>
   </block>
 </view>
 

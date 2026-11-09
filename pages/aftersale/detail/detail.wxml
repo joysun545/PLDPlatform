@@ -1,4 +1,4 @@
-<theme-shell>
+<theme-shell business-context="{{true}}" root-organization="{{detail.root_organization}}">
 <view class="page">
   <view wx:if="{{loading}}" class="state">正在读取售后申请...</view>
   <view wx:elif="{{error}}" class="state error"><text>{{error}}</text><button bindtap="backHome">返回首页</button></view>
@@ -281,7 +281,7 @@
         <block wx:if="{{item.can_send}}">
           <input class="field" value="{{replacementCompany}}" data-field="replacementCompany" bindinput="onRepairInput" placeholder="本段物流公司"/>
           <input class="field" value="{{replacementTracking}}" data-field="replacementTracking" bindinput="onRepairInput" placeholder="本段物流单号"/>
-          <aftersale-media-uploader files="{{actionMedia}}" max-count="9" allow-document="{{true}}" disabled="{{submitting}}" bindchange="onActionMediaChange" bindretry="onActionMediaRetry"/>
+          <aftersale-media-uploader files="{{evidenceMediaByScope[item.evidence_scope_key] || []}}" max-count="{{evidenceMaxByScope[item.evidence_scope_key]}}" data-evidence-action="FACTORY_TRANSPORT_SEND" data-transport-id="{{detail.factory_transport.transport_id}}" data-direction="{{item.direction}}" data-index="{{item.index}}" allow-document="{{true}}" disabled="{{submitting}}" bindchange="onActionMediaChange" bindretry="onActionMediaRetry"/>
           <button data-direction="{{item.direction}}" data-index="{{item.index}}" bindtap="factoryTransportSend" disabled="{{submitting}}">上传物流凭证并确认本段发出</button>
         </block>
         <button wx:if="{{item.can_receive}}" data-direction="{{item.direction}}" data-index="{{item.index}}" bindtap="factoryTransportReceive" disabled="{{submitting}}">核对实物并确认收到</button>
@@ -291,9 +291,9 @@
       <text class="section-title">旧机退回上级 · 上传凭证</text>
       <text class="tip">无需扫描设备。分别上传本次物流单和旧机图片，再点击对应退回按钮；无需另填物流公司或单号。</text>
       <text>物流单图片</text>
-      <aftersale-media-uploader files="{{oldReturnLogisticsMedia}}" max-count="4" allow-document="{{true}}" disabled="{{submitting}}" bindchange="onOldReturnLogisticsMedia"/>
+      <aftersale-media-uploader files="{{oldReturnLogisticsMedia}}" max-count="{{oldReturnLogisticsMaxCount}}" data-leg-id="{{oldReturnLegId}}" allow-document="{{true}}" disabled="{{submitting}}" bindchange="onOldReturnLogisticsMedia"/>
       <text>旧机设备图片</text>
-      <aftersale-media-uploader files="{{oldReturnDeviceMedia}}" max-count="4" allow-document="{{false}}" disabled="{{submitting}}" bindchange="onOldReturnDeviceMedia"/>
+      <aftersale-media-uploader files="{{oldReturnDeviceMedia}}" max-count="{{oldReturnDeviceMaxCount}}" data-leg-id="{{oldReturnLegId}}" allow-document="{{false}}" disabled="{{submitting}}" bindchange="onOldReturnDeviceMedia"/>
     </view>
     <view class="card" wx:if="{{!detail.factory_transport && detail.replacement_flow && detail.replacement_flow.protocol_version !== 6}}">
       <button wx:if="{{detail.replacement_flow.can_upgrade_protocol}}" disabled="{{submitting}}" bindtap="enableCurrentReplacementFlow">按现行换新方式办理</button>
@@ -320,7 +320,7 @@
       <aftersale-media-uploader files="{{actionMedia}}" max-count="9" allow-document="{{true}}" disabled="{{submitting}}" bindchange="onActionMediaChange" bindretry="onActionMediaRetry"/>
       <button wx:if="{{detail.replacement_flow.can_scan_swap}}" disabled="{{submitting}}" bindtap="scanReplacementStock">扫描库存新机生命周期码并交付换新</button>
       </block>
-      <view wx:for="{{detail.replacement_flow.legs}}" wx:key="id" class="history-row">
+      <view wx:for="{{detail.replacement_flow.legs}}" wx:key="id" id="replacement-leg-{{item.id}}" class="history-row {{focusedReplacementLegId === item.id ? 'replacement-leg-focus' : ''}}">
         <text>{{item.direction === 'OLD' ? '退旧' : (item.direction === 'SUPPLY' ? '补发' : '交付用户')}} · 第{{item.sequence}}段 · {{item.from_name}} → {{item.to_name}}</text>
         <text>设备：{{item.device_sn || '待厂家扫码配机'}} · {{item.status === 'RECEIVED' ? '已签收' : (item.status === 'SENT' ? '在途待签收' : '待发出')}}</text>
         <text wx:if="{{item.logistics.tracking_no}}">{{item.logistics.company}}　{{item.logistics.tracking_no}}</text>
@@ -328,7 +328,8 @@
         <button wx:if="{{item.can_receive}}" data-id="{{item.id}}" disabled="{{submitting}}" bindtap="receiveReplacementLeg">核对并签收本段</button>
       </view>
     </view>
-    <view class="card" wx:if="{{!detail.factory_transport && detail.replacement_flow.protocol_version === 6}}">
+    <view class="card" wx:if="{{detail.replacement_flow.protocol_version === 6}}">
+      <block wx:if="{{!detail.factory_transport}}">
       <text class="section-title">换新交付、独立退旧与补发</text>
       <button wx:if="{{detail.replacement_flow.factory_logistics_only}}" class="secondary" bindtap="openReplacementSupplyPlans">查看换新补发计划</button>
       <view>换机：{{detail.replacement_flow.swapped ? '已交付替换' : '待交付'}}　退旧：{{detail.replacement_flow.old_return_complete ? '已回收' : '在途/暂存'}}</view>
@@ -347,7 +348,7 @@
         <button wx:if="{{detail.replacement_flow.can_scan_swap}}" disabled="{{submitting}}" bindtap="scanReplacementStock">扫描新机生命周期二维码，完成当面交付</button>
         <text class="tip" wx:if="{{detail.replacement_flow.swapped}}">换新由服务操作人扫码确认，不需要用户另做线上签收。原车牌激活自动承接；原设备编码激活须用户扫描新机设备编码，时间沿用首次。</text>
       </block>
-      <view class="history-row" wx:for="{{detail.replacement_flow.legs}}" wx:key="id">
+      <view wx:for="{{detail.replacement_flow.legs}}" wx:key="id" id="replacement-leg-{{item.id}}" class="history-row {{focusedReplacementLegId === item.id ? 'replacement-leg-focus' : ''}}">
         <text>{{item.direction === 'OLD' ? '旧机退回' : (item.direction === 'SUPPLY' ? '补机下发' : '新机交付')}} · {{item.from_name}} → {{item.to_name}}</text>
         <text>{{item.device_sn || '待扫码配机'}} · {{item.status === 'RECEIVED' ? (item.direction === 'USER' && detail.replacement_flow.mode === 'LOCAL' ? '操作人已扫码交付' : '已确认接收') : (item.status === 'SENT' ? '已交出待接收' : '暂存/待发出')}}</text>
         <text wx:if="{{item.logistics.tracking_no}}">{{item.logistics.company}} {{item.logistics.tracking_no}}</text>
@@ -362,6 +363,7 @@
         </block>
       </view>
       <button wx:if="{{detail.replacement_flow.can_pickup}}" data-action="FACTORY_PICKUP" disabled="{{submitting}}" bindtap="oldMachineAction">厂家物流经理：取货后确认</button>
+      </block>
       <text class="section-title">旧机回收处置：{{detail.replacement_flow.recovery.state_name}}</text>
       <block wx:if="{{detail.replacement_flow.can_diagnose || detail.replacement_flow.can_complete_repair || detail.replacement_flow.can_complete_disassembly}}">
         <textarea value="{{recoveryNote}}" data-field="recoveryNote" bindinput="onRepairInput" placeholder="研判、维修或拆机说明"/>
@@ -382,7 +384,7 @@
       <button wx:if="{{detail.viewer.is_factory_aftersales}}" class="secondary" bindtap="openRecoveredStock">查看成品／周转机库</button>
       <view wx:for="{{detail.replacement_flow.material_returns}}" wx:key="id"><text>三包退料：{{item.material}} × {{item.quantity}} → {{item.supplier}} · {{item.status}}</text><button wx:if="{{item.can_send}}" data-id="{{item.id}}" disabled="{{submitting}}" bindtap="sendWarrantyPart">确认三包物料发出</button></view>
       <block wx:if="{{detail.replacement_flow.needs_logistics_controls}}">
-        <text class="section-title">补机／三包退料／直接返厂换新交接</text>
+        <text class="section-title">{{detail.factory_transport ? '三包退料发出' : '补机／三包退料／直接返厂换新交接'}}</text>
         <radio-group wx:if="{{!detail.replacement_flow.factory_logistics_only}}" data-field="replacementHandoverMethod" bindchange="onEscalationChoice"><label class="check-row"><radio value="SHIPMENT" checked="{{replacementHandoverMethod === 'SHIPMENT'}}"/>物流寄送</label><label class="check-row"><radio value="IN_PERSON" checked="{{replacementHandoverMethod === 'IN_PERSON'}}"/>现场交接</label></radio-group>
         <input class="field" data-field="replacementCompany" value="{{replacementCompany}}" bindinput="onRepairInput" placeholder="物流公司"/>
         <input class="field" data-field="replacementTracking" value="{{replacementTracking}}" bindinput="onRepairInput" placeholder="物流单号"/>

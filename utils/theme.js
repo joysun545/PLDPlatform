@@ -86,10 +86,12 @@ const listeners = [];
 
 function normalize(value) {
   const source = value && typeof value === 'object' ? value : {};
-  const color = COLOR_SCHEMES[source.color_scheme]
+  const color = typeof source.color_scheme === 'string'
+    && Object.prototype.hasOwnProperty.call(COLOR_SCHEMES, source.color_scheme)
     ? source.color_scheme
     : DEFAULT_APPEARANCE.color_scheme;
-  const style = STYLE_SCHEMES[source.style_scheme]
+  const style = typeof source.style_scheme === 'string'
+    && Object.prototype.hasOwnProperty.call(STYLE_SCHEMES, source.style_scheme)
     ? source.style_scheme
     : DEFAULT_APPEARANCE.style_scheme;
   return {
@@ -99,6 +101,30 @@ function normalize(value) {
     owner_organization_id: source.owner_organization_id || null,
     owner_organization_name: source.owner_organization_name || ''
   };
+}
+
+function personalSelection(value) {
+  const { color_scheme, style_scheme } = value || {};
+  if (typeof color_scheme !== 'string' || typeof style_scheme !== 'string'
+    || !Object.prototype.hasOwnProperty.call(COLOR_SCHEMES, color_scheme)
+    || !Object.prototype.hasOwnProperty.call(STYLE_SCHEMES, style_scheme)) return null;
+  return { color_scheme, style_scheme };
+}
+
+function readPersonalAppearance(key) {
+  if (!key) return null;
+  try { return personalSelection(wx.getStorageSync(key)); } catch (e) { return null; }
+}
+
+function savePersonalAppearance(key, value) {
+  const selection = personalSelection(value);
+  if (!key || !selection) return false;
+  try {
+    wx.setStorageSync(key, selection);
+    return true;
+  } catch (e) {
+    return false;
+  }
 }
 
 function styleVariables(appearance) {
@@ -184,6 +210,8 @@ module.exports = {
   STYLE_SCHEMES,
   DEFAULT_APPEARANCE,
   normalize,
+  readPersonalAppearance,
+  savePersonalAppearance,
   apply,
   restore,
   get,

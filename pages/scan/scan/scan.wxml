@@ -14,6 +14,7 @@
     <text class="scan-tip">
       {{role === 'tourist' ? '游客可查看设备公开信息' : '扫描设备二维码查看当前状态'}}
     </text>
+    <navigator wx:if="{{role === 'tourist'}}" url="/pages/theme/setting/setting" class="scan-tip">界面主题 ›</navigator>
   </view>
 </view>
 

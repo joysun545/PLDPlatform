@@ -593,9 +593,12 @@ function parseSplitQuantity(value) {
   return Number.isSafeInteger(number) ? number : null;
 }
 
-Page({
-  openReplacementSupplyPlans(){wx.navigateTo({url:'/pages/sales/replacement_supply/replacement_supply?order_id='+this.data.plan.id});},
+function replacementViewerKey() {
+  const { openid, access_token, organization_id, role, factory_root_id, operationRoot } = app.globalData;
+  return JSON.stringify([openid, access_token, organization_id, role, factory_root_id, operationRoot && operationRoot.id]);
+}
 
+Page({
   data: {
     orderPlanId: null,
     loading: true,
@@ -611,6 +614,7 @@ Page({
     productionSubplans: [],
     qrcodeBatches: [],
     shipments: [],
+    replacementSupplyItems: [],
     finance: null,
     financeDraft: null,
     financeOrdersExpanded: false,
@@ -672,12 +676,18 @@ Page({
       return;
     }
     this._loadingDetail = true;
+    const viewerKey = replacementViewerKey();
     this.setData({ loading: !this.data.plan, refreshing: !!this.data.plan, errorMessage: '' });
     wx.request({
       url: `${app.globalData.apiBase}/sales/order-plans/${this.data.orderPlanId}/material-flow/detail/`,
       method: 'GET',
       header: app.authHeader(),
       success: res => {
+        if (this._unloaded) return;
+        if (viewerKey !== replacementViewerKey()) {
+          this.setData({ errorMessage: '登录身份已变更，请重新加载订单计划' });
+          return;
+        }
         if (res.statusCode === 401) {
           app.reauthenticate();
           this.setData({ errorMessage: '登录状态已失效，请重新进入' });
@@ -699,9 +709,24 @@ Page({
     });
   },
 
-  openReplacementDemand(e) {
-    const id=Number(e.currentTarget.dataset.id);
-    if (id) wx.navigateTo({url:'/pages/aftersale/detail/detail?application_id='+id});
+  openReplacementSupplyItem(e) {
+    if (!this.replacementNavigationAllowed()) return;
+    const { id, legId, actionCode } = e.currentTarget.dataset;
+    const item = this.data.replacementSupplyItems.find(row => row.id === Number(id));
+    if (!item) return;
+    const url = `/pages/aftersale/detail/detail?application_id=${item.application_id}`;
+    if (item.link !== url) return;
+    if (!actionCode) {
+      wx.navigateTo({ url });
+      return;
+    }
+    const action = asArray(item.actions).find(row => row.leg_id === Number(legId) && row.code === actionCode);
+    if (action) wx.navigateTo({ url: `${url}&replacement_leg_id=${action.leg_id}` });
+  },
+
+  replacementNavigationAllowed() {
+    return !this._unloaded && !!this.data.plan && !this.data.loading && !this.data.refreshing &&
+      !this.data.errorMessage && this._replacementViewerKey === replacementViewerKey();
   },
 
   applyDetail(payload) {
@@ -763,8 +788,9 @@ Page({
         };
       }
     }
+    this._replacementViewerKey = replacementViewerKey();
     this.setData({
-      pendingReplacementDemands: payload.pending_replacement_demands || [],
+      replacementSupplyItems: asArray(payload.replacement_supply_items),
       plan,
       viewer: payload.viewer || plan.viewer || null,
       timeline: normalizeTimeline(payload.timeline || plan.timeline || payload.flow_timeline),

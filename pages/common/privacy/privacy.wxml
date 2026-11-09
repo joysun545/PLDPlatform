@@ -1,0 +1,4 @@
+<view class="legal-page">
+  <text class="legal-title">{{title}}</text>
+  <text class="legal-content" user-select="true">{{body}}</text>
+</view>

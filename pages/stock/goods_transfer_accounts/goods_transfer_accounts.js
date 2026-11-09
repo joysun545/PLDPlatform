@@ -12,6 +12,8 @@ function prepareDetail(detail) {
   if (!detail) return null;
   return {
     ...detail,
+    financialDisabled: detail.financial_disabled === true || detail.financial_mode === 'DOCUMENTS_ONLY' ||
+      (detail.merchant_accounts_enabled === false && !(detail.cases || []).length),
     cases: (detail.cases || []).map(item => ({
       ...item,
       submittedText: formatDate(item.submitted_at),
@@ -99,23 +101,38 @@ Page({
     });
   },
 
+  financialActionsAllowed() {
+    const detail = this.data.detail;
+    if (!detail || this.data.loading) return false;
+    if (detail.financialDisabled) {
+      wx.showToast({ title: '商家下发货款流程已停用', icon: 'none' });
+      return false;
+    }
+    return true;
+  },
+
   onAmountInput(e) {
+    if (!this.financialActionsAllowed()) return;
     this.setData({ [`detail.cases[${e.currentTarget.dataset.index}].amountInput`]: e.detail.value || '' });
   },
 
   onRemarkInput(e) {
+    if (!this.financialActionsAllowed()) return;
     this.setData({ [`detail.cases[${e.currentTarget.dataset.index}].remarkInput`]: e.detail.value || '' });
   },
 
   onNoAmountChange(e) {
+    if (!this.financialActionsAllowed()) return;
     this.setData({ [`detail.cases[${e.currentTarget.dataset.index}].noAmount`]: !!e.detail.value });
   },
 
   onRejectionInput(e) {
+    if (!this.financialActionsAllowed()) return;
     this.setData({ [`detail.cases[${e.currentTarget.dataset.index}].rejectionInput`]: e.detail.value || '' });
   },
 
   chooseStatement(e) {
+    if (!this.financialActionsAllowed()) return;
     const index = Number(e.currentTarget.dataset.index);
     wx.chooseMedia({
       count: 1,
@@ -131,6 +148,7 @@ Page({
   },
 
   submitCase(e) {
+    if (!this.financialActionsAllowed()) return;
     const index = Number(e.currentTarget.dataset.index);
     const item = this.data.detail.cases[index];
     if (!item || !item.actions.can_submit || this.data.busyKey) return;
@@ -151,6 +169,7 @@ Page({
   },
 
   doSubmitCase(index) {
+    if (!this.financialActionsAllowed()) return;
     const item = this.data.detail.cases[index];
     const key = `submit-${item.id}`;
     this.setData({ busyKey: key });
@@ -200,6 +219,7 @@ Page({
   },
 
   confirmCase(e) {
+    if (!this.financialActionsAllowed()) return;
     const index = Number(e.currentTarget.dataset.index);
     const item = this.data.detail.cases[index];
     if (!item || !item.actions.can_confirm || this.data.busyKey) return;
@@ -213,6 +233,7 @@ Page({
   },
 
   rejectCase(e) {
+    if (!this.financialActionsAllowed()) return;
     const index = Number(e.currentTarget.dataset.index);
     const item = this.data.detail.cases[index];
     const reason = (item.rejectionInput || '').trim();
@@ -229,6 +250,7 @@ Page({
   },
 
   submitCaseDecision(caseId, action, reason) {
+    if (!this.financialActionsAllowed()) return;
     const key = `confirm-${caseId}`;
     if (this.data.busyKey) return;
     this.setData({ busyKey: key });
@@ -244,12 +266,14 @@ Page({
   },
 
   onAllocationInput(e) {
+    if (!this.financialActionsAllowed()) return;
     const caseIndex = Number(e.currentTarget.dataset.caseindex);
     const candidateIndex = Number(e.currentTarget.dataset.candidateindex);
     this.setData({ [`detail.cases[${caseIndex}].allocation_candidates[${candidateIndex}].allocationInput`]: e.detail.value || '' });
   },
 
   allocateCredit(e) {
+    if (!this.financialActionsAllowed()) return;
     const caseIndex = Number(e.currentTarget.dataset.caseindex);
     const candidateIndex = Number(e.currentTarget.dataset.candidateindex);
     const item = this.data.detail.cases[caseIndex];
@@ -268,6 +292,7 @@ Page({
   },
 
   doAllocate(caseId, candidate, amount) {
+    if (!this.financialActionsAllowed()) return;
     const key = `allocate-${caseId}-${candidate.target_id}`;
     if (this.data.busyKey) return;
     this.setData({ busyKey: key });
@@ -283,6 +308,7 @@ Page({
   },
 
   chooseVoucher(e) {
+    if (!this.financialActionsAllowed()) return;
     const index = Number(e.currentTarget.dataset.index);
     wx.chooseMedia({
       count: 1,
@@ -298,6 +324,7 @@ Page({
   },
 
   uploadVoucher(e) {
+    if (!this.financialActionsAllowed()) return;
     const index = Number(e.currentTarget.dataset.index);
     const item = this.data.detail.cases[index];
     if (!item.selectedVoucherPath) {
@@ -324,12 +351,14 @@ Page({
   },
 
   onConfirmPaymentInput(e) {
+    if (!this.financialActionsAllowed()) return;
     const caseIndex = Number(e.currentTarget.dataset.caseindex);
     const paymentIndex = Number(e.currentTarget.dataset.paymentindex);
     this.setData({ [`detail.cases[${caseIndex}].payments[${paymentIndex}].confirmInput`]: e.detail.value || '' });
   },
 
   confirmPayment(e) {
+    if (!this.financialActionsAllowed()) return;
     const caseIndex = Number(e.currentTarget.dataset.caseindex);
     const paymentIndex = Number(e.currentTarget.dataset.paymentindex);
     const item = this.data.detail.cases[caseIndex];
@@ -348,6 +377,7 @@ Page({
   },
 
   doConfirmPayment(caseId, paymentId, amount) {
+    if (!this.financialActionsAllowed()) return;
     const key = `payment-confirm-${paymentId}`;
     if (this.data.busyKey) return;
     this.setData({ busyKey: key });
@@ -379,6 +409,7 @@ Page({
   },
 
   previewFile(e) {
+    if (!this.financialActionsAllowed()) return;
     const path = e.currentTarget.dataset.path || '';
     if (!path) return;
     wx.downloadFile({

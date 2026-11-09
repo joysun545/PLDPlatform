@@ -5,6 +5,8 @@ Page({
   data: {
     themeStyle: '',
     availableRoles: [],
+    isPlatformAdmin: false,
+    factoryInvitationForm: { organization_name: '', region: '', address: '' },
     role_name: '',
     nickname: '',
     loading: true,
@@ -19,6 +21,7 @@ Page({
     selectedManagerRoleCodes: [],
     selectedManagerRoleNames: '',
     invitationError: '',
+    invitationRootOrganization: null,
     shareReady: false,
     sharePanelVisible: false,
     sharePath: '',
@@ -38,7 +41,17 @@ Page({
         wx.showToast({ title: '登录失败', icon: 'none' });
         return;
       }
-      this.loadAvailableRoles();
+      const isPlatformAdmin = !!app.globalData.is_platform_admin;
+      this.setData({
+        isPlatformAdmin,
+        role_name: app.globalData.role_name || '',
+        nickname: app.globalData.nickname || '用户'
+      });
+      if (isPlatformAdmin) {
+        this.setData({ loading: false });
+      } else {
+        this.loadAvailableRoles();
+      }
     });
   },
 
@@ -78,6 +91,37 @@ Page({
     });
   },
 
+  onFactoryInvitationInput(e) {
+    if (this.data.creating) return;
+    const field = e.currentTarget.dataset.field;
+    this.setData({
+      [`factoryInvitationForm.${field}`]: e.detail.value || '',
+      shareReady: false,
+      sharePanelVisible: false,
+      sharePath: '',
+      invitationRootOrganization: null,
+      invitationError: ''
+    });
+  },
+
+  createFactoryInvitation() {
+    if (!app.globalData.is_platform_admin || this.data.creating) return;
+    const { organization_name, region, address } = this.data.factoryInvitationForm;
+    if (!organization_name.trim()) {
+      wx.showToast({ title: '请填写厂家组织名称', icon: 'none' });
+      return;
+    }
+    this.createInvitation({
+      role: 'factory_admin',
+      name: '厂家负责人',
+      factoryInvitation: {
+        organization_name: organization_name.trim(),
+        region: region.trim(),
+        address: address.trim()
+      }
+    });
+  },
+
   selectRole(e) {
     if (this.data.creating) return;
 
@@ -101,6 +145,7 @@ Page({
         selectedRole: role,
         selectedRoleName: name,
         shareReady: false,
+        invitationRootOrganization: null,
         sharePanelVisible: false,
         invitationError: '',
         managerConfigVisible: true,
@@ -159,12 +204,14 @@ Page({
     role,
     name,
     seniorManagerJobTitle = '',
-    seniorManagerManagedRoleCodes = []
+    seniorManagerManagedRoleCodes = [],
+    factoryInvitation = null
   }) {
 
     this.setData({
       creating: true,
       shareReady: false,
+      invitationRootOrganization: null,
       sharePanelVisible: false,
       invitationError: ''
     });
@@ -172,14 +219,17 @@ Page({
 
     const isSeniorManagerInvitation =
       role === 'factory_senior_manager' || role === 'merchant_senior_manager';
-    const requestData = { rule_id: ruleId };
+    const requestData = factoryInvitation || { rule_id: ruleId };
     if (isSeniorManagerInvitation) {
       requestData.senior_manager_job_title = seniorManagerJobTitle;
       requestData.senior_manager_managed_role_codes = seniorManagerManagedRoleCodes;
     }
 
+    const endpoint = factoryInvitation
+      ? '/account/platform/factory-invitations/create/'
+      : '/account/invitations/create/';
     wx.request({
-      url: `${app.globalData.apiBase}/account/invitations/create/`,
+      url: `${app.globalData.apiBase}${endpoint}`,
       method: 'POST',
       // The backend reads array-valued delegation fields from JSON. Keep the
       // existing form encoding for ordinary role invitations.
@@ -206,7 +256,8 @@ Page({
             invitationError: '',
             selectedRuleId: ruleId,
             selectedRole: role,
-            selectedRoleName: name,
+            selectedRoleName: factoryInvitation ? (data.target_role_name || name) : name,
+            invitationRootOrganization: data.root_organization || null,
             shareReady: true,
             sharePanelVisible: seniorManagerManagedRoleCodes.length === 0,
             sharePath,
@@ -248,7 +299,9 @@ Page({
     }
 
     return {
-      title: `${app.globalData.role_name || '上级'}邀请您成为${this.data.selectedRoleName}`,
+      title: this.data.isPlatformAdmin
+        ? `邀请您成为${this.data.factoryInvitationForm.organization_name.trim()}的${this.data.selectedRoleName}`
+        : `${app.globalData.role_name || '上级'}邀请您成为${this.data.selectedRoleName}`,
       path: this.data.sharePath,
       imageUrl: '/images/default_avatar.png'
     };

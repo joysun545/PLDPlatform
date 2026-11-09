@@ -1,4 +1,4 @@
-<theme-shell>
+<theme-shell business-context="{{true}}" root-organization="{{detail.root_organization}}">
 <view class="page">
   <view class="state-card" wx:if="{{loading}}">正在加载商品流转详情…</view>
   <view class="state-card error" wx:elif="{{errorMessage}}">
@@ -7,7 +7,6 @@
   </view>
 
   <block wx:elif="{{detail}}">
-    <view class="hero-card" wx:if="{{detail.pending_replacement_demands.length}}"><text>本段下发待补机 {{detail.pending_replacement_demands.length}} 台</text><view wx:for="{{detail.pending_replacement_demands}}" wx:key="application_id"><text>{{item.case_no}} · {{item.organization}} · {{item.model}}</text><button data-id="{{item.application_id}}" bindtap="openReplacementDemand">进入补机工作流</button></view></view>
     <view class="hero-card">
       <view class="hero-head">
         <text class="flow-type" wx:if="{{detail.actions.can_receive}}">接收上级发货</text>
@@ -19,10 +18,34 @@
       <text class="hero-meta">共 {{detail.item_count}} 台｜{{detail.initiated_by_name}}</text>
     </view>
 
+    <view class="section-card" wx:if="{{detail.replacement_supply_items.length}}">
+      <text class="section-title">随单换新补发</text>
+      <text class="empty-tip">补发独立交接。正常发货与补发数量分别记录，货品清单按原下发单留存。</text>
+      <view wx:for="{{detail.replacement_supply_items}}" wx:for-item="replacement" wx:key="id">
+        <view class="info-row"><text>{{replacement.model}} × {{replacement.quantity}} 台</text><text class="value">{{replacement.status_name}}</text></view>
+        <view class="info-row"><text class="label">售后单 {{replacement.case_no}}</text><text wx:if="{{!replacement.node_legs.length}}" class="value">{{replacement.from_name}} → {{replacement.to_name}}</text></view>
+        <view class="info-row" wx:if="{{replacement.device_sn}}"><text class="label">补发机 SN</text><text class="value">{{replacement.device_sn}}</text></view>
+        <view class="info-row" wx:for="{{replacement.node_legs}}" wx:for-item="leg" wx:key="id"><text class="label">{{leg.from_name}} → {{leg.to_name}}</text><text class="value">{{leg.status_name}}</text></view>
+        <block wx:if="{{replacement.link}}">
+          <button class="secondary-button" wx:for="{{replacement.actions}}" wx:for-item="replacementAction" wx:key="leg_id" data-id="{{replacement.id}}" data-leg-id="{{replacementAction.leg_id}}" data-action-code="{{replacementAction.code}}" disabled="{{receiving}}" bindtap="openReplacementSupplyItem">{{replacementAction.label}}</button>
+          <button wx:if="{{!replacement.actions.length}}" class="secondary-button" data-id="{{replacement.id}}" disabled="{{receiving}}" bindtap="openReplacementSupplyItem">查看补发进度</button>
+        </block>
+      </view>
+    </view>
+
+    <view class="section-card" wx:if="{{detail.pending_replacement_demands.length}}">
+      <text class="section-title">本段待关联补发</text>
+      <text class="empty-tip">请核对线下实际转发，再选择本次下发单作为物流关联。</text>
+      <view wx:for="{{detail.pending_replacement_demands}}" wx:key="leg_id">
+        <view class="info-row"><text>{{item.case_no}} · {{item.model}} × {{item.quantity}} 台</text><text class="value">{{item.organization}}</text></view>
+        <button wx:if="{{item.link}}" class="secondary-button" data-id="{{item.application_id}}" disabled="{{receiving}}" bindtap="openReplacementDemand">办理补发交接</button>
+      </view>
+    </view>
+
     <view class="rule-card waiting" wx:if="{{detail.status === 'PENDING_RECEIPT'}}">设备正在运输中，收货方确认入库前，物权仍属于 {{detail.from_organization.name}}。</view>
     <view class="rule-card waiting" wx:if="{{detail.status === 'PENDING_FACTORY_PICKUP'}}">商家已提交退厂退货，当前等待厂家物流取回；物权仍属于 {{detail.from_organization.name}}。</view>
     <view class="rule-card waiting" wx:if="{{detail.status === 'PENDING_FACTORY_POSTING'}}">厂家物流已取回设备，当前等待销售助理下账并分类入库；退货冲抵金额可随后独立确认。</view>
-    <view class="rule-card transfer" wx:if="{{detail.flow_type === 'TRANSFER' && detail.status === 'COMPLETED'}}">调货已由上级商家完成，物权已从 B 转至 C；款项分别按 A–B退货冲抵、A–C新增应收处理，不发生B–C平级结算。</view>
+    <view class="rule-card transfer" wx:if="{{detail.flow_type === 'TRANSFER' && detail.status === 'COMPLETED'}}">调货已由上级组织完成，物权已从 B 转至 C；设备流转数量继续记录。商家上级不形成下发应收，厂家作为上级的退货与调货往来仍按原规则办理。</view>
     <view class="rule-card terminal" wx:if="{{detail.flow_type === 'RETURN' && detail.to_organization.type === 'OWNER' && detail.receivedText}}">设备已由厂家物流取回，原二维码已冻结；旧生命周期保留，待后续拆机报废或重新流转时再正式衔接。</view>
 
     <view class="section-card">
@@ -204,7 +227,7 @@
     </view>
 
     <button class="scan-button" wx:if="{{detail.actions.can_scan}}" bindtap="continueScanning">继续逐台扫码</button>
-    <button class="settlement-button" wx:if="{{detail.flow_type === 'SHIPMENT' && detail.status !== 'SCANNING'}}" bindtap="openSettlement">货品清单、物流与应收</button>
+    <button class="settlement-button" wx:if="{{detail.flow_type === 'SHIPMENT' && detail.status !== 'SCANNING'}}" bindtap="openSettlement">货品清单与物流</button>
     <button class="account-button" wx:if="{{detail.actions.can_view_accounts}}" bindtap="openAccounts">退货冲抵与调货上下级往来</button>
     <button class="account-button" wx:if="{{detail.actions.can_view_factory_return_process}}" bindtap="openFactoryReturnProcess">厂家退货取回与分类入库</button>
     <button class="receipt-button" loading="{{receiving}}" disabled="{{receiving}}" wx:if="{{detail.actions.can_receive}}" bindtap="confirmReceipt">确认收货并入库</button>

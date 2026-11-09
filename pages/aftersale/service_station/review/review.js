@@ -8,6 +8,7 @@ Page({
     submitting: false,
     applicationId: 0,
     application: null,
+    rootOrganization: null,
     canReview: false,
     taskCompletedByName: '',
     reviewNote: '',
@@ -52,6 +53,7 @@ Page({
         const data = body.data || {};
         this.setData({
           application: data.application || null,
+          rootOrganization: data.root_organization || null,
           canReview: !!data.can_review,
           taskCompletedByName: data.task_completed_by_name || '',
           error: ''
@@ -134,6 +136,7 @@ Page({
         const data = body.data || {};
         this.setData({
           application: data.application || this.data.application,
+          rootOrganization: data.root_organization || null,
           canReview: !!data.can_review,
           taskCompletedByName: data.task_completed_by_name || '',
           reviewNote: ''

@@ -1,4 +1,4 @@
-<theme-shell>
+<theme-shell business-context="{{true}}" root-organization="{{group.root_organization}}">
 <view class="page">
   <view wx:if="{{group && !isGoodsTransfer}}" class="group-summary">
     <view class="group-top">
@@ -36,6 +36,7 @@
         <text class="domain">{{item.domainName}}</text>
         <text class="state {{item.stateClass}}">{{item.stateText}}</text>
       </view>
+      <text wx:if="{{item.root_organization.name && !group.root_organization.name}}" class="child-summary">根组织 · {{item.root_organization.name}}</text>
       <text class="child-title">{{item.title}}</text>
       <text wx:if="{{item.summary}}" class="child-summary">{{item.summary}}</text>
       <view class="child-bottom">

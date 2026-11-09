@@ -1,4 +1,4 @@
-<theme-shell>
+<theme-shell business-context="{{domain === 'FINANCE'}}" root-organization="{{financeRoot}}">
 <view class="page">
   <view class="hero"><view class="hero-title">{{title}}</view><view class="hero-sub">当前岗位授权范围 · 实时业务口径</view></view>
   <view class="state" wx:if="{{loading}}">正在加载统计数据…</view>
@@ -7,7 +7,25 @@
     <view class="metric-grid">
       <view class="metric" wx:for="{{metrics}}" wx:key="code"><view class="value">{{item.value}}<text>{{item.unit}}</text></view><view class="name">{{item.name}}</view></view>
     </view>
-    <view class="note" wx:if="{{note}}">口径说明：{{note}}</view>
+    <view class="note {{domain === 'FINANCE' ? 'finance-scope' : ''}}" wx:if="{{note}}">口径说明：{{note}}</view>
+    <view class="warehouse-panel finance-panel" wx:if="{{domain === 'FINANCE'}}">
+      <view class="warehouse-title">往来款项明细</view>
+      <view class="warehouse-subtitle" wx:if="{{financeRoot.name}}">根组织：{{financeRoot.name}}</view>
+      <view class="finance-scope-note">仅展示当前根组织、当前组织及当前岗位有权查看的账款，不代表企业全部应收、应付。厂家订单及保留的厂家退货／调货往来按账源汇总一次。商家下发仅记录货物与单据，不形成应收账款。</view>
+      <view class="finance-account" wx:for="{{financeAccounts}}" wx:key="key">
+        <view class="finance-head"><text class="finance-counterparty">{{item.counterparty_name}}</text><text class="finance-side {{item.side === 'PAYABLE' ? 'payable' : ''}}">{{item.sideName}}</text></view>
+        <view class="warehouse-subtitle">{{item.sourceName}} · {{item.document_count}} 单</view>
+        <view class="finance-balance"><text>{{item.side === 'PAYABLE' ? '当前未付余额' : '当前未收余额'}}</text><text>¥{{item.outstanding_amount}}</text></view>
+        <view class="finance-numbers">
+          <view><text>{{item.side === 'PAYABLE' ? '原始应付' : '原始应收'}}</text><text>¥{{item.receivable_amount}}</text></view>
+          <view><text>{{item.side === 'PAYABLE' ? '对方确认收款' : '确认到账'}}</text><text>¥{{item.received_amount}}</text></view>
+          <view><text>退货冲抵</text><text>¥{{item.credit_amount}}</text></view>
+          <view><text>{{item.side === 'PAYABLE' ? '预付款余额' : '预收余额（超收）'}}</text><text>¥{{item.overpaid_amount}}</text></view>
+        </view>
+        <button class="secondary wide" wx:if="{{item.canOpen}}" data-key="{{item.key}}" bindtap="openFinanceAccount">查看当前办理单</button>
+      </view>
+      <view class="empty" wx:if="{{!financeAccounts.length}}">当前岗位授权范围暂无往来款项明细</view>
+    </view>
     <view class="warehouse-panel" wx:if="{{showWarehouseLots}}">
       <view class="warehouse-title">物料批次历史清单</view>
       <view class="warehouse-subtitle">按入库时间倒序保留全部批次，包括已用完或已退完的历史批次；本页只读。</view>

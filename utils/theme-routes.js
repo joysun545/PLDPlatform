@@ -31,8 +31,8 @@ const ROUTES = {
   'pages/stock/goods_transfer/goods_transfer': { level: 'primary', title: '扫码商品流转' },
   'pages/stock/goods_transfer_list/goods_transfer_list': { level: 'primary', title: '商品流转列表' },
   'pages/stock/goods_transfer_detail/goods_transfer_detail': { level: 'secondary', title: '商品流转详情' },
-  'pages/stock/goods_transfer_settlement/goods_transfer_settlement': { level: 'tertiary', title: '商品单据与应收' },
-  'pages/stock/goods_transfer_accounts/goods_transfer_accounts': { level: 'secondary', title: '流转往来账' },
+  'pages/stock/goods_transfer_settlement/goods_transfer_settlement': { level: 'tertiary', title: '货品清单与物流' },
+  'pages/stock/goods_transfer_accounts/goods_transfer_accounts': { level: 'secondary', title: '商品流转说明' },
   'pages/stock/factory_return_process/factory_return_process': { level: 'secondary', title: '厂家退货处理' },
   'pages/stock/factory_return_inventory/factory_return_inventory': { level: 'primary', title: '厂家成品库存' },
 
@@ -62,7 +62,7 @@ const ROUTES = {
   'pages/material_inventory/detail/detail': { level: 'secondary', title: '物料库存详情' },
   'pages/material_inventory/form/form': { level: 'tertiary', title: '物料出入库' },
   'pages/material_inventory/warranty_list/warranty_list': { level: 'secondary', title: '三包件退货' },
-  'pages/theme/setting/setting': { level: 'primary', title: '全局界面主题' }
+  'pages/theme/setting/setting': { level: 'primary', title: '界面主题' }
 };
 
 function getRouteMeta(route) {

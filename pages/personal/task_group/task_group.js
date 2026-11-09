@@ -106,7 +106,7 @@ Page({
         url: normalizedUrl,
         fail: () => wx.showToast({ title: '流转详情打开失败，请重试', icon: 'none' })
       });
-    });
+    }, { switchOperationRoot: true });
   },
 
   openChildTask(e) {
@@ -126,16 +126,16 @@ Page({
       }
 
       if (task.link) {
-        this.navigateToTask(task.link);
+        this.navigateToTask(task.link, response.data && response.data.root_organization);
         return;
       }
 
       wx.showToast({ title: '已记录知晓', icon: 'success' });
       this.loadGroup();
-    });
+    }, { switchOperationRoot: !!task.link });
   },
 
-  navigateToTask(url) {
+  navigateToTask(url, rootOrganization) {
     const normalizedUrl = url.startsWith('/') ? url : `/${url}`;
     const tabPages = [
       '/pages/home/index/index',
@@ -150,6 +150,11 @@ Page({
 
     wx.navigateTo({
       url: normalizedUrl,
+      success: ({ eventChannel }) => {
+        if (eventChannel) {
+          eventChannel.emit('taskRootOrganization', rootOrganization || null);
+        }
+      },
       fail: error => {
         console.error('子任务页面跳转失败', normalizedUrl, error);
         wx.showModal({

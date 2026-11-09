@@ -1,7 +1,15 @@
-<theme-shell title-metric="{{attentionCount}} 项待关注" title-subtitle="{{unreadCount}} 未读 · {{actionPendingCount}} 待处理">
+<theme-shell business-context="{{true}}" root-organization="{{listContext}}" title-metric="{{attentionCount}} 项待关注" title-subtitle="{{unreadCount}} 未读 · {{actionPendingCount}} 待处理">
 <view class="page">
+  <view class="list-controls">
+    <text>已加载 {{loadedCount}} 组任务</text>
+    <button size="mini" bindtap="refreshTaskList" loading="{{refreshing}}" disabled="{{refreshing}}">刷新任务</button>
+  </view>
+  <view wx:if="{{hasUpdates}}" class="update-notice" bindtap="refreshTaskList">任务有更新，刷新查看 ›</view>
   <view wx:if="{{loading}}" class="empty">正在加载任务...</view>
-  <view wx:elif="{{taskList.length === 0}}" class="empty">暂无任务</view>
+  <view wx:elif="{{taskList.length === 0}}" class="empty">
+    <text>{{loadError || '暂无任务'}}</text>
+    <button wx:if="{{loadError}}" size="mini" bindtap="retryTaskList">重试加载</button>
+  </view>
 
   <view wx:else class="task-list">
     <view
@@ -15,6 +23,7 @@
         <text class="domain">{{item.domainName}}</text>
         <text class="state {{item.stateClass}}">{{item.stateText}}</text>
       </view>
+      <text wx:if="{{item.root_organization.name}}" class="task-summary">根组织 · {{item.root_organization.name}}</text>
       <text class="task-title">{{item.title}}</text>
       <text wx:if="{{item.summary}}" class="task-summary">{{item.summary}}</text>
       <text wx:if="{{item.grouped && !item.isWorkorder && item.latest_summary}}" class="latest-summary">
@@ -30,6 +39,15 @@
       </view>
       <view wx:if="{{openingId === item.id}}" class="opening">正在打开...</view>
     </view>
+  </view>
+  <view wx:if="{{taskList.length > 0}}" class="pagination">
+    <text wx:if="{{loadingMore}}">正在加载更多任务...</text>
+    <block wx:elif="{{loadError}}">
+      <text class="load-error">{{loadError}}</text>
+      <button size="mini" bindtap="retryTaskList">重试加载</button>
+    </block>
+    <button wx:elif="{{hasMore}}" size="mini" bindtap="loadMore" disabled="{{refreshing}}">加载更多任务</button>
+    <text wx:else>{{refreshing ? '正在刷新任务...' : '本次列表已加载完'}}</text>
   </view>
 </view>
 

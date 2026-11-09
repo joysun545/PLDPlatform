@@ -33,9 +33,17 @@ function localDateTime() {
     'T' + pad(now.getHours()) + ':' + pad(now.getMinutes());
 }
 
+function clientUploadId() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, character => {
+    const value = Math.floor(Math.random() * 16);
+    return (character === 'x' ? value : (value & 3) | 8).toString(16);
+  });
+}
+
 Page({
   data: {
     applicationId: null,
+    focusedReplacementLegId: null,
     loading: true,
     error: '',
     detail: null,
@@ -60,6 +68,12 @@ Page({
     factoryReturnRoute:'DIRECT',
     actionMedia: [],
     oldReturnDeviceMedia: [], oldReturnLogisticsMedia: [],
+    actionEvidenceScopeKey: '',
+    evidenceMediaByScope: {},
+    evidenceMaxByScope: {},
+    oldReturnLegId: null,
+    oldReturnDeviceMaxCount: 8,
+    oldReturnLogisticsMaxCount: 8,
     submitting: false,
     triage: {
       faultIndex: -1,
@@ -138,6 +152,8 @@ Page({
       this.setData({ loading: false, error: '售后申请参数缺失' });
       return;
     }
+    const legId = Number(options && options.replacement_leg_id);
+    if (Number.isSafeInteger(legId) && legId > 0) this._replacementFocus = legId;
     this.setData({ applicationId });
     app.ensureLogin(ok => {
       if (!ok) return this.setData({ loading: false, error: '登录失败，请重新进入' });
@@ -181,10 +197,21 @@ Page({
         };
         // Returning from the album/file picker can trigger onShow(). Preserve
         // the files selected for the current action during a silent refresh.
-        if (!silent) Object.assign(nextData,{actionMedia:[],oldReturnDeviceMedia:[],oldReturnLogisticsMedia:[]});
+        Object.assign(nextData, this.restoreActionEvidence(detail, silent));
         if ((detail.dispatch || {}).route === 'FACTORY_AFTERSALES') nextData.replacementExecutionMode = 'FACTORY';
         if (!silent || !(detail.actions || {}).can_escalation_request) nextData.repairActionMode = 'COMPLETE';
-        this.setData(nextData);
+        const legId = this._replacementFocus;
+        const legs = (detail.replacement_flow || {}).legs || [];
+        if (legId && legs.some(leg => leg.id === legId)) {
+          this._replacementFocus = null;
+          nextData.focusedReplacementLegId = legId;
+          this.setData(nextData, () => {
+            this.downloadRestoredEvidence();
+            wx.pageScrollTo({ selector: `#replacement-leg-${legId}`, duration: 250 });
+          });
+        } else {
+          this.setData(nextData, () => this.downloadRestoredEvidence());
+        }
       })
       .catch(err => {
         if (!silent) this.setData({ loading: false, error: err.message || '无法读取售后申请' });
@@ -415,26 +442,196 @@ Page({
   },
 
   onActionMediaChange(e) {
-    this.setData({ actionMedia: e.detail.files || [] });
+    const context = this.actionEvidenceContext(e.currentTarget && e.currentTarget.dataset);
+    this.setActionEvidence(context, e.detail.files || []);
   },
 
   onActionMediaRetry(e) {
+    const context = this.actionEvidenceContext(e.currentTarget && e.currentTarget.dataset);
+    if (context) this.selectActionEvidence(context);
     const index = Number(e.detail.index);
     const actionMedia = this.data.actionMedia.slice();
     if (actionMedia[index]) {
       actionMedia[index] = { ...actionMedia[index], status: 'PENDING', error: '' };
-      this.setData({ actionMedia });
+      this.setActionEvidence(this._actionEvidenceContext || null, actionMedia);
     }
+  },
+
+  actionEvidenceContext(data, detail = this.data.detail || {}) {
+    data = data || {};
+    const action = data.evidenceAction || data.evidence_action || data.action;
+    if (action === 'FACTORY_TRANSPORT_SEND') {
+      const transport = detail.factory_transport || {};
+      const direction = data.direction;
+      const index = Number(data.index);
+      const transportId = data.transport_id || data.transportId || transport.transport_id;
+      if (!transportId || !['inbound', 'outbound'].includes(direction) || !Number.isInteger(index) || index < 0) return null;
+      const row = (transport.legs || []).find(item => item.direction === direction && Number(item.index) === index);
+      return { key: (row && row.evidence_scope_key) || `ft:${transportId}:${direction}:${index}:send`, row,
+        formData: { evidence_action: action, transport_id: transportId, direction, index } };
+    }
+    if (action === 'SEND_REPLACEMENT_LEG') {
+      const legId = Number(data.leg_id || data.legId || data.id);
+      const row = ((detail.replacement_flow || {}).legs || []).find(item => Number(item.id) === legId);
+      if (!Number.isInteger(legId) || legId < 1 || (!data.old_return_upload && (!row || row.direction !== 'OLD'))) return null;
+      return { key: (row && row.evidence_scope_key) || `old:${legId}:send`, row,
+        formData: { evidence_action: action, leg_id: legId } };
+    }
+    return null;
+  },
+
+  evidenceContexts(detail) {
+    const transport = detail.factory_transport || {};
+    const contexts = (transport.legs || []).map(row => this.actionEvidenceContext({
+      action: 'FACTORY_TRANSPORT_SEND', transport_id: transport.transport_id, direction: row.direction, index: row.index
+    }, detail));
+    if (!detail.factory_transport) {
+      ((detail.replacement_flow || {}).legs || []).filter(row => row.direction === 'OLD').forEach(row => {
+        contexts.push(this.actionEvidenceContext({ action: 'SEND_REPLACEMENT_LEG', leg_id: row.id }, detail));
+      });
+    }
+    return contexts.filter(Boolean);
+  },
+
+  scopeFiles(context, files) {
+    return files.reduce((result, source) => {
+      const item = { ...source };
+      const sameScope = context && item.evidenceScopeKey === context.key;
+      if ((context || item.evidenceScopeKey) && !sameScope && (item.serverMediaId || item.evidenceScopeKey)) {
+        // A downloaded server record belongs to its original leg. A newly
+        // selected local file can be uploaded again, with a fresh request key.
+        if (item.restoredFromServer || !item.path) return result;
+        delete item.serverMediaId;
+        delete item.clientUploadId;
+        item.status = 'PENDING';
+        item.error = '';
+      }
+      if (context) {
+        item.evidenceScopeKey = context.key;
+        item.clientUploadId = item.clientUploadId || clientUploadId();
+        item.evidenceKind = context.formData.evidence_action === 'FACTORY_TRANSPORT_SEND'
+          ? 'LOGISTICS' : (item.evidenceKind || item.oldReturnKind);
+        if (context.formData.evidence_action === 'SEND_REPLACEMENT_LEG') item.oldReturnKind = item.evidenceKind;
+        else delete item.oldReturnKind;
+      } else {
+        delete item.evidenceScopeKey;
+        delete item.evidenceKind;
+        delete item.clientUploadId;
+      }
+      result.push(item);
+      return result;
+    }, []);
+  },
+
+  mergeServerEvidence(context, localFiles) {
+    const files = this.scopeFiles(context, localFiles || []);
+    ((context.row || {}).evidence_media || []).forEach(media => {
+      if (media.evidence_scope_key !== context.key) return;
+      const index = files.findIndex(item => Number(item.serverMediaId) === Number(media.id)
+        || (media.client_upload_id && item.clientUploadId === media.client_upload_id));
+      const previous = index < 0 ? {} : files[index];
+      const item = { ...previous, key: previous.key || `server-${media.id}`, path: previous.path || '',
+        name: media.original_name, media_type: media.media_type, status: 'SUCCESS', error: '',
+        serverMediaId: media.id, clientUploadId: media.client_upload_id,
+        evidenceScopeKey: context.key, evidenceKind: media.evidence_kind, url: media.url,
+        restoredFromServer: previous.restoredFromServer || !previous.path };
+      if (context.formData.evidence_action === 'SEND_REPLACEMENT_LEG') item.oldReturnKind = media.evidence_kind;
+      if (index < 0) files.push(item); else files[index] = item;
+    });
+    return files;
+  },
+
+  evidenceCapacity(context, files) {
+    const row = context.row || {};
+    const existingIds = new Set((row.evidence_media || []).filter(media => media.evidence_scope_key === context.key).map(media => Number(media.id)));
+    const selectedExisting = files.filter(item => item.evidenceScopeKey === context.key && existingIds.has(Number(item.serverMediaId))).length;
+    const remaining = Number.isInteger(row.evidence_remaining) ? Math.max(0, row.evidence_remaining) : 9;
+    return Math.min(9, remaining + selectedExisting);
+  },
+
+  setActionEvidence(context, files) {
+    files = this.scopeFiles(context, files);
+    const patch = { actionMedia: files, actionEvidenceScopeKey: context ? context.key : '',
+      oldReturnDeviceMedia: files.filter(item => item.oldReturnKind === 'DEVICE'),
+      oldReturnLogisticsMedia: files.filter(item => item.oldReturnKind === 'LOGISTICS') };
+    this._actionEvidenceContext = context;
+    if (context) {
+      const capacity = this.evidenceCapacity(context, files);
+      patch.evidenceMediaByScope = { ...this.data.evidenceMediaByScope, [context.key]: files };
+      patch.evidenceMaxByScope = { ...this.data.evidenceMaxByScope, [context.key]: capacity };
+      if (context.formData.evidence_action === 'SEND_REPLACEMENT_LEG') {
+        patch.oldReturnLegId = context.formData.leg_id;
+        patch.oldReturnDeviceMaxCount = Math.max(patch.oldReturnDeviceMedia.length, capacity - Math.max(1, patch.oldReturnLogisticsMedia.length));
+        patch.oldReturnLogisticsMaxCount = Math.max(patch.oldReturnLogisticsMedia.length, capacity - Math.max(1, patch.oldReturnDeviceMedia.length));
+      }
+    }
+    this.setData(patch);
+    return files;
+  },
+
+  selectActionEvidence(context) {
+    if (!context) {
+      if (this.data.actionEvidenceScopeKey) this.setActionEvidence(null, this.data.actionMedia);
+      return this.data.actionMedia;
+    }
+    let files = this.data.evidenceMediaByScope[context.key];
+    if (!files) files = !this.data.actionEvidenceScopeKey ? this.data.actionMedia : [];
+    return this.setActionEvidence(context, this.mergeServerEvidence(context, files));
+  },
+
+  restoreActionEvidence(detail, silent) {
+    const contexts = this.evidenceContexts(detail);
+    const media = {}, limits = {};
+    contexts.forEach(context => {
+      media[context.key] = this.mergeServerEvidence(context, silent ? this.data.evidenceMediaByScope[context.key] : []);
+      limits[context.key] = this.evidenceCapacity(context, media[context.key]);
+    });
+    const preferredLeg = Number(this._replacementFocus || this.data.focusedReplacementLegId);
+    const preserveUnscoped = silent && !this.data.actionEvidenceScopeKey && this.data.actionMedia.length;
+    const selected = !preserveUnscoped && (contexts.find(context => context.key === this.data.actionEvidenceScopeKey && (context.row || {}).can_send)
+      || contexts.find(context => context.formData.leg_id === preferredLeg && (context.row || {}).can_send)
+      || contexts.find(context => (context.row || {}).can_send));
+    this._actionEvidenceContext = selected || null;
+    const files = selected ? media[selected.key] : (silent && !this.data.actionEvidenceScopeKey ? this.data.actionMedia : []);
+    const deviceFiles = files.filter(item => item.oldReturnKind === 'DEVICE');
+    const logisticsFiles = files.filter(item => item.oldReturnKind === 'LOGISTICS');
+    const oldContext = selected && selected.formData.evidence_action === 'SEND_REPLACEMENT_LEG' ? selected : null;
+    const capacity = oldContext ? limits[oldContext.key] : 9;
+    return { actionMedia: files, actionEvidenceScopeKey: selected ? selected.key : '',
+      evidenceMediaByScope: media, evidenceMaxByScope: limits,
+      oldReturnDeviceMedia: deviceFiles, oldReturnLogisticsMedia: logisticsFiles,
+      oldReturnLegId: oldContext ? oldContext.formData.leg_id : null,
+      oldReturnDeviceMaxCount: Math.max(deviceFiles.length, capacity - Math.max(1, logisticsFiles.length)),
+      oldReturnLogisticsMaxCount: Math.max(logisticsFiles.length, capacity - Math.max(1, deviceFiles.length)) };
+  },
+
+  downloadRestoredEvidence() {
+    if (typeof wx.downloadFile !== 'function') return;
+    const apiRoot = String(app.globalData.apiBase || '').replace(/\/api\/?$/, '');
+    Object.keys(this.data.evidenceMediaByScope).forEach(scope => {
+      this.data.evidenceMediaByScope[scope].filter(item => item.restoredFromServer && !item.path && item.url).forEach(item => {
+        wx.downloadFile({ url: apiRoot + item.url, header: app.authHeader(), success: response => {
+          if (response.statusCode !== 200) return;
+          const files = this.data.evidenceMediaByScope[scope];
+          if (!files) return;
+          const index = files.findIndex(file => file.serverMediaId === item.serverMediaId && file.evidenceScopeKey === scope);
+          if (index < 0) return;
+          const updated = files.map((file, n) => n === index ? { ...file, path: response.tempFilePath } : file);
+          if (this.data.actionEvidenceScopeKey === scope) this.setActionEvidence(this._actionEvidenceContext, updated);
+          else this.setData({ evidenceMediaByScope: { ...this.data.evidenceMediaByScope, [scope]: updated } });
+        } });
+      });
+    });
   },
 
   updateActionMedia(index, patch) {
     const actionMedia = this.data.actionMedia.slice();
     if (!actionMedia[index]) return;
     actionMedia[index] = { ...actionMedia[index], ...patch };
-    this.setData({ actionMedia,oldReturnDeviceMedia:actionMedia.filter(x=>x.oldReturnKind==='DEVICE'),oldReturnLogisticsMedia:actionMedia.filter(x=>x.oldReturnKind==='LOGISTICS') });
+    this.setActionEvidence(this._actionEvidenceContext || null, actionMedia);
   },
 
-  uploadActionOne(purpose, item, index) {
+  uploadActionOne(purpose, item, index, context) {
     this.updateActionMedia(index, { status: 'UPLOADING', error: '' });
     return new Promise((resolve, reject) => {
       wx.uploadFile({
@@ -447,15 +644,27 @@ Page({
           media_type: item.media_type,
           purpose,
           duration_seconds: item.duration_seconds || '',
-          caption: item.oldReturnKind || ''
+          caption: item.oldReturnKind || '',
+          ...(context ? { ...context.formData, evidence_kind: item.evidenceKind,
+            client_upload_id: item.clientUploadId } : {})
         },
         success: res => {
           let body = null;
           try {
             body = JSON.parse(res.data || '{}');
           } catch (err) {}
-          if (res.statusCode >= 200 && res.statusCode < 300 && body && body.code === 0) {
-            this.updateActionMedia(index, { status: 'SUCCESS', serverMediaId: body.data && body.data.id });
+          if (res.statusCode >= 200 && res.statusCode < 300 && body && body.code === 0 && body.data && body.data.id
+              && (!context || body.data.evidence_scope_key === context.key)) {
+            if (context && context.row) {
+              const known = context.row.evidence_media || [];
+              if (!known.some(media => Number(media.id) === Number(body.data.id))) {
+                context.row.evidence_media = known.concat(body.data);
+                context.row.evidence_count = Number(context.row.evidence_count || 0) + 1;
+                context.row.evidence_remaining = Math.max(0, 9 - context.row.evidence_count);
+              }
+            }
+            this.updateActionMedia(index, { status: 'SUCCESS', serverMediaId: body.data.id,
+              ...(context ? { evidenceScopeKey: body.data.evidence_scope_key, evidenceKind: body.data.evidence_kind } : {}) });
             resolve();
           } else {
             const message = uploadFailureMessage(res, body);
@@ -474,21 +683,36 @@ Page({
     });
   },
 
-  uploadActionMedia(purpose) {
+  uploadActionMedia(purpose, context) {
     if (!purpose) return Promise.resolve();
+    if (context) {
+      const files = this.data.actionMedia;
+      if (files.length > this.evidenceCapacity(context, files)) return Promise.reject(new Error('本段附件合计最多9个，请刷新后核对剩余额度'));
+      if (!files.length) return Promise.reject(new Error('请添加本段凭证'));
+      if (context.formData.evidence_action === 'SEND_REPLACEMENT_LEG'
+          && (!files.some(item => item.evidenceKind === 'DEVICE') || !files.some(item => item.evidenceKind === 'LOGISTICS'))) {
+        return Promise.reject(new Error('请分别添加本段物流单和设备图片'));
+      }
+    }
     const next = index => {
       const item = this.data.actionMedia[index];
       if (!item) return Promise.resolve();
-      if (item.status === 'SUCCESS') return next(index + 1);
-      return this.uploadActionOne(purpose, item, index).then(() => next(index + 1));
+      if (item.status === 'SUCCESS' && (!context || item.evidenceScopeKey === context.key)) return next(index + 1);
+      return this.uploadActionOne(purpose, item, index, context).then(() => next(index + 1));
     };
     return next(0);
   },
 
   runAction(options) {
     if (this.data.submitting) return;
+    const context = this.actionEvidenceContext(options.data);
+    if ((options.data.factory_transport_upload || options.data.old_return_upload) && !context) {
+      wx.showToast({ title: '本段信息已变化，请刷新后重试', icon: 'none' });
+      return Promise.resolve();
+    }
+    this.selectActionEvidence(context);
     this.setData({ submitting: true });
-    this.uploadActionMedia(options.purpose)
+    return this.uploadActionMedia(options.purpose, context)
       .then(() => {
         if (options.data.factory_transport_upload) {
           options.data.document_ids=this.data.actionMedia.map(x=>x.serverMediaId);
@@ -507,6 +731,14 @@ Page({
       .then(() => {
         wx.showToast({ title: options.success || '操作已完成', icon: 'success' });
         this.setData({ actionMedia: [] });
+        // A committed business action invalidates the cached inbox. Ordinary
+        // page/background returns still preserve the user's loaded task pages.
+        try {
+          app.refreshTasks();
+        } catch (error) {
+          // Inbox refresh cannot undo a successful business submission.
+          console.warn('售后操作已成功，任务刷新失败，请在任务页重试。', error);
+        }
         return this.loadDetail();
       })
       .catch(err => wx.showToast({ title: err.message || '操作失败，请重试', icon: 'none' }))
@@ -673,7 +905,7 @@ Page({
   },
 
   escalationAction(action, data, purpose) {
-    this.runAction({endpoint: '/escalation/', purpose,
+    return this.runAction({endpoint: '/escalation/', purpose,
       data: Object.assign({action}, data), success: '售后处理变更已提交'});
   },
 
@@ -722,19 +954,30 @@ Page({
 
   onOldReturnDeviceMedia(e) {
     const files=(e.detail.files || []).map(x=>Object.assign({},x,{oldReturnKind:'DEVICE'}));
-    this.setData({oldReturnDeviceMedia:files,actionMedia:files.concat(this.data.oldReturnLogisticsMedia)});
+    const context = this.oldReturnEvidenceContext(e);
+    this.setActionEvidence(context, files.concat(this.data.oldReturnLogisticsMedia));
   },
   onOldReturnLogisticsMedia(e) {
     const files=(e.detail.files || []).map(x=>Object.assign({},x,{oldReturnKind:'LOGISTICS'}));
-    this.setData({oldReturnLogisticsMedia:files,actionMedia:this.data.oldReturnDeviceMedia.concat(files)});
+    const context = this.oldReturnEvidenceContext(e);
+    this.setActionEvidence(context, this.data.oldReturnDeviceMedia.concat(files));
+  },
+  oldReturnEvidenceContext(e) {
+    const dataset = (e.currentTarget || {}).dataset || {};
+    const row = (((this.data.detail || {}).replacement_flow || {}).legs || []).find(item => item.direction === 'OLD' && item.can_send)
+      || (((this.data.detail || {}).replacement_flow || {}).legs || []).find(item => item.direction === 'OLD');
+    return this.actionEvidenceContext({ action: 'SEND_REPLACEMENT_LEG', old_return_upload: true,
+      leg_id: dataset.legId || this.data.oldReturnLegId || (row && row.id) });
   },
   sendOldReplacementLeg(e) {
     if (this.data.submitting) return;
+    const context = this.actionEvidenceContext({ action: 'SEND_REPLACEMENT_LEG', old_return_upload: true, leg_id: Number(e.currentTarget.dataset.id) });
+    this.selectActionEvidence(context);
     if (!this.data.oldReturnDeviceMedia.length || !this.data.oldReturnLogisticsMedia.length)
       return wx.showToast({title:'请分别添加物流单和设备图片',icon:'none'});
     if (this.data.oldReturnDeviceMedia.some(x=>x.media_type!=='IMAGE') || this.data.oldReturnLogisticsMedia.some(x=>!['IMAGE','DOCUMENT'].includes(x.media_type)))
       return wx.showToast({title:'设备须为图片，物流单须为图片或单据',icon:'none'});
-    this.escalationAction('SEND_REPLACEMENT_LEG',{leg_id:Number(e.currentTarget.dataset.id),old_return_upload:true,confirmed:true},'REPAIR_RETURN_SHIPMENT_DOCUMENT');
+    return this.escalationAction('SEND_REPLACEMENT_LEG',{leg_id:Number(e.currentTarget.dataset.id),old_return_upload:true,confirmed:true},'REPAIR_RETURN_SHIPMENT_DOCUMENT');
   },
 
   oldMachineAction(e) {
@@ -781,9 +1024,15 @@ Page({
   },
   factoryTransportSend(e) {
     if(this.data.submitting)return;
+    const transportId = ((this.data.detail || {}).factory_transport || {}).transport_id;
+    const target = { action: 'FACTORY_TRANSPORT_SEND', transport_id: transportId,
+      direction: e.currentTarget.dataset.direction, index: Number(e.currentTarget.dataset.index) };
+    const context = this.actionEvidenceContext(target);
+    if (!context) return wx.showToast({title:'本段信息已变化，请刷新后重试',icon:'none'});
+    this.selectActionEvidence(context);
     if(!this.data.replacementCompany.trim() || !this.data.replacementTracking.trim() || !this.data.actionMedia.length)
       return wx.showToast({title:'请填写物流并添加本段凭证',icon:'none'});
-    this.escalationAction('FACTORY_TRANSPORT_SEND',{direction:e.currentTarget.dataset.direction,index:Number(e.currentTarget.dataset.index),factory_transport_upload:true,
+    return this.escalationAction('FACTORY_TRANSPORT_SEND',{transport_id:transportId,direction:target.direction,index:target.index,factory_transport_upload:true,
       logistics_company:this.data.replacementCompany.trim(),tracking_no:this.data.replacementTracking.trim()},'REPAIR_RETURN_SHIPMENT_DOCUMENT');
   },
   factoryTransportReceive(e) {

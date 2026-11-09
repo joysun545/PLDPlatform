@@ -6,6 +6,7 @@ Page({
     loading: true,
     accepting: false,
     invitationReady: false,
+    invitationRootOrganization: null,
 
     inviterNickname: '加载中...',
     inviterAvatar: '/images/default_avatar.png',
@@ -16,6 +17,8 @@ Page({
     targetRoleName: '',
     targetOrganizationTypeName: '',
     targetOrganizationName: '',
+    targetOrganizationRegion: '',
+    isPlatformFactoryInvitation: false,
     requiresOrganizationProfile: false,
 
     nickname: '',
@@ -51,7 +54,7 @@ Page({
   },
 
   loadInvitation() {
-    this.setData({ loading: true });
+    this.setData({ loading: true, invitationRootOrganization: null });
 
     wx.request({
       url: `${app.globalData.apiBase}/account/invitations/detail/`,
@@ -60,7 +63,7 @@ Page({
       data: { token: this.data.token },
       success: res => {
         if (!res.data || res.data.code !== 0) {
-          this.showInvalidInvitation(res.data.msg || '邀请链接无效');
+          this.showInvalidInvitation((res.data && res.data.msg) || '邀请链接无效');
           return;
         }
 
@@ -78,6 +81,7 @@ Page({
 
         this.setData({
           invitationReady: true,
+          invitationRootOrganization: data.root_organization || null,
           inviterNickname: inviter.nickname || '邀请人',
           inviterAvatar: inviter.avatar || '/images/default_avatar.png',
           inviterRoleName: inviter.role_name || '',
@@ -86,6 +90,8 @@ Page({
           targetRoleName: targetRole.name || '成员',
           targetOrganizationTypeName: targetType.name || '',
           targetOrganizationName: targetOrganization.name || '',
+          targetOrganizationRegion: targetOrganization.region || '',
+          isPlatformFactoryInvitation: data.invitation_kind === 'platform_factory_owner',
           requiresOrganizationProfile: !!data.requires_organization_profile,
           region: sourceOrganization.region || ''
         });
@@ -100,7 +106,7 @@ Page({
   },
 
   showInvalidInvitation(message) {
-    this.setData({ loading: false, invitationReady: false });
+    this.setData({ loading: false, invitationReady: false, invitationRootOrganization: null });
     wx.showModal({
       title: '无法接受邀请',
       content: message,
@@ -208,6 +214,9 @@ Page({
         }
 
         const profile = res.data.data || {};
+        if (profile.root_organization) {
+          this.setData({ invitationRootOrganization: profile.root_organization });
+        }
         app.applyUserPayload(profile);
 
         wx.showToast({ title: '加入成功', icon: 'success' });

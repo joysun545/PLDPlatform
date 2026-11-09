@@ -4,9 +4,6 @@ function request(planId, method) {
   return new Promise((resolve, reject) => {
     app.ensureLogin(ok => {
       if (!ok) return reject(new Error('请重新登录后再试'));
-      if ((app.globalData.role || '').trim() !== 'factory_material_stock') {
-        return reject(new Error('仅厂家物料库管可办理订单配送入库'));
-      }
       wx.request({
         url: `${app.globalData.apiBase}/sales/order-plans/${planId}/material-flow/order-delivery-receipt/`,
         method,

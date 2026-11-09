@@ -1,9 +1,12 @@
-<theme-shell>
+<theme-shell title="{{organizationMode ? '组织默认主题' : '界面主题'}}" root-organization="{{editingRoot}}">
 <view class="page">
-  <view wx:if="{{loading}}" class="state-card">正在读取全局主题…</view>
+  <view wx:if="{{loading}}" class="state-card">正在读取主题…</view>
   <view wx:if="{{errorMessage}}" class="state-card error">{{errorMessage}}</view>
 
   <block wx:if="{{!loading}}">
+    <view wx:if="{{!organizationMode && canManage}}" class="state-card">
+      {{editingRoot ? editingRoot.name + ' · 个人主题' : '个人主题'}}，仅应用于当前账号。
+    </view>
     <view class="section-card">
       <text class="section-title">第一步 · 选择色系</text>
       <view class="option-list">
@@ -38,8 +41,8 @@
       <view class="mock-card"><text>页面头部</text><text>内容卡片与操作按钮</text></view>
     </view>
 
-    <button wx:if="{{canManage}}" class="save-button" loading="{{saving}}" disabled="{{saving}}" bindtap="save">保存并全局应用</button>
-    <view wx:else class="readonly-tip">当前账号可以查看主题，但只有运营业主负责人可以修改。</view>
+    <button wx:if="{{canManage}}" class="save-button" loading="{{saving}}" disabled="{{saving}}" bindtap="save">{{organizationMode ? '保存组织默认主题' : '保存个人主题'}}</button>
+    <view wx:elif="{{organizationMode}}" class="readonly-tip">组织默认主题由本组织负责人设置。</view>
   </block>
 </view>
 </theme-shell>

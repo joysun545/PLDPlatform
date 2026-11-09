@@ -1,4 +1,4 @@
-<theme-shell>
+<theme-shell business-context="{{true}}" root-organization="{{context.root_organization}}">
 <view class="page">
   <view wx:if="{{loading}}" class="state">正在读取设备信息...</view>
   <view wx:elif="{{error}}" class="state error"><text>{{error}}</text><button bindtap="goBack">返回</button></view>
@@ -9,7 +9,13 @@
       <text>{{context.device.product_model}}｜{{context.device.lifecycle_code || '-'}}</text>
     </view>
 
-    <view class="card presence-gate" wx:if="{{presenceRequired && !presenceVerified}}">
+    <view class="card" wx:if="{{confirmingSubmission}}">
+      <text class="section-title">确认提交结果</text>
+      <text class="tip">{{submissionNotice}}</text>
+      <button class="secondary" loading="{{submitting}}" disabled="{{submitting}}" bindtap="retrySubmission">确认本次提交</button>
+    </view>
+
+    <view class="card presence-gate" wx:elif="{{presenceRequired && !presenceVerified}}">
       <text class="section-title">先扫码确认设备在身边</text>
       <text class="tip">请扫描激活时绑定的设备本体二维码。核验一致后即可填写售后申请。</text>
       <text class="presence-message">{{presenceMessage}}</text>
@@ -17,7 +23,7 @@
       <button class="presence-back" bindtap="goBack">返回设备详情</button>
     </view>
 
-    <block wx:if="{{!presenceRequired || presenceVerified}}">
+    <block wx:else>
     <view class="card">
       <view class="row fold-heading" data-field="equipmentExpanded" bindtap="toggleSection">
         <text class="section-title">设备与质保信息</text>
@@ -53,14 +59,14 @@
       </view>
       <block wx:if="{{locationExpanded}}">
         <text class="tip">提交前必须确认当前GPS位置，并补充现场名称或详细地址。</text>
-        <button class="secondary" bindtap="obtainLocation">获取当前位置</button>
+        <button class="secondary" disabled="{{submitting}}" bindtap="obtainLocation">获取当前位置</button>
         <view wx:if="{{location}}" class="location-ready">
           <text>GPS：{{location.latitude}}, {{location.longitude}}</text>
           <text>{{locationConfirmed ? '已确认真实位置' : '待填写并确认'}}</text>
         </view>
-        <input class="field" value="{{locationName}}" bindinput="onLocationName" placeholder="现场名称，例如：重庆市渝北区某服务区" />
-        <input class="field" value="{{locationAddress}}" bindinput="onLocationAddress" placeholder="详细地址（建议填写）" />
-        <button class="confirm-location" disabled="{{!location}}" bindtap="confirmLocation">{{locationConfirmed ? '位置已确认' : '确认此真实位置'}}</button>
+        <input class="field" value="{{locationName}}" disabled="{{submitting}}" bindinput="onLocationName" placeholder="现场名称，例如：重庆市渝北区某服务区" />
+        <input class="field" value="{{locationAddress}}" disabled="{{submitting}}" bindinput="onLocationAddress" placeholder="详细地址（建议填写）" />
+        <button class="confirm-location" disabled="{{submitting || !location}}" bindtap="confirmLocation">{{locationConfirmed ? '位置已确认' : '确认此真实位置'}}</button>
       </block>
     </view>
 
@@ -92,7 +98,7 @@
           bindretry="onMediaRetry"
         ></aftersale-media-uploader>
         <text wx:if="{{existingMedia.length}}" class="muted">草稿中已有 {{existingMedia.length}} 个附件；本次可继续追加。</text>
-        <textarea class="description" maxlength="1000" value="{{faultDescription}}" bindinput="onFaultDescription" placeholder="请描述故障现象、发生条件、已尝试的处理方式及当前状态"></textarea>
+        <textarea class="description" maxlength="1000" value="{{faultDescription}}" disabled="{{submitting}}" bindinput="onFaultDescription" placeholder="请描述故障现象、发生条件、已尝试的处理方式及当前状态"></textarea>
       </block>
     </view>
 

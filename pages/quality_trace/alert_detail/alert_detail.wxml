@@ -1,4 +1,4 @@
-<theme-shell>
+<theme-shell business-context="{{true}}" root-organization="{{item.root_organization}}">
 <view class="page">
   <view class="error" wx:if="{{error}}">{{error}}</view>
   <view wx:if="{{item.id}}">

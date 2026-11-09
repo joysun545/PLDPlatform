@@ -1,4 +1,4 @@
-<theme-shell title-eyebrow="换新补发计划" title-subtitle="销售安排 · 成品库管发货">
+<theme-shell title-eyebrow="换新补发计划" title-subtitle="销售安排 · 成品库管发货" business-context="{{businessContext || !!plan}}" root-organization="{{plan.root_organization}}">
 <view class="page">
   <view class="card"><text>厂家物流确认收旧机后即可安排补发，无需等待售后归因结案。补发不计正常销售数量或应收。</text></view>
   <view class="card" wx:if="{{error}}"><text>{{error}}</text><button bindtap="load">刷新</button></view>

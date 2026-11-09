@@ -1,4 +1,4 @@
-<theme-shell>
+<theme-shell business-context="{{true}}" root-organization="{{notice.root_organization}}">
 <view class="page">
   <view wx:if="{{loading}}" class="state-card">正在加载脱敏质量通知…</view>
   <view wx:elif="{{errorMessage}}" class="state-card error">

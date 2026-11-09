@@ -1,4 +1,4 @@
-<theme-shell>
+<theme-shell business-context="{{true}}" root-organization="{{campaign.root_organization || selected.root_organization}}">
 <view class="page">
   <view class="hero" wx:if="{{campaign}}">
     <view class="row"><text class="hero-title">{{campaign.recall_no}}</text><text>{{campaign.statusText || campaign.status}}</text></view>
@@ -24,11 +24,11 @@
     <view class="tip">已激活设备的用户交接由系统在发布召回时自动建立，无需逐台创建。</view>
     <button class="primary" wx:if="{{isQualityFactory && campaign.status === 'DRAFT'}}" bindtap="launch" loading="{{busy}}" disabled="{{busy || loading}}">发布召回</button>
     <button class="secondary" wx:if="{{isQualityFactory && campaign.status === 'ACTIVE'}}" bindtap="refreshProgress" loading="{{busy}}" disabled="{{busy || loading}}">刷新召回进度</button>
-    <button class="primary" wx:if="{{role === 'factory_chief_engineer' && campaign.status === 'ACTIVE' && campaign.post_disposition.can_start}}" bindtap="startPostDisposition" loading="{{busy}}" disabled="{{busy || loading}}">启动召回后的风险与处置流程</button>
+    <button class="primary" wx:if="{{campaign.status === 'ACTIVE' && campaign.post_disposition.can_start}}" bindtap="startPostDisposition" loading="{{busy}}" disabled="{{busy || loading}}">启动召回后的风险与处置流程</button>
     <view class="tip" wx:if="{{campaign.post_disposition.started}}">召回后处置：已完成 {{campaign.post_disposition.completed_device_count}} / {{campaign.post_disposition.device_count}} 台</view>
-    <button class="primary" wx:if="{{role === 'factory_chief_engineer' && campaign.status === 'ACTIVE' && campaign.post_disposition.can_complete_campaign}}" bindtap="completeCampaign" loading="{{busy}}" disabled="{{busy || loading}}">全部处置完成，确认完成召回</button>
+    <button class="primary" wx:if="{{campaign.status === 'ACTIVE' && campaign.post_disposition.can_complete_campaign}}" bindtap="completeCampaign" loading="{{busy}}" disabled="{{busy || loading}}">全部处置完成，确认完成召回</button>
     <view class="tip" wx:if="{{campaign.inventory_posting}}">入库记账：{{campaign.inventory_posting.accounted_device_count}} / {{campaign.inventory_posting.campaign_device_count}} 台</view>
-    <button class="primary" wx:if="{{campaign.status === 'ACTIVE' && role === 'factory_sales_assistant' && campaign.inventory_posting.all_accounted && !campaign.inventory_posting.batch_confirmed}}" bindtap="confirmBatchPosting" loading="{{busy}}" disabled="{{busy || loading}}">确认本批设备全部入库记账</button>
+    <button class="primary" wx:if="{{campaign.status === 'ACTIVE' && campaign.inventory_posting.can_confirm_batch}}" bindtap="confirmBatchPosting" loading="{{busy}}" disabled="{{busy || loading}}">确认本批设备全部入库记账</button>
     <view class="tip" wx:if="{{campaign.inventory_posting.batch_confirmed}}">本批已完成入库记账确认，厂家总工程师可启动召回后处置。</view>
   </view>
 

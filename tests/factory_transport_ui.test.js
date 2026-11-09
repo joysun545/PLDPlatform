@@ -3,11 +3,11 @@ function setup(){let p,action,scan,modal,toast,request;
 vm.runInNewContext(fs.readFileSync(path.resolve(__dirname,'../pages/aftersale/detail/detail.js'),'utf8'),{
 getApp:()=>({globalData:{},authHeader:()=>({})}),Page:x=>p=x,console,wx:{scanCode:x=>scan=x,showModal:x=>modal=x,showToast:x=>toast=x.title,request:x=>{request=x;x.success({statusCode:200,data:{code:0,data:{}}});}}});
 p.data=JSON.parse(JSON.stringify(p.data));p.setData=d=>Object.assign(p.data,d);const original=p.runAction;p.runAction=x=>action=x;
-p.data.detail={factory_transport:{kind:'REPAIR',can_finalize:true}};return {p,original,get action(){return action},get scan(){return scan},get modal(){return modal},get toast(){return toast},get request(){return request}};
+p.data.detail={factory_transport:{kind:'REPAIR',can_finalize:true,transport_id:'transport-test',legs:[{direction:'outbound',index:0,evidence_scope_key:'ft:transport-test:outbound:0:send',evidence_count:0,evidence_remaining:9,evidence_media:[]}]}};return {p,original,get action(){return action},get scan(){return scan},get modal(){return modal},get toast(){return toast},get request(){return request}};
 }
 test('factory logistics shipment submits current leg and evidence without scanning',()=>{
 const s=setup();s.p.factoryTransportSend({currentTarget:{dataset:{direction:'outbound',index:0}}});assert.equal(s.action,undefined);assert.match(s.toast,/物流/);
-s.p.data.replacementCompany='顺丰';s.p.data.replacementTracking='SF1';s.p.data.actionMedia=[{path:'doc.jpg'}];
+s.p.data.replacementCompany='顺丰';s.p.data.replacementTracking='SF1';s.p.onActionMediaChange({currentTarget:{dataset:{evidenceAction:'FACTORY_TRANSPORT_SEND',transportId:'transport-test',direction:'outbound',index:0}},detail:{files:[{path:'doc.jpg',media_type:'IMAGE'}]}});
 s.p.factoryTransportSend({currentTarget:{dataset:{direction:'outbound',index:0}}});
 assert.equal(s.scan,undefined);assert.equal(s.action.data.action,'FACTORY_TRANSPORT_SEND');assert.equal(s.action.data.direction,'outbound');assert.equal(s.action.data.index,0);assert.equal(s.action.purpose,'REPAIR_RETURN_SHIPMENT_DOCUMENT');
 });
@@ -23,8 +23,8 @@ const s=setup();s.p.factoryTransportReceive({currentTarget:{dataset:{direction:'
 s.p.factoryTransportReceive({currentTarget:{dataset:{direction:'inbound',index:1}}});s.modal.success({confirm:true});assert.equal(s.action.data.confirmed,true);assert.equal(s.action.data.index,1);assert.equal(s.scan,undefined);
 });
 test('upload success attaches selected proof IDs while failure prevents submission',async()=>{
-const s=setup();s.p.uploadActionMedia=()=>Promise.resolve();s.p.loadDetail=()=>Promise.resolve();s.p.data.actionMedia=[{serverMediaId:101}];
-s.original.call(s.p,{endpoint:'/escalation/',purpose:'REPAIR_RETURN_SHIPMENT_DOCUMENT',data:{action:'FACTORY_TRANSPORT_SEND',factory_transport_upload:true}});
+const s=setup();s.p.uploadActionMedia=()=>Promise.resolve();s.p.loadDetail=()=>Promise.resolve();s.p.data.actionMedia=[{serverMediaId:101,evidenceScopeKey:'ft:transport-test:outbound:0:send',clientUploadId:'existing-upload'}];
+s.original.call(s.p,{endpoint:'/escalation/',purpose:'REPAIR_RETURN_SHIPMENT_DOCUMENT',data:{action:'FACTORY_TRANSPORT_SEND',transport_id:'transport-test',direction:'outbound',index:0,factory_transport_upload:true}});
 await new Promise(r=>setImmediate(r));assert.deepEqual(Array.from(s.request.data.document_ids),[101]);assert.equal(s.request.data.factory_transport_upload,undefined);
 const f=setup();f.p.uploadActionMedia=()=>Promise.reject(new Error('failed'));
 f.original.call(f.p,{endpoint:'/escalation/',purpose:'REPAIR_RETURN_SHIPMENT_DOCUMENT',data:{factory_transport_upload:true}});await new Promise(r=>setImmediate(r));assert.equal(f.request,undefined);

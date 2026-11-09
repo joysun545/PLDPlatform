@@ -4,3 +4,4 @@ page{background:var(--ui-page-bg);color:var(--ui-ink)}.page{min-height:100vh;pad
 .fold-heading{min-height:64rpx;margin:-4rpx 0 0;cursor:pointer}.fold-heading .section-title{margin-bottom:0}.fold-heading .link{flex-shrink:0;font-size:24rpx}
 
 .repair-action-buttons{display:flex;align-items:center;gap:18rpx;margin-top:24rpx}.repair-action-buttons .repair-complete-button{flex:1;margin:0}.repair-mode-link{flex-shrink:0;width:auto;margin:0;padding:12rpx 4rpx;background:transparent!important;color:var(--ui-primary)!important;font-size:23rpx;line-height:1.5;font-weight:400;border-radius:0}.repair-mode-link::after{border:0}.repair-mode-link[disabled]{opacity:.45}.repair-action-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16rpx}.repair-action-heading .section-title{flex:1}
+.replacement-leg-focus{padding:19rpx 16rpx;background:var(--ui-primary-pale);border-radius:var(--ui-card-radius)}

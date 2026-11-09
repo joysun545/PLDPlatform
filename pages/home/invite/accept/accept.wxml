@@ -1,4 +1,4 @@
-<theme-shell>
+<theme-shell business-context="{{true}}" root-organization="{{invitationRootOrganization}}">
 <view class="container">
   <view class="loading-tip" wx:if="{{loading}}">
     正在读取邀请信息...
@@ -22,7 +22,9 @@
       <text class="text">邀请您成为：</text>
       <text class="highlight-role">{{targetRoleName}}</text>
       <text class="desc" wx:if="{{targetOrganizationName}}">所属{{targetOrganizationTypeName}}：{{targetOrganizationName}}</text>
-      <text class="desc">接受后将为您开放该岗位的功能入口</text>
+      <text class="desc" wx:if="{{isPlatformFactoryInvitation && targetOrganizationRegion}}">所在区域：{{targetOrganizationRegion}}</text>
+      <text class="desc" wx:if="{{isPlatformFactoryInvitation}}">接受后将建立该厂家组织，您将成为厂家负责人。</text>
+      <text class="desc" wx:else>接受后将为您开放该岗位的功能入口</text>
     </view>
 
     <view class="profile-form">

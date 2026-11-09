@@ -11,21 +11,9 @@ function formatDate(value) {
   );
 }
 
-function prepareDetail(detail, previousDetail) {
-  const rolling = detail.rolling_receivables || {};
-  const oldPayments = (previousDetail && previousDetail.payments) || [];
+function prepareDetail(detail) {
   return {
     ...detail,
-    hasRollingReceivables: Boolean(rolling.enabled),
-    isCurrentReceivable: Boolean(rolling.enabled && rolling.is_current),
-    showCarriedForward: Boolean(
-      rolling.enabled && !rolling.is_current && rolling.active_transfer_id &&
-      detail.statement && detail.statement.submitted
-    ),
-    rolling_receivables: {
-      ...rolling,
-      settlements: Array.isArray(rolling.settlements) ? rolling.settlements : []
-    },
     statement: {
       ...(detail.statement || {}),
       submittedText: formatDate(detail.statement && detail.statement.submitted_at)
@@ -33,17 +21,7 @@ function prepareDetail(detail, previousDetail) {
     logistics_documents: (detail.logistics_documents || []).map(document => ({
       ...document,
       uploadedText: formatDate(document.uploaded_at)
-    })),
-    payments: (detail.payments || []).map(payment => {
-      const previous = oldPayments.find(item => item.id === payment.id);
-      return {
-        ...payment,
-        uploadedText: formatDate(payment.uploaded_at),
-        confirmedText: formatDate(payment.confirmed_at),
-        confirmInput: payment.can_confirm && previous ? previous.confirmInput || '' : '',
-        allocations: Array.isArray(payment.allocations) ? payment.allocations : []
-      };
-    })
+    }))
   };
 }
 
@@ -53,18 +31,13 @@ Page({
     loading: true,
     errorMessage: '',
     detail: null,
-    showReceivableHistory: false,
     selectedStatementPath: '',
-    receivableAmount: '',
     selectedLogisticsPath: '',
     selectedLogisticsName: '',
     selectedLogisticsType: 'IMAGE',
     logisticsRemark: '',
-    selectedVoucherPath: '',
     submittingStatement: false,
-    uploadingLogistics: false,
-    uploadingVoucher: false,
-    confirmingPaymentId: 0
+    uploadingLogistics: false
   },
 
   onLoad(options) {
@@ -89,8 +62,7 @@ Page({
 
   onShow() {
     if (this.data.transferId && this.data.detail && !this.data.loading &&
-        !this.data.submittingStatement && !this.data.uploadingLogistics &&
-        !this.data.uploadingVoucher && !this.data.confirmingPaymentId) {
+        !this.data.submittingStatement && !this.data.uploadingLogistics) {
       this.loadDetail(null, true);
     }
   },
@@ -107,19 +79,16 @@ Page({
         if (body.code !== 0 || !body.data) {
           this.setData({
             loading: false,
-            errorMessage: body.msg || '商品货款信息加载失败'
+            errorMessage: body.msg || '商品单据信息加载失败'
           });
           return;
         }
-        const detail = prepareDetail(body.data, preserveDrafts ? this.data.detail : null);
+        const detail = prepareDetail(body.data);
         const values = {
           loading: false,
           detail
         };
         if (!preserveDrafts || detail.statement.submitted) values.selectedStatementPath = '';
-        if (!preserveDrafts || !detail.actions || !detail.actions.can_upload_payment) {
-          values.selectedVoucherPath = '';
-        }
         this.setData(values);
       },
       fail: () => this.setData({
@@ -140,42 +109,6 @@ Page({
     });
   },
 
-  openCurrentSettlement() {
-    const rolling = (this.data.detail && this.data.detail.rolling_receivables) || {};
-    const transferId = Number(rolling.active_transfer_id || 0);
-    if (!Number.isSafeInteger(transferId) || transferId <= 0 || transferId === this.data.transferId) return;
-    wx.redirectTo({
-      url: `/pages/stock/goods_transfer_settlement/goods_transfer_settlement?transfer_id=${transferId}`
-    });
-  },
-
-  openSettlementHistory(e) {
-    const transferId = Number(e.currentTarget.dataset.id || 0);
-    const rolling = (this.data.detail && this.data.detail.rolling_receivables) || {};
-    const row = (rolling.settlements || []).find(item => Number(item.transfer_id) === transferId);
-    if (!row || !Number.isSafeInteger(transferId) || transferId <= 0 || transferId === this.data.transferId) return;
-    wx.navigateTo({
-      url: `/pages/stock/goods_transfer_settlement/goods_transfer_settlement?transfer_id=${transferId}`
-    });
-  },
-
-  toggleReceivableHistory() {
-    this.setData({ showReceivableHistory: !this.data.showReceivableHistory });
-  },
-
-  financialEntryIsCurrent() {
-    const detail = this.data.detail;
-    if (detail && detail.showCarriedForward) {
-      wx.showToast({ title: '请到最新发货单办理货款', icon: 'none' });
-      return false;
-    }
-    return true;
-  },
-
-  onReceivableInput(e) {
-    this.setData({ receivableAmount: e.detail.value || '' });
-  },
-
   onLogisticsRemarkInput(e) {
     this.setData({ logisticsRemark: e.detail.value || '' });
   },
@@ -194,27 +127,28 @@ Page({
     });
   },
 
+  documentActionAllowed(action) {
+    const detail = this.data.detail;
+    return Boolean(!this.data.loading && detail && detail.actions && detail.actions[action]);
+  },
+
   submitStatement() {
-    const amount = (this.data.receivableAmount || '').trim();
+    if (!this.documentActionAllowed('can_submit_statement')) return;
     const filePath = this.data.selectedStatementPath;
-    if (!amount) {
-      wx.showToast({ title: '请填写本单新增应收金额', icon: 'none' });
-      return;
-    }
     if (!filePath) {
       wx.showToast({ title: '请上传货品清单图片', icon: 'none' });
       return;
     }
     wx.showModal({
       title: '提交货品清单',
-      content: `确认本单新增应收货款为 ¥${amount}？请勿包含前单未收余额。提交后不能修改。`,
+      content: '确认上传本次发货的货品清单？清单仅作单据留存，不生成应收账款。',
       confirmText: '确认提交',
-      success: modal => modal.confirm && this.uploadStatement(filePath, amount)
+      success: modal => modal.confirm && this.uploadStatement(filePath)
     });
   },
 
-  uploadStatement(filePath, amount) {
-    if (this.data.submittingStatement) return;
+  uploadStatement(filePath) {
+    if (this.data.submittingStatement || !this.documentActionAllowed('can_submit_statement')) return;
     this.setData({ submittingStatement: true });
     wx.showLoading({ title: '正在提交...', mask: true });
     wx.uploadFile({
@@ -222,7 +156,7 @@ Page({
       filePath,
       name: 'statement_image',
       header: app.authHeader(null),
-      formData: { receivable_amount: amount },
+      formData: {},
       success: res => this.handleUploadResponse(res, '货品清单已提交'),
       fail: () => wx.showToast({ title: '货品清单上传失败', icon: 'none' }),
       complete: () => {
@@ -269,6 +203,7 @@ Page({
   },
 
   submitLogistics() {
+    if (!this.documentActionAllowed('can_upload_logistics')) return;
     const filePath = this.data.selectedLogisticsPath;
     if (!filePath) {
       wx.showToast({ title: '请先选择物流单据', icon: 'none' });
@@ -296,54 +231,16 @@ Page({
     });
   },
 
-  chooseVoucher() {
-    wx.chooseMedia({
-      count: 1,
-      mediaType: ['image'],
-      sourceType: ['album', 'camera'],
-      success: res => {
-        const file = (res.tempFiles || [])[0];
-        if (file && file.tempFilePath) {
-          this.setData({ selectedVoucherPath: file.tempFilePath });
-        }
-      }
-    });
+  showPaymentUnavailable() {
+    wx.showToast({ title: '商家下发仅留存单据，不办理货款', icon: 'none' });
   },
 
-  submitVoucher() {
-    if (!this.financialEntryIsCurrent()) return;
-    const filePath = this.data.selectedVoucherPath;
-    if (!filePath) {
-      wx.showToast({ title: '请先选择付款凭证', icon: 'none' });
-      return;
-    }
-    wx.showModal({
-      title: '上传付款凭证',
-      content: '确认上传本次付款凭证？发货方将依据凭证填写实际到账金额。',
-      confirmText: '确认上传',
-      success: modal => modal.confirm && this.uploadVoucher(filePath)
-    });
-  },
-
-  uploadVoucher(filePath) {
-    if (this.data.uploadingVoucher || !this.financialEntryIsCurrent()) return;
-    const clientRequestId = `payment-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    this.setData({ uploadingVoucher: true });
-    wx.showLoading({ title: '正在上传...', mask: true });
-    wx.uploadFile({
-      url: `${app.globalData.apiBase}/lifecycle/goods-transfers/${this.data.transferId}/settlement/payments/`,
-      filePath,
-      name: 'voucher_image',
-      header: app.authHeader(null),
-      formData: { client_request_id: clientRequestId },
-      success: res => this.handleUploadResponse(res, '付款凭证已上传'),
-      fail: () => wx.showToast({ title: '付款凭证上传失败', icon: 'none' }),
-      complete: () => {
-        wx.hideLoading();
-        this.setData({ uploadingVoucher: false });
-      }
-    });
-  },
+  // Old hot-loaded event handlers remain harmless while the new page removes the forms.
+  chooseVoucher() { this.showPaymentUnavailable(); },
+  submitVoucher() { this.showPaymentUnavailable(); },
+  uploadVoucher() { this.showPaymentUnavailable(); },
+  confirmPayment() { this.showPaymentUnavailable(); },
+  submitPaymentConfirmation() { this.showPaymentUnavailable(); },
 
   handleUploadResponse(res, successText) {
     let body = {};
@@ -368,63 +265,6 @@ Page({
     this.loadDetail();
   },
 
-  onConfirmAmountInput(e) {
-    const paymentId = Number(e.currentTarget.dataset.id);
-    const index = (this.data.detail.payments || []).findIndex(
-      payment => payment.id === paymentId
-    );
-    if (index < 0) return;
-    this.setData({ [`detail.payments[${index}].confirmInput`]: e.detail.value || '' });
-  },
-
-  confirmPayment(e) {
-    if (!this.financialEntryIsCurrent()) return;
-    const paymentId = Number(e.currentTarget.dataset.id);
-    const payment = (this.data.detail.payments || []).find(item => item.id === paymentId);
-    if (!payment || !payment.can_confirm || this.data.confirmingPaymentId) return;
-    const amount = (payment.confirmInput || '').trim();
-    if (!amount) {
-      wx.showToast({ title: '请填写实际到账金额', icon: 'none' });
-      return;
-    }
-    wx.showModal({
-      title: `确认第${payment.sequence_no}笔收款`,
-      content: payment.source_flow_no
-        ? `付款凭证所属发货单：${payment.source_flow_no}。确认实际到账金额为 ¥${amount}？`
-        : `确认实际到账金额为 ¥${amount}？`,
-      confirmText: '确认收款',
-      success: modal => modal.confirm && this.submitPaymentConfirmation(paymentId, amount)
-    });
-  },
-
-  submitPaymentConfirmation(paymentId, amount) {
-    if (!this.financialEntryIsCurrent()) return;
-    this.setData({ confirmingPaymentId: paymentId });
-    wx.showLoading({ title: '正在确认...', mask: true });
-    wx.request({
-      url: `${app.globalData.apiBase}/lifecycle/goods-transfers/${this.data.transferId}/settlement/payments/${paymentId}/confirm/`,
-      method: 'POST',
-      header: app.authHeader('application/json'),
-      data: { confirmed_amount: amount },
-      success: res => {
-        const body = res.data || {};
-        if (res.statusCode === 401 || body.code === 401) app.reauthenticate();
-        if (body.code !== 0) {
-          wx.showToast({ title: body.msg || '确认收款失败', icon: 'none' });
-          return;
-        }
-        wx.showToast({ title: body.msg || '收款已确认', icon: 'success' });
-        app.refreshTasks && app.refreshTasks();
-        this.loadDetail();
-      },
-      fail: () => wx.showToast({ title: '网络连接失败', icon: 'none' }),
-      complete: () => {
-        wx.hideLoading();
-        this.setData({ confirmingPaymentId: 0 });
-      }
-    });
-  },
-
   previewStatement() {
     const path = this.data.detail && this.data.detail.statement.preview_path;
     if (path) this.downloadAndPreview(path, 'IMAGE');
@@ -437,10 +277,7 @@ Page({
     );
   },
 
-  previewVoucher(e) {
-    const path = e.currentTarget.dataset.path || '';
-    if (path) this.downloadAndPreview(path, 'IMAGE');
-  },
+  previewVoucher() { this.showPaymentUnavailable(); },
 
   downloadAndPreview(path, fileType) {
     if (!path) return;

@@ -36,8 +36,8 @@ Page({
     this.setData({ loading: true, error: '' });
     try {
       const campaign = await qt.request(`/recalls/${this.data.campaignId}/`);
-      if (campaign.viewer && (campaign.viewer.role !== 'factory_chief_engineer' ||
-          campaign.viewer.organization_type !== 'OWNER' || campaign.status !== 'ACTIVE')) {
+      if (campaign.status !== 'ACTIVE' || !campaign.post_disposition ||
+          campaign.post_disposition.can_start !== true) {
         throw new Error('当前岗位或批次状态不允许分配召回后处置，请返回召回详情。');
       }
       const selected = new Set(this.data.selectedIds);
@@ -111,7 +111,7 @@ Page({
         {
           method,
           recall_device_ids: ids,
-          note: `厂家总工程师分配${label}`
+          note: `分配${label}`
         }
       );
       this.setData({ selectedIds: [] });

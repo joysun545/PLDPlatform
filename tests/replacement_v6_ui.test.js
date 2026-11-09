@@ -44,7 +44,7 @@ assert.equal(s.action.purpose,'REPAIR_RETURN_SHIPMENT_DOCUMENT');assert.equal(s.
 
 test('old return sends the selected uploaded proof IDs after successful upload',async()=>{
 const s=setup();s.p.uploadActionMedia=()=>Promise.resolve();s.p.loadDetail=()=>Promise.resolve();
-s.p.data.actionMedia=[{oldReturnKind:'DEVICE',serverMediaId:71},{oldReturnKind:'LOGISTICS',serverMediaId:72}];
+s.p.data.actionMedia=[{oldReturnKind:'DEVICE',serverMediaId:71,evidenceScopeKey:'old:13:send',clientUploadId:'device-upload'},{oldReturnKind:'LOGISTICS',serverMediaId:72,evidenceScopeKey:'old:13:send',clientUploadId:'logistics-upload'}];
 s.actualRunAction.call(s.p,{endpoint:'/escalation/',purpose:'REPAIR_RETURN_SHIPMENT_DOCUMENT',data:{action:'SEND_REPLACEMENT_LEG',leg_id:13,old_return_upload:true}});
 await new Promise(resolve=>setImmediate(resolve));
 assert.deepEqual(Array.from(s.request.data.device_image_ids),[71]);assert.deepEqual(Array.from(s.request.data.logistics_document_ids),[72]);

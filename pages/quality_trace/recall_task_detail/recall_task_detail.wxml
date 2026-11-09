@@ -1,4 +1,4 @@
-<theme-shell>
+<theme-shell business-context="{{true}}" root-organization="{{campaign.root_organization}}">
 <view class="page">
   <view class="hero" wx:if="{{campaign}}">
     <view class="row"><text class="hero-title">{{campaign.recall_no}}</text><text>{{campaign.statusText}}</text></view>

@@ -1,4 +1,4 @@
-<theme-shell>
+<theme-shell business-context="{{true}}" root-organization="{{campaign.root_organization}}">
 <view class="page">
   <view class="hero" wx:if="{{campaign}}">
     <view class="hero-title">召回后风险与处置</view>

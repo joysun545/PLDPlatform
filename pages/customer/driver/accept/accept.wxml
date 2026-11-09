@@ -1,4 +1,4 @@
-<theme-shell>
+<theme-shell business-context="{{true}}" root-organization="{{detail.root_organization}}">
 <view class="page">
   <view class="state" wx:if="{{loading}}">正在读取车辆分享信息...</view>
   <view class="state error" wx:elif="{{error}}">
@@ -33,9 +33,9 @@
       </view>
     </view>
 
-    <view class="accepted" wx:if="{{detail.accepted_by_me}}">您已加入这辆车，可以直接查看车辆设备。</view>
-    <button class="primary-btn" wx:if="{{detail.accepted_by_me}}" bindtap="openDevices">进入我的设备</button>
-    <button class="primary-btn" wx:elif="{{detail.acceptance_allowed}}" loading="{{submitting}}" disabled="{{submitting}}" bindtap="acceptInvitation">确认加入并查看设备</button>
+    <view class="accepted" wx:if="{{canOpenDevices}}">您已加入这辆车，可以直接查看车辆设备。</view>
+    <button class="primary-btn" wx:if="{{canOpenDevices}}" disabled="{{loading || submitting}}" bindtap="openDevices">进入我的设备</button>
+    <button class="primary-btn" wx:elif="{{canAccept}}" loading="{{submitting}}" disabled="{{loading || submitting}}" bindtap="acceptInvitation">确认加入并查看设备</button>
     <view class="blocked" wx:else>{{detail.blocked_reason || '当前邀请不能接受'}}</view>
   </block>
 </view>

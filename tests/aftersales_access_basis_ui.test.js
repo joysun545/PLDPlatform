@@ -3,11 +3,16 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
+const { createRequire } = require('node:module');
 const root = path.resolve(__dirname, '..');
 function load(file, app, wx) {
   let page;
-  vm.runInNewContext(fs.readFileSync(path.join(root, file),'utf8'), {
-    getApp:()=>app, wx, Page:p=>{page=p;}, require:()=>({sync(){}}), console, setTimeout, clearTimeout
+  const filename = path.join(root, file);
+  const requirePageModule = createRequire(filename);
+  vm.runInNewContext(fs.readFileSync(filename,'utf8'), {
+    getApp:()=>app, wx, Page:p=>{page=p;},
+    require: name => name.endsWith('/statistics_access') ? requirePageModule(name) : { sync() {} },
+    console, setTimeout, clearTimeout
   });
   page.data=JSON.parse(JSON.stringify(page.data));
   page.setData=values=>Object.assign(page.data,values);
@@ -45,12 +50,18 @@ test('repair requires actual quantities and sends no BOM inferred count',()=>{
 });
 test('basis records open canonical application detail and paginate',()=>{
   let url='';let request;
-  const app={globalData:{openid:'x',role:'merchant_sales',organization_id:18,apiBase:'/api'},authHeader:()=>({})};
-  const p=load('pages/data_statistics/domain/domain.js',app,{navigateTo:r=>{url=r.url;},request:r=>{request=r;}});
+  const app={globalData:{openid:'x',role:'merchant_sales',organization_id:18,apiBase:'/api'},
+    authHeader:()=>({}), ensureLogin: done => done(true)};
+  const p=load('pages/data_statistics/domain/domain.js',app,{navigateTo:r=>{url=r.url;},
+    request:r=>{request=r;},setNavigationBarTitle(){}});
+  p.onLoad({domain:'AFTERSALES'});
+  p.onShow();
+  const topicRequest = request;
+  topicRequest.success({ data:{ code:0, data:{ can_view_repair_basis:true } } });
+  topicRequest.complete();
+  request.success({data:{code:0,data:{items:[{application_id:26,materials:[{material_name:'控制器',quantity:100,replacement_quantity:null}]}],next_cursor:26}}});
   p.openRepairCase({currentTarget:{dataset:{id:26}}});
   assert.equal(url,'/pages/aftersale/detail/detail?application_id=26');
-  p.loadRepairBasis(false);
-  request.success({data:{code:0,data:{items:[{application_id:26,materials:[{material_name:'控制器',quantity:100,replacement_quantity:null}]}],next_cursor:26}}});
   assert.match(p.data.basisRows[0].materialsText,/数量待核对/);
   p.moreRepairBasis();assert.equal(request.data.cursor,26);
   request.success({data:{code:0,data:{items:[{application_id:25}],next_cursor:null}}});

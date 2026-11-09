@@ -13,7 +13,10 @@ Page({
     region: '',
     phone: '',
     company_name: '',
-    taskCount: 0
+    taskCount: 0,
+    operationRoot: null,
+    operationRootIndex: 0,
+    operationRoots: []
   },
 
   onLoad() {
@@ -21,6 +24,7 @@ Page({
     this.syncTasks();
     this._taskUpdatedHandler = () => this.syncTasks();
     app.onTaskUpdated(this._taskUpdatedHandler);
+    this._unsubscribeOperationRoot = app.onOperationRootChanged(() => this.syncOperationRoot());
   },
 
   onShow() {
@@ -37,6 +41,7 @@ Page({
 
   onUnload() {
     app.offTaskUpdated(this._taskUpdatedHandler);
+    if (this._unsubscribeOperationRoot) this._unsubscribeOperationRoot();
   },
 
   loadUserInfo() {
@@ -56,6 +61,24 @@ Page({
     this.setData({
       taskCount: app.globalData.taskCount || 0
     });
+    this.syncOperationRoot();
+  },
+
+  syncOperationRoot() {
+    const operationRoot = app.globalData.operationRoot;
+    const operationRoots = app.operationRootOptions();
+    this.setData({
+      operationRoot,
+      operationRoots,
+      operationRootIndex: Math.max(0, operationRoots.findIndex(root => root.id === operationRoot?.id))
+    });
+  },
+
+  onOperationRootChange(event) {
+    const selected = this.data.operationRoots[Number(event.detail.value)];
+    if (selected && !app.selectOperationRoot(selected.id)) {
+      wx.showToast({ title: '当前链路选项已变化，请重试', icon: 'none' });
+    }
   },
 
   gotoTaskList() {

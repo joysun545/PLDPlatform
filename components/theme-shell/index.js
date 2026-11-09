@@ -1,6 +1,14 @@
 const theme = require('../../utils/theme');
 const { getRouteMeta } = require('../../utils/theme-routes');
 
+function rootLabel(root) {
+  if (root?.state === 'task_list') return '根组织 · 见任务卡片';
+  const name = typeof root?.name === 'string' ? root.name.trim() : '';
+  if (!name) return '';
+  if (root.state === 'pending_creation') return `待建根组织 · ${name}`;
+  return Number(root.id) > 0 ? `根组织 · ${name}` : '';
+}
+
 Component({
   options: {
     multipleSlots: true,
@@ -22,6 +30,8 @@ Component({
     titleEyebrow: { type: String, value: '' },
     titleMetric: { type: String, value: '' },
     titleSubtitle: { type: String, value: '' },
+    businessContext: { type: Boolean, value: false, observer: 'resolveOrganizationLine' },
+    rootOrganization: { type: Object, value: null, observer: 'resolveOrganizationLine' },
     hideHeader: { type: Boolean, value: false }
   },
 
@@ -46,14 +56,23 @@ Component({
 
   lifetimes: {
     attached() {
+      this.listenForTaskRoot();
       this.resolveRoute();
       this.resolveSystemMetrics();
       this.applyTheme(theme.get());
       this._unsubscribeTheme = theme.subscribe(value => this.applyTheme(value));
+      const app = getApp();
+      if (app && typeof app.onOperationRootChanged === 'function') {
+        this._unsubscribeOperationRoot = app.onOperationRootChanged(() => this.resolveOrganizationLine());
+      }
       this.refreshServiceStationBadge();
     },
     detached() {
       if (this._unsubscribeTheme) this._unsubscribeTheme();
+      if (this._unsubscribeOperationRoot) this._unsubscribeOperationRoot();
+      if (this._taskRootChannel && typeof this._taskRootChannel.off === 'function') {
+        this._taskRootChannel.off('taskRootOrganization', this._onTaskRootOrganization);
+      }
     }
   },
 
@@ -66,6 +85,36 @@ Component({
   },
 
   methods: {
+    listenForTaskRoot() {
+      const pages = getCurrentPages();
+      const page = pages[pages.length - 1];
+      if (!page || typeof page.getOpenerEventChannel !== 'function') return;
+      const channel = page.getOpenerEventChannel();
+      if (!channel || typeof channel.on !== 'function') return;
+      this._taskRootChannel = channel;
+      this._onTaskRootOrganization = root => {
+        // This navigation context belongs to this page instance only.
+        this._openedFromTask = true;
+        this._taskRootOrganization = root;
+        this.resolveOrganizationLine();
+      };
+      channel.on('taskRootOrganization', this._onTaskRootOrganization);
+    },
+
+    resolveOrganizationLine() {
+      const globalData = (getApp() || {}).globalData || {};
+      const businessRoot = rootLabel(this.data.rootOrganization) || rootLabel(this._taskRootOrganization);
+      const isBusinessPage = this.data.businessContext || this._openedFromTask;
+      // General tabs show the selected workspace. Identity-scoped forms still
+      // use the organization the backend will actually operate on.
+      const workspaceRoot = this.data.pageLevel === 'tab'
+        ? rootLabel(globalData.operationRoot)
+        : rootLabel({ id: globalData.factory_root_id, name: globalData.factory_root_name });
+      this.setData({
+        organizationName: businessRoot || (isBusinessPage ? '根组织未确认' : workspaceRoot)
+      });
+    },
+
     resolveRoute() {
       const pages = getCurrentPages();
       const currentPage = pages.length ? pages[pages.length - 1] : null;
@@ -73,15 +122,14 @@ Component({
       const routeMeta = getRouteMeta(route);
       const app = getApp();
       const globalData = (app && app.globalData) || {};
-      const appearance = globalData.appearance || {};
       this.setData({
         routeTitle: this.data.title || routeMeta.title,
         pageLevel: this.data.level || routeMeta.level,
         canGoBack: pages.length > 1 && routeMeta.level !== 'tab',
-        organizationName: globalData.factory_root_name || appearance.owner_organization_name || '',
         roleName: globalData.role_name || '游客',
         welcomeName: globalData.real_name || globalData.nickname || '用户'
       });
+      this.resolveOrganizationLine();
     },
 
     resolveSystemMetrics() {

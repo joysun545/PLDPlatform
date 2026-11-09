@@ -85,6 +85,11 @@ Page({
           return;
         }
 
+        if (qrText.startsWith('PLDP_WEB_LOGIN|')) {
+          this.approveWebPortalLogin(qrText);
+          return;
+        }
+
         if (qrText.startsWith('PLDP_DEVICE_CODE_LOGIN|')) {
           this.approveDeviceCodeRegistryLogin(qrText);
           return;
@@ -106,6 +111,44 @@ Page({
     });
   },
 
+  approveWebPortalLogin(qrText) {
+    const match = /^PLDP_WEB_LOGIN\|([a-f0-9]{64})$/.exec(qrText);
+    if (!match) {
+      this.finishScanning();
+      wx.showToast({ title: '网页登录二维码无效', icon: 'none' });
+      return;
+    }
+    wx.showModal({
+      title: '授权电脑登录 PLDP',
+      content: '允许当前电脑以你的小程序账号身份登录对应管理工作台？请仅在本人电脑上确认。',
+      confirmText: '确认登录',
+      success: result => {
+        if (!result.confirm) { this.finishScanning(); return; }
+        wx.showLoading({ title: '正在核验身份', mask: true });
+        const webBase = app.globalData.apiBase.replace(/\/api\/?$/, '');
+        wx.request({
+          url: `${webBase}/web/portal/api/approve/`,
+          method: 'POST',
+          header: app.authHeader('application/json'),
+          data: { token: match[1] },
+          success: res => {
+            const body = res.data || {};
+            if (res.statusCode === 401) app.reauthenticate();
+            if (res.statusCode < 200 || res.statusCode >= 300 || body.code !== 0) {
+              wx.showModal({ title: '登录授权未完成', content: body.msg || '请确认角色权限，或刷新电脑二维码后重试。', showCancel: false });
+              return;
+            }
+            const data = body.data || {};
+            wx.showModal({ title: '电脑登录已授权', content: `${data.organization_name || ''} · ${data.role_name || ''}。请返回电脑继续操作，完成后退出登录。`, showCancel: false });
+          },
+          fail: () => wx.showToast({ title: '网络请求失败，请重试', icon: 'none' }),
+          complete: () => { wx.hideLoading(); this.finishScanning(); }
+        });
+      },
+      fail: () => this.finishScanning()
+    });
+  },
+
   approvePrintCenterLogin(qrText) {
     const match = /^PLDP_PRINT_LOGIN\|([a-f0-9]{64})$/.exec(qrText);
     if (!match) {
@@ -115,7 +158,7 @@ Page({
     }
     wx.showModal({
       title: '授权电脑进入打印中心',
-      content: '允许当前电脑以你的厂家成品库管身份进入打印中心？仅在本人电脑上确认。',
+      content: '允许当前电脑使用你获准的成品打印权限？仅在本人电脑上确认。',
       confirmText: '确认授权',
       success: result => {
         if (!result.confirm) {
@@ -135,7 +178,7 @@ Page({
             if (res.statusCode < 200 || res.statusCode >= 300 || body.code !== 0) {
               wx.showModal({
                 title: '授权未完成',
-                content: body.msg || '请刷新电脑上的二维码后，使用厂家成品库管账号重新扫码。',
+                content: body.msg || '请确认当前账号拥有成品打印权限，再刷新电脑二维码并扫码。',
                 showCancel: false
               });
               return;
@@ -143,7 +186,7 @@ Page({
             const data = body.data || {};
             wx.showModal({
               title: '打印中心已授权',
-              content: `${data.organization_name || '当前厂家'} · ${data.role_name || '厂家成品库管'}。请返回电脑继续打印，完成后退出登录。`,
+              content: `${data.organization_name || '当前厂家'} · ${data.role_name || '当前岗位'}。请返回电脑继续打印，完成后退出登录。`,
               showCancel: false
             });
           },

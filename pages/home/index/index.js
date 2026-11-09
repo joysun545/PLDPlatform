@@ -286,7 +286,15 @@ Page({
   },
 
   goMatching() {
-    wx.navigateTo({ url: '/pages/supply_chain/matching/matching' });
+    const url = app.globalData.apiBase.replace(/\/api\/?$/, '') + '/web/supply-chain/material-config/';
+    wx.showModal({
+      title: '物料配套配置',
+      content: '请在电脑浏览器打开配套配置地址，并用当前账号扫码登录。',
+      confirmText: '复制地址',
+      success: ({ confirm }) => {
+        if (confirm) wx.setClipboardData({ data: url });
+      }
+    });
   },
 
   goBatchScan() {
@@ -346,7 +354,7 @@ Page({
 
   goThemeSettings() {
     wx.navigateTo({
-      url: '/pages/theme/setting/setting',
+      url: '/pages/theme/setting/setting?scope=organization',
       fail: () => wx.showToast({ title: '主题设置页面打开失败', icon: 'none' })
     });
   },

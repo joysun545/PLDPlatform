@@ -4,7 +4,7 @@
   <view class="menu-grid">
     <view class="menu-item" bindtap="goThemeSettings" wx:if="{{showThemeSettings}}">
       <image src="/images/menu_icons/{{iconTheme}}/theme-settings.png" class="icon" mode="aspectFit" />
-      <text>界面主题</text>
+      <text>组织默认主题</text>
     </view>
 
     <view class="menu-item" bindtap="goMaterialInventory" wx:if="{{showMaterialInventory}}">
@@ -50,7 +50,7 @@
     <!-- 组织物料配套（厂家配套经理） -->
     <view class="menu-item" bindtap="goMatching" wx:if="{{showMatching}}">
       <image src="/images/menu_icons/{{iconTheme}}/matching.png" class="icon" mode="aspectFit" />
-      <text>组织物料配套</text>
+      <text>物料配套配置（电脑端）</text>
     </view>
 
     <!-- 我的设备（仅终端用户） -->

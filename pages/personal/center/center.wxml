@@ -25,6 +25,20 @@
   </view>
 
   <view class="function-list">
+    <picker wx:if="{{operationRoot}}" mode="selector" range="{{operationRoots}}" range-key="name"
+      value="{{operationRootIndex}}" disabled="{{operationRoots.length < 2}}" bindchange="onOperationRootChange">
+      <view class="function-item">
+        <text class="text-left">当前根组织</text>
+        <text>{{operationRoot.name}}</text>
+        <text wx:if="{{operationRoots.length > 1}}" class="arrow">›</text>
+      </view>
+    </picker>
+
+    <navigator url="/pages/theme/setting/setting" class="function-item">
+      <text class="text-left">界面主题</text>
+      <text class="arrow">›</text>
+    </navigator>
+
     <navigator url="/pages/personal/edit/edit" class="function-item">
       <text class="text-left">编辑账号资料</text>
       <text class="arrow">›</text>

@@ -2,6 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const vm = require('node:vm');
 
 const ROOT = path.resolve(__dirname, '..');
 const appConfig = require(path.join(ROOT, 'app.json'));
@@ -94,12 +95,63 @@ test('theme settings omit the removed layer style and the redundant combinations
   assert.doesNotMatch(styles, /style-layer/);
 });
 
-test('shared header prefers the explicit factory root name over the current organization', () => {
+test('shared header keeps business roots separate from the account and from other pages', () => {
   const shellLogic = fs.readFileSync(path.join(ROOT, 'components/theme-shell/index.js'), 'utf8');
-  const appLogic = fs.readFileSync(path.join(ROOT, 'app.js'), 'utf8');
-  assert.match(shellLogic, /organizationName:\s*globalData\.factory_root_name\s*\|\|\s*appearance\.owner_organization_name/);
-  assert.doesNotMatch(shellLogic, /organizationName:\s*globalData\.organization_name\s*\|\|/);
-  assert.match(appLogic, /factory_root_name/);
+  let shell;
+  let page;
+  const globalData = {
+    operationRoot: { id: 5, name: '当前工作链路' },
+    factory_root_id: 1,
+    factory_root_name: '当前账号链路'
+  };
+  vm.runInNewContext(shellLogic, {
+    require: () => ({}),
+    Component: config => { shell = config; },
+    getApp: () => ({ globalData }),
+    getCurrentPages: () => [page]
+  });
+  function open(businessContext, pageLevel = 'tab') {
+    let receiveRoot;
+    page = { getOpenerEventChannel: () => ({
+      on(event, listener) {
+        assert.equal(event, 'taskRootOrganization');
+        receiveRoot = listener;
+      },
+      off(event, listener) {
+        assert.equal(event, 'taskRootOrganization');
+        assert.equal(listener, receiveRoot);
+        receiveRoot = undefined;
+      }
+    }) };
+    const data = { businessContext, pageLevel, rootOrganization: null };
+    const component = {
+      ...shell.methods,
+      data,
+      setData(values) { Object.assign(data, values); }
+    };
+    component.listenForTaskRoot();
+    component.resolveOrganizationLine();
+    return { component, data, send: root => receiveRoot?.(root) };
+  }
+  const first = open(true);
+  assert.equal(first.data.organizationName, '根组织未确认');
+  first.send({ id: 12, name: '甲厂家' });
+  assert.equal(first.data.organizationName, '根组织 · 甲厂家');
+  first.data.rootOrganization = { id: 13, name: '乙厂家' };
+  first.component.resolveOrganizationLine();
+  assert.equal(first.data.organizationName, '根组织 · 乙厂家');
+  const second = open(false);
+  assert.equal(second.data.organizationName, '根组织 · 当前工作链路');
+  second.send(null);
+  assert.equal(second.data.organizationName, '根组织未确认');
+  second.data.rootOrganization = { id: null, name: '新厂家', state: 'pending_creation' };
+  second.component.resolveOrganizationLine();
+  assert.equal(second.data.organizationName, '待建根组织 · 新厂家');
+  assert.equal(first.data.organizationName, '根组织 · 乙厂家');
+  assert.equal(open(false, 'primary').data.organizationName, '根组织 · 当前账号链路');
+  shell.lifetimes.detached.call(first.component);
+  first.send({ id: 9, name: '不再接收' });
+  assert.equal(first.data.organizationName, '根组织 · 乙厂家');
 });
 
 test('the shared header stays pinned and reserves content space at every level', () => {
@@ -113,13 +165,13 @@ test('the shared header stays pinned and reserves content space at every level',
   assert.match(logic, /hideHeader\s*\|\|\s*pageLevel\s*===\s*'none'/);
 });
 
-test('factory root name is restored, cached, and displayed in the shared branded header', () => {
+test('account root stays in the profile and the shared header shows the selected operation root', () => {
   const appSource = fs.readFileSync(path.join(ROOT, 'app.js'), 'utf8');
   const shellLogic = fs.readFileSync(path.join(ROOT, 'components/theme-shell/index.js'), 'utf8');
   const shellMarkup = fs.readFileSync(path.join(ROOT, 'components/theme-shell/index.wxml'), 'utf8');
   assert.match(appSource, /factory_root_name:\s*data\.factory_root_name/);
   assert.match(appSource, /factory_root_name:\s*g\.factory_root_name/);
-  assert.match(shellLogic, /globalData\.factory_root_name \|\| appearance\.owner_organization_name/);
+  assert.match(shellLogic, /rootLabel\(globalData\.operationRoot\)/);
   assert.match(shellMarkup, /{{organizationName}}/);
 });
 

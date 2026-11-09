@@ -1,0 +1,24 @@
+.legal-page {
+  box-sizing: border-box;
+  min-height: 100vh;
+  max-width: 850px;
+  margin: 0 auto;
+  padding: 32rpx 36rpx 64rpx;
+  color: #17211d;
+  background: #fff;
+}
+
+.legal-title {
+  display: block;
+  margin-bottom: 24rpx;
+  font-size: 42rpx;
+  font-weight: 700;
+}
+
+.legal-content {
+  display: block;
+  font-size: 32rpx;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}

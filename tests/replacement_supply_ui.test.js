@@ -18,8 +18,12 @@ const s=setup();s.p.onLoad({order_id:25});assert.match(s.requests[0].url,/\?orde
 test('factory replacement logistics cannot submit in person from stale frontend state',()=>{
 const s=setup('pages/aftersale/detail/detail.js');s.p.data.detail={replacement_flow:{factory_logistics_only:true}};s.p.data.replacementHandoverMethod='IN_PERSON';assert.equal(s.p.replacementLogistics().handover_method,'SHIPMENT');
 });
-test('factory shipping selectors are hidden and supply plan has entry points',()=>{
+test('factory shipping selectors are hidden, standalone entry stays on create page and order detail uses linked rows',()=>{
 const detail=fs.readFileSync(path.resolve(__dirname,'../pages/aftersale/detail/detail.wxml'),'utf8');
 assert.equal((detail.match(/<radio-group wx:if="{{!detail.replacement_flow.factory_logistics_only}}" data-field="replacementHandoverMethod"/g)||[]).length,2);
-for(const page of ['create_plan','order_plan_detail'])assert.match(fs.readFileSync(path.resolve(__dirname,'../pages/sales/'+page+'/'+page+'.wxml'),'utf8'),/openReplacementSupplyPlans/);
+const create=fs.readFileSync(path.resolve(__dirname,'../pages/sales/create_plan/create_plan.wxml'),'utf8');
+assert.match(create,/openReplacementSupplyPlans/);
+const order=fs.readFileSync(path.resolve(__dirname,'../pages/sales/order_plan_detail/order_plan_detail.wxml'),'utf8');
+assert.match(order,/wx:for="{{replacementSupplyItems}}"/);
+assert.doesNotMatch(order,/openReplacementSupplyPlans/);
 });

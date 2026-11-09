@@ -4,6 +4,8 @@
     "pages/home/index/index",
     "pages/home/invite/invite/invite",
     "pages/home/invite/accept/accept",
+    "pages/common/agreement/agreement",
+    "pages/common/privacy/privacy",
     "pages/home/edit/edit",
     "pages/personal/center/center",
     "pages/personal/edit/edit",

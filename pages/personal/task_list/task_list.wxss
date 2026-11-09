@@ -35,6 +35,51 @@
   opacity: 0.78;
 }
 
+.task-card.stage {
+  border-left-color: #1677ff;
+  opacity: 1;
+}
+
+.list-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+  color: #666;
+  font-size: 25rpx;
+}
+
+.list-controls button,
+.pagination button,
+.empty button {
+  margin: 12rpx 0;
+  color: var(--ui-primary-bright);
+}
+
+.update-notice {
+  margin-bottom: 20rpx;
+  padding: 18rpx 22rpx;
+  border-radius: 12rpx;
+  color: #0958d9;
+  background: #e6f4ff;
+  font-size: 26rpx;
+}
+
+.pagination {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14rpx;
+  padding: 28rpx 0 48rpx;
+  color: #888;
+  font-size: 26rpx;
+  text-align: center;
+}
+
+.load-error {
+  color: #a33b31;
+}
+
 .task-top,
 .task-bottom {
   display: flex;
@@ -66,6 +111,11 @@
 .state.done {
   color: #237804;
   background: #f6ffed;
+}
+
+.state.stage {
+  color: #0958d9;
+  background: #e6f4ff;
 }
 
 .task-title {

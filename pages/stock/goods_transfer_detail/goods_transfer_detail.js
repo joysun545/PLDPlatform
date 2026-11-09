@@ -24,6 +24,11 @@ function formatDate(value) {
   );
 }
 
+function replacementViewerKey() {
+  const { openid, access_token, organization_id, role, factory_root_id, operationRoot } = app.globalData;
+  return JSON.stringify([openid, access_token, organization_id, role, factory_root_id, operationRoot && operationRoot.id]);
+}
+
 function prepareDetail(detail) {
   if (!detail) return null;
   return {
@@ -32,6 +37,8 @@ function prepareDetail(detail) {
     submittedText: formatDate(detail.submitted_at),
     receivedText: formatDate(detail.received_at),
     completedText: formatDate(detail.completed_at),
+    replacement_supply_items: detail.replacement_supply_items || [],
+    pending_replacement_demands: detail.pending_replacement_demands || [],
     items: (detail.items || []).map(item => ({
       ...item,
       scannedText: formatDate(item.scanned_at),
@@ -91,31 +98,78 @@ Page({
     }
   },
 
+  onUnload() {
+    this._unloaded = true;
+  },
+
   onPullDownRefresh() {
     this.loadDetail(() => wx.stopPullDownRefresh());
   },
 
   loadDetail(done) {
+    if (this._loadingDetail) {
+      if (done) done();
+      return;
+    }
+    this._loadingDetail = true;
+    const viewerKey = replacementViewerKey();
     this.setData({ loading: true, errorMessage: '' });
     wx.request({
       url: `${app.globalData.apiBase}/lifecycle/goods-transfers/${this.data.transferId}/`,
       method: 'GET',
       header: app.authHeader(),
       success: res => {
+        if (this._unloaded) return;
+        if (viewerKey !== replacementViewerKey()) {
+          this.setData({ loading: false, errorMessage: '登录身份已变更，请重新加载商品流转' });
+          return;
+        }
         const body = res.data || {};
         if (res.statusCode === 401 || body.code === 401) app.reauthenticate();
         if (body.code !== 0 || !body.data) {
           this.setData({ loading: false, errorMessage: body.msg || '商品流转详情加载失败' });
           return;
         }
+        this._replacementViewerKey = viewerKey;
         this.setData({ loading: false, detail: prepareDetail(body.data) });
       },
       fail: () => this.setData({ loading: false, errorMessage: '网络连接失败，请稍后重试' }),
-      complete: () => done && done()
+      complete: () => {
+        this._loadingDetail = false;
+        if (done) done();
+      }
     });
   },
 
-  openReplacementDemand(e) {wx.navigateTo({url:'/pages/aftersale/detail/detail?application_id='+Number(e.currentTarget.dataset.id)});},
+  openReplacementDemand(e) {
+    if (!this.replacementNavigationAllowed()) return;
+    const id = Number(e.currentTarget.dataset.id);
+    const item = this.data.detail.pending_replacement_demands.find(row => row.application_id === id);
+    const url = `/pages/aftersale/detail/detail?application_id=${id}`;
+    if (item && item.link === url) {
+      wx.navigateTo({ url: item.leg_id ? `${url}&replacement_leg_id=${item.leg_id}` : url });
+    }
+  },
+
+  openReplacementSupplyItem(e) {
+    if (!this.replacementNavigationAllowed()) return;
+    const { id, legId, actionCode } = e.currentTarget.dataset;
+    const item = this.data.detail.replacement_supply_items.find(row => row.id === Number(id));
+    if (!item) return;
+    const url = `/pages/aftersale/detail/detail?application_id=${item.application_id}`;
+    if (item.link !== url) return;
+    if (!actionCode) {
+      wx.navigateTo({ url });
+      return;
+    }
+    const action = (item.actions || []).find(row => row.leg_id === Number(legId) && row.code === actionCode);
+    if (action) wx.navigateTo({ url: `${url}&replacement_leg_id=${action.leg_id}` });
+  },
+
+  replacementNavigationAllowed() {
+    return !this._unloaded && !!this.data.detail && !this.data.loading && !this.data.receiving &&
+      !this.data.errorMessage && this._replacementViewerKey === replacementViewerKey();
+  },
 
   retryLoad() {
     this.loadDetail();
@@ -134,6 +188,7 @@ Page({
   },
 
   openAccounts() {
+    if (!this.data.detail || !this.data.detail.actions || !this.data.detail.actions.can_view_accounts) return;
     wx.navigateTo({
       url: `/pages/stock/goods_transfer_accounts/goods_transfer_accounts?transfer_id=${this.data.transferId}`
     });

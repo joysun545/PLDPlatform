@@ -54,6 +54,7 @@ Page({
     const latestLeg = legs[legs.length - 1] || null;
     const handover = row.handover;
     const actions = (handover && handover.available_actions) || {};
+    const deviceActions = row.available_actions || {};
     const qrImageUrl = handover && handover.merchant_transfer_token
       ? `${app.globalData.apiBase}/quality-trace/recall-handovers/merchant-transfer/${handover.merchant_transfer_token}/qrcode/`
       : '';
@@ -70,8 +71,8 @@ Page({
       canMerchantReceive: !!actions.merchant_receive,
       canCreateTransport: campaignActive && !batchEnabled && MERCHANT.includes(role) && handover && handover.merchant_organization_id === orgId && handover.status === 'MERCHANT_RECEIVED' && (!latestLeg || latestLeg.status === 'RECEIVED'),
       canDispatch: campaignActive && !batchEnabled && MERCHANT.includes(role) && latestLeg && latestLeg.status === 'PREPARING' && latestLeg.from_organization.id === orgId,
-      canReceive: campaignActive && !batchEnabled && (MERCHANT.includes(role) || role === 'factory_logistics') && latestLeg && latestLeg.status === 'IN_TRANSIT' && latestLeg.to_organization.id === orgId && (!latestLeg.is_factory_destination || role === 'factory_logistics'),
-      canIsolate: campaignActive && !batchEnabled && role === 'factory_sales_assistant' && latestLeg && latestLeg.status === 'RECEIVED' && latestLeg.is_factory_destination && latestLeg.to_organization.id === orgId && !row.isolation
+      canReceive: campaignActive && !batchEnabled && deviceActions.transport_receive === true,
+      canIsolate: campaignActive && !batchEnabled && deviceActions.inventory_post === true
     };
   },
   async load() {
@@ -116,14 +117,18 @@ Page({
         this.setData({ evidence: null, changingMethod: false, provider: '', trackingNo: '', note: '' });
       }
       const role = this.data.role;
+      const fullFactoryAccess = viewer
+        ? viewer.organization_type === 'OWNER' && viewer.full_campaign_access === true
+        : FACTORY_VIEW.includes(role);
       this.setData({
         campaign, devices, selected, ...batchState,
         taskFocusDeviceId: devices.some(row => row.id === this.data.taskFocusDeviceId) ? this.data.taskFocusDeviceId : 0,
         focusStageText: selected ? (selected.next_step || selected.current_stage_label || '') : '',
         batchGuidance: flow.guidance || '', batchEmptyMessage: flow.empty_message || '当前没有可批量办理的设备，请查看设备进度。',
         recallDeviceId: selected ? selected.id : this.data.recallDeviceId,
-        isFactory: FACTORY_VIEW.includes(role) && (!viewer || viewer.full_campaign_access !== false),
-        isObserver: FACTORY_OBSERVER.includes(role) || !!(viewer && viewer.observer_only),
+        isFactory: fullFactoryAccess,
+        isObserver: !!(viewer && viewer.observer_only) ||
+          (!fullFactoryAccess && FACTORY_OBSERVER.includes(role)),
         isQualityFactory: QUALITY_FACTORY.includes(role),
         isFactoryOperations: FACTORY_OPERATIONS.includes(role),
         isMerchant: MERCHANT.includes(role),

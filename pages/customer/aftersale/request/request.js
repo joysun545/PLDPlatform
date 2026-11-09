@@ -1,6 +1,6 @@
 const app = getApp();
 
-function requestJson(url, method, data) {
+function requestJson(url, method, data, expectedApplicationId) {
   return new Promise((resolve, reject) => {
     wx.request({
       url: app.globalData.apiBase + url,
@@ -8,15 +8,32 @@ function requestJson(url, method, data) {
       data,
       header: app.authHeader('application/json'),
       success: res => {
-        if (res.statusCode >= 200 && res.statusCode < 300 && res.data && res.data.code === 0) {
-          resolve(res.data.data);
-        } else {
-          reject(new Error((res.data && res.data.msg) || '请求失败'));
+        const body = res.data || {};
+        const matchingApplication = expectedApplicationId === undefined ||
+          (body.data && body.data.id === expectedApplicationId);
+        if (res.statusCode >= 200 && res.statusCode < 300 && body.code === 0 && matchingApplication) {
+          resolve(body.data);
+          return;
         }
+        const error = new Error(body.msg || '请求失败');
+        if (expectedApplicationId !== undefined) {
+          error.authorizationRejected = res.statusCode === 401 || res.statusCode === 403;
+          error.resultUnknown = !error.authorizationRejected && !(res.statusCode === 409 && body.code === 1);
+        }
+        reject(error);
       },
-      fail: () => reject(new Error('网络连接失败，请稍后重试'))
+      fail: () => {
+        const error = new Error('网络连接失败，请稍后重试');
+        if (expectedApplicationId !== undefined) error.resultUnknown = true;
+        reject(error);
+      }
     });
   });
+}
+
+function submissionIdentity() {
+  const { openid, organization_id, role, factory_root_id, operationRoot } = app.globalData;
+  return JSON.stringify([openid, organization_id, role, factory_root_id, operationRoot && operationRoot.id]);
 }
 
 Page({
@@ -40,6 +57,8 @@ Page({
     remainingCount: 9,
     applicationId: null,
     submitting: false,
+    confirmingSubmission: false,
+    submissionNotice: '',
     activationMethod: 'VEHICLE_PLATE',
     presenceRequired: false,
     presenceVerified: false,
@@ -65,6 +84,10 @@ Page({
       }
       this.loadContext();
     });
+  },
+
+  onUnload() {
+    this._unloaded = true;
   },
 
   loadContext() {
@@ -137,7 +160,7 @@ Page({
   },
 
   scanBoundDeviceCode() {
-    if (this.data.presenceScanning || this.data.presenceVerified) return;
+    if (this.data.confirmingSubmission || this.data.presenceScanning || this.data.presenceVerified) return;
     this.setData({ presenceScanning: true, presenceMessage: '请扫描设备本体二维码。' });
     wx.scanCode({
       scanType: ['qrCode'],
@@ -178,22 +201,31 @@ Page({
     this.setData({ [field]: !this.data[field] });
   },
 
+  formLocked() {
+    return this.data.submitting || this.data.confirmingSubmission;
+  },
+
   onFaultDescription(e) {
+    if (this.formLocked()) return;
     this.setData({ faultDescription: e.detail.value });
   },
 
   onLocationName(e) {
+    if (this.formLocked()) return;
     this.setData({ locationName: e.detail.value, locationConfirmed: false });
   },
 
   onLocationAddress(e) {
+    if (this.formLocked()) return;
     this.setData({ locationAddress: e.detail.value, locationConfirmed: false });
   },
 
   obtainLocation() {
+    if (this.formLocked()) return;
     wx.getLocation({
       type: 'gcj02',
       success: res => {
+        if (this.formLocked()) return;
         this.setData({
           location: {
             latitude: Number(res.latitude).toFixed(7),
@@ -204,6 +236,7 @@ Page({
         wx.showToast({ title: '已获取坐标，请填写现场名称和地址后确认', icon: 'none' });
       },
       fail: () => {
+        if (this.formLocked()) return;
         wx.showModal({
           title: '需要真实位置',
           content: '售后申请必须确认当前真实位置。请允许定位权限后重试。',
@@ -217,6 +250,7 @@ Page({
   },
 
   confirmLocation() {
+    if (this.formLocked()) return;
     if (!this.data.location) {
       wx.showToast({ title: '请先获取当前位置', icon: 'none' });
       return;
@@ -229,19 +263,20 @@ Page({
       title: '确认真实位置',
       content: '确认后将把当前GPS坐标与填写的位置一并提交到售后单。',
       success: modal => {
-        if (modal.confirm) this.setData({ locationConfirmed: true });
+        if (modal.confirm && !this.formLocked()) this.setData({ locationConfirmed: true });
       }
     });
   },
 
   capturePlatePhoto() {
-    if (this.data.submitting || this.data.platePhotoUploading) return;
+    if (this.formLocked() || this.data.platePhotoUploading) return;
     wx.chooseMedia({
       count: 1,
       mediaType: ['image'],
       sourceType: ['camera'],
       camera: 'back',
       success: result => {
+        if (this.formLocked()) return;
         const file = result && result.tempFiles && result.tempFiles[0];
         if (!file || !file.tempFilePath) {
           wx.showToast({ title: '没有取得车牌照片，请重拍', icon: 'none' });
@@ -254,10 +289,12 @@ Page({
   },
 
   onMediaChange(e) {
+    if (this.formLocked()) return;
     this.setData({ media: e.detail.files || [] });
   },
 
   onMediaRetry(e) {
+    if (this.formLocked()) return;
     const index = Number(e.detail.index);
     const media = this.data.media.slice();
     if (media[index]) {
@@ -368,8 +405,8 @@ Page({
     return next(0);
   },
 
-  submit() {
-    if (this.data.submitting) return;
+  async submit() {
+    if (this.formLocked()) return;
     if (!this.data.faultDescription.trim()) {
       wx.showToast({ title: '请填写故障文字描述', icon: 'none' });
       return;
@@ -391,50 +428,97 @@ Page({
       wx.showToast({ title: '请拍摄并上传包含车牌号的实时照片', icon: 'none' });
       return;
     }
+    const identity = submissionIdentity();
+    const deviceId = this.data.deviceId;
     this.setData({ submitting: true });
-    this.saveDraft()
-      .then(draft => {
-        const applicationId = draft.id;
-        // The one-time verification proof is consumed by saveDraft. Preserve the
-        // saved server-side proof for upload retries without reusing this token.
-        this.setData({ applicationId, deviceCodeVerificationToken: '' });
-        return this.uploadAll(applicationId)
-          .then(() => this.uploadPlatePhoto(applicationId))
-          .then(() => applicationId);
-      })
-      .then(applicationId => requestJson(
-        '/lifecycle/after-sales/applications/' + applicationId + '/submit/',
-        'POST',
-        {}
-      ).then(() => applicationId))
-      .then(applicationId => {
-        wx.showToast({ title: '申请已提交', icon: 'success' });
-        setTimeout(() => {
-          wx.redirectTo({
-            url: '/pages/aftersale/detail/detail?application_id=' + applicationId
-          });
-        }, 350);
-      })
-      .catch(err => {
-        const message = err.message || '提交失败，请重试';
-        if (this.data.presenceRequired && (
-          message.indexOf('请先扫描设备本体二维码') >= 0 ||
-          message.indexOf('设备编码核验已失效') >= 0 ||
-          message.indexOf('请重新扫描设备本体二维码') >= 0
-        )) {
-          this.setData({
-            presenceVerified: false,
-            deviceCodeVerificationToken: '',
-            presenceMessage: '设备编码核验已过期，请重新扫码。已填写的申请内容会保留。'
-          }, () => {
-            wx.showToast({ title: '请重新扫描设备编码', icon: 'none' });
-            this.scanBoundDeviceCode();
-          });
-          return;
-        }
-        wx.showToast({ title: message, icon: 'none' });
-      })
-      .finally(() => this.setData({ submitting: false }));
+    try {
+      const { id: applicationId } = await this.saveDraft();
+      if (this._unloaded) return;
+      if (identity !== submissionIdentity()) throw new Error('登录身份已变更，请重新进入');
+      // Draft saving consumes the scan proof. Upload retries use the server-side proof.
+      this.setData({ applicationId, deviceCodeVerificationToken: '' });
+      await this.uploadAll(applicationId);
+      await this.uploadPlatePhoto(applicationId);
+      await this.confirmSubmission({ applicationId, deviceId, identity }, false);
+    } catch (error) {
+      if (!this._unloaded) this.showSubmissionError(error);
+    } finally {
+      if (!this._unloaded) this.setData({ submitting: false });
+    }
+  },
+
+  async retrySubmission() {
+    if (this.data.submitting || !this._pendingSubmission) return;
+    this.setData({ submitting: true });
+    try {
+      await this.confirmSubmission(this._pendingSubmission, true);
+    } catch (error) {
+      if (!this._unloaded) this.showSubmissionError(error);
+    } finally {
+      if (!this._unloaded) this.setData({ submitting: false });
+    }
+  },
+
+  async confirmSubmission(attempt, recovering) {
+    if (this._unloaded) return;
+    const { applicationId, deviceId, identity } = attempt;
+    const sameContext = () => identity === submissionIdentity() &&
+      deviceId === this.data.deviceId && applicationId === this.data.applicationId;
+    if (!sameContext()) {
+      if (!recovering) throw new Error('登录身份已变更，请重新进入');
+      this.setData({ submissionNotice: '请切回原申请身份，再确认提交结果。' });
+      return;
+    }
+    try {
+      await requestJson('/lifecycle/after-sales/applications/' + applicationId + '/submit/',
+        'POST', {}, applicationId);
+    } catch (error) {
+      if (this._unloaded) return;
+      if (error.resultUnknown || (recovering && error.authorizationRejected)) {
+        this._pendingSubmission = attempt;
+        this.setData({ confirmingSubmission: true, submissionNotice: error.authorizationRejected
+          ? '请恢复原申请身份后，再确认提交结果。'
+          : '暂未收到提交结果，请确认本次申请。' });
+        return;
+      }
+      this._pendingSubmission = null;
+      this.setData({ confirmingSubmission: false, submissionNotice: '' });
+      throw error;
+    }
+    if (this._unloaded) return;
+    this._pendingSubmission = attempt;
+    if (!sameContext()) {
+      this.setData({ confirmingSubmission: true, submissionNotice: '请切回原申请身份，再确认提交结果。' });
+      return;
+    }
+    this.setData({ confirmingSubmission: true, submissionNotice: '申请已提交，正在打开工单。' });
+    wx.showToast({ title: '申请已提交', icon: 'success' });
+    wx.redirectTo({
+      url: '/pages/aftersale/detail/detail?application_id=' + applicationId,
+      fail: () => {
+        if (!this._unloaded) this.setData({ submissionNotice: '申请已提交，请再次打开工单。' });
+      }
+    });
+  },
+
+  showSubmissionError(error) {
+    const message = error.message || '提交失败，请重试';
+    if (this.data.presenceRequired && (
+      message.indexOf('请先扫描设备本体二维码') >= 0 ||
+      message.indexOf('设备编码核验已失效') >= 0 ||
+      message.indexOf('请重新扫描设备本体二维码') >= 0
+    )) {
+      this.setData({
+        presenceVerified: false,
+        deviceCodeVerificationToken: '',
+        presenceMessage: '设备编码核验已过期，请重新扫码。已填写的申请内容会保留。'
+      }, () => {
+        wx.showToast({ title: '请重新扫描设备编码', icon: 'none' });
+        this.scanBoundDeviceCode();
+      });
+      return;
+    }
+    wx.showToast({ title: message, icon: 'none' });
   },
 
   goBack() {
