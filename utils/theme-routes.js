@@ -1,5 +1,7 @@
 const ROUTES = {
   'pages/index/index': { level: 'none', title: '' },
+  'pages/account/root_application/root_application': { level: 'primary', title: '根组织厂家试用申请' },
+  'pages/account/root_application_review/root_application_review': { level: 'primary', title: '厂家试用申请审核' },
   'pages/home/index/index': { level: 'tab', title: '首页' },
   'pages/scan/scan/scan': { level: 'tab', title: '扫一扫' },
   'pages/personal/center/center': { level: 'tab', title: '我的' },

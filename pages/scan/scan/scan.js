@@ -1,5 +1,6 @@
 const app = getApp();
 const theme = require('../../../utils/theme');
+const rootTrial = require('../../../utils/root-trial');
 const tabBar = typeof require === 'function'
   ? require('../../../utils/tab-bar')
   : { sync() {} };
@@ -10,6 +11,7 @@ Page({
     role: 'tourist',
     nickname: '',
     role_name: '',
+    isPlatformAdmin: false,
     iconTheme: 'jade',
     scanning: false
   },
@@ -36,12 +38,13 @@ Page({
       role: app.globalData.role || 'tourist',
       nickname: app.globalData.nickname || '用户',
       role_name: app.globalData.role_name || '游客',
+      isPlatformAdmin: !!app.globalData.is_platform_admin,
       iconTheme: ['jade', 'ocean', 'amber'].includes(colorScheme) ? colorScheme : 'jade'
     });
   },
 
   controlTabBar() {
-    tabBar.sync(this, 1, { hidden: this.data.role === 'tourist' });
+    tabBar.sync(this, 1, { hidden: this.data.role === 'tourist' && !app.globalData.is_platform_admin });
   },
 
   directScan() {
@@ -53,6 +56,14 @@ Page({
         return;
       }
       this.openScanner();
+    });
+  },
+
+  openRootTrialApplication() {
+    if (this.data.scanning || app.globalData.is_platform_admin) return;
+    app.ensureLogin(ok => {
+      if (ok) wx.navigateTo({ url: rootTrial.APPLICATION_PAGE });
+      else wx.showToast({ title: '登录失败，请稍后重试', icon: 'none' });
     });
   },
 
@@ -119,8 +130,11 @@ Page({
       return;
     }
     wx.showModal({
-      title: '授权电脑登录 PLDP',
-      content: '允许当前电脑以你的小程序账号身份登录对应管理工作台？请仅在本人电脑上确认。',
+      title: this.data.role === 'tourist' && !app.globalData.is_platform_admin
+        ? '申请试用或电脑登录' : '授权电脑登录 PLDP',
+      content: this.data.role === 'tourist' && !app.globalData.is_platform_admin
+        ? '无组织身份时将进入厂家根组织试用申请；已有权限则授权当前电脑登录。申请通过后需另行确认电脑登录。请仅在本人电脑上确认。'
+        : '允许当前电脑以你的小程序账号身份登录对应管理工作台？请仅在本人电脑上确认。',
       confirmText: '确认登录',
       success: result => {
         if (!result.confirm) { this.finishScanning(); return; }
@@ -139,6 +153,11 @@ Page({
               return;
             }
             const data = body.data || {};
+            if (rootTrial.isTrialRequired(data)) {
+              this.finishScanning();
+              wx.navigateTo({ url: rootTrial.applicationUrl(match[1]) });
+              return;
+            }
             wx.showModal({ title: '电脑登录已授权', content: `${data.organization_name || ''} · ${data.role_name || ''}。请返回电脑继续操作，完成后退出登录。`, showCancel: false });
           },
           fail: () => wx.showToast({ title: '网络请求失败，请重试', icon: 'none' }),

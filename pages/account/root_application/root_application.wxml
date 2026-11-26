@@ -1,0 +1,51 @@
+<theme-shell business-context="{{true}}" root-organization="{{rootOrganization}}">
+  <view class="trial-page">
+    <view wx:if="{{loading}}" class="trial-card muted">正在读取申请状态…</view>
+    <block wx:else>
+      <view class="trial-card">
+        <text class="card-title">申请成为根组织厂家负责人</text>
+        <text class="description">填写厂家组织名称并上传企业营业执照，由项目超级管理员审核。通过后可在小程序及电脑工作台管理本组织业务。</text>
+        <view class="status-row"><text>申请状态</text><text class="status">{{statusLabel}}</text></view>
+        <text wx:if="{{reviewReason}}" class="review-note">审核说明：{{reviewReason}}</text>
+        <text wx:if="{{reason && !application && !canSubmit}}" class="muted">{{reason}}</text>
+        <button class="secondary" bindtap="refreshStatus" disabled="{{submitting || uploading || refreshingProfile}}">刷新审核状态</button>
+      </view>
+
+      <view wx:if="{{canSubmit || application}}" class="trial-card">
+        <text class="field-label">组织名称</text>
+        <input wx:if="{{canSubmit}}" class="input" value="{{organizationName}}" maxlength="128" placeholder="请填写与营业执照一致的企业名称" bindinput="onOrganizationInput" disabled="{{submitting}}" />
+        <text wx:else class="value">{{organizationName}}</text>
+        <text class="field-label">企业营业执照图片</text>
+        <text class="muted">仅用于审核申请；请上传清晰、完整的 JPG 或 PNG 图片，大小不超过5MB。</text>
+        <image wx:if="{{licensePath}}" class="license-image" src="{{licensePath}}" mode="aspectFit" bindtap="previewLicense" />
+        <text wx:if="{{uploading}}" class="muted">正在上传，请稍候…</text>
+        <text wx:if="{{imageError}}" class="error">{{imageError}}</text>
+        <button wx:if="{{licenseId && !licensePath}}" class="secondary" bindtap="retryLicenseImage">重新加载营业执照</button>
+        <view wx:if="{{canSubmit}}" class="button-row">
+          <button class="secondary" bindtap="chooseLicense" loading="{{uploading}}" disabled="{{uploading || submitting}}">{{licensePath ? '重新上传' : '选择营业执照图片'}}</button>
+          <button wx:if="{{licensePath}}" class="secondary" bindtap="removeLicense" disabled="{{uploading || submitting}}">移除图片</button>
+        </view>
+        <button wx:if="{{canSubmit}}" class="primary" bindtap="submitApplication" loading="{{submitting}}" disabled="{{submitting || uploading || !licenseId}}">{{application ? '修改并重新提交' : '提交试用申请'}}</button>
+      </view>
+
+      <view wx:if="{{application.status === 'APPROVED'}}" class="trial-card approved">
+        <text class="card-title">根组织厂家负责人权限已开通</text>
+        <text class="description">组织：{{organizationName}}</text>
+        <button class="primary" bindtap="enterWorkbench" loading="{{refreshingProfile}}" disabled="{{refreshingProfile || authorizingWeb}}">{{profileReady ? '进入小程序工作台' : '刷新身份并进入工作台'}}</button>
+        <block wx:if="{{hasWebToken}}">
+          <text wx:if="{{webApproved}}" class="description">电脑登录已授权，请返回原电脑继续操作。</text>
+          <block wx:elif="{{webNeedsRescan}}">
+            <text class="description">原电脑二维码已失效。请在电脑刷新二维码，再回到小程序扫一扫；已通过的申请无需重新提交。</text>
+            <button class="secondary" bindtap="scanNewWebCode">返回扫一扫</button>
+          </block>
+          <block wx:else>
+            <text class="description">如果需要继续登录刚才扫码的电脑，请在下方单独确认。二维码过期后需在电脑刷新并重新扫码。</text>
+            <button class="primary" bindtap="confirmWebLogin" loading="{{authorizingWeb}}" disabled="{{!profileReady || refreshingProfile || authorizingWeb}}">确认登录原电脑</button>
+          </block>
+        </block>
+      </view>
+      <text wx:if="{{feedback}}" class="feedback">{{feedback}}</text>
+      <text wx:if="{{error}}" class="error page-error">{{error}}</text>
+    </block>
+  </view>
+</theme-shell>

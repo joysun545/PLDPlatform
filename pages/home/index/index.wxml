@@ -24,6 +24,11 @@
     </view>
 
     <!-- 所有具备邀请能力的角色同时具备直接下级查看入口 -->
+    <view class="menu-item" bindtap="goRootTrialReview" wx:if="{{isPlatformAdmin}}">
+      <image src="/images/menu_icons/{{iconTheme}}/invite.png" class="icon" mode="aspectFit" />
+      <text>厂家试用申请审核</text>
+    </view>
+
     <view class="menu-item" bindtap="goManageSubordinates" wx:if="{{showManageSubordinates}}">
       <image src="/images/menu_icons/{{iconTheme}}/manage-subordinates.png" class="icon" mode="aspectFit" />
       <text>管理下级用户</text>

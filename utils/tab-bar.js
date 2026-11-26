@@ -7,7 +7,7 @@ function sync(page, selected, options = {}) {
   tabBar.setData({
     selected,
     hidden: options.hidden === undefined
-      ? globalData.role === 'tourist'
+      ? globalData.role === 'tourist' && !globalData.is_platform_admin
       : !!options.hidden,
     badge: Number(globalData.taskCount) || 0
   });

@@ -235,6 +235,11 @@ Page({
     });
   },
 
+  goRootTrialReview() {
+    if (!app.globalData.is_platform_admin) return;
+    wx.navigateTo({ url: '/pages/account/root_application_review/root_application_review' });
+  },
+
   goManageSubordinates() {
     wx.navigateTo({
       url: '/pages/home/edit/edit',

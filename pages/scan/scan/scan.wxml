@@ -15,6 +15,10 @@
       {{role === 'tourist' ? '游客可查看设备公开信息' : '扫描设备二维码查看当前状态'}}
     </text>
     <navigator wx:if="{{role === 'tourist'}}" url="/pages/theme/setting/setting" class="scan-tip">界面主题 ›</navigator>
+    <view wx:if="{{role === 'tourist' && !isPlatformAdmin}}" class="root-trial-entry">
+      <button class="root-trial-button" bindtap="openRootTrialApplication" disabled="{{scanning}}">申请成为根组织厂家负责人</button>
+      <text class="root-trial-tip">提交企业资料，经项目超级管理员审核后开通试用。</text>
+    </view>
   </view>
 </view>
 

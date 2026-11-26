@@ -1,0 +1,47 @@
+<theme-shell business-context="{{true}}" root-organization="{{rootOrganization}}">
+  <view class="trial-page">
+    <view class="trial-card toolbar">
+      <text class="card-title">{{applicationId ? '厂家试用申请审核' : '厂家试用申请'}}</text>
+      <view wx:if="{{!applicationId}}" class="button-row">
+        <button class="{{filterStatus === 'PENDING' ? 'primary' : 'secondary'}}" data-status="PENDING" bindtap="changeFilter">待审核</button>
+        <button class="{{filterStatus === 'ALL' ? 'primary' : 'secondary'}}" data-status="ALL" bindtap="changeFilter">全部申请</button>
+      </view>
+      <button class="secondary" bindtap="reload" disabled="{{loading || submitting}}">刷新{{applicationId ? '审核状态' : '申请列表'}}</button>
+    </view>
+    <view wx:if="{{loading}}" class="trial-card muted">正在读取申请资料…</view>
+    <block wx:elif="{{applicationId}}">
+      <view wx:if="{{application}}" class="trial-card">
+        <text class="card-title">{{application.organization_name}}</text>
+        <view class="status-row"><text>申请状态</text><text class="status">{{application.status_label}}</text></view>
+        <text class="description" wx:if="{{application.applicant_name}}">申请人：{{application.applicant_name}}</text>
+        <text class="muted" wx:if="{{application.created_at}}">提交时间：{{application.created_at}}</text>
+        <text class="field-label">企业营业执照</text>
+        <image wx:if="{{licensePath}}" class="license-image" src="{{licensePath}}" mode="aspectFit" bindtap="previewLicense" />
+        <text wx:if="{{imageError}}" class="error">{{imageError}}</text>
+        <button wx:if="{{licenseId && !licensePath}}" class="secondary" bindtap="loadLicenseImage">加载营业执照</button>
+        <text wx:if="{{application.review_reason}}" class="description">审核说明：{{application.review_reason}}</text>
+        <text wx:if="{{application.reviewed_at}}" class="muted">审核时间：{{application.reviewed_at}}</text>
+        <block wx:if="{{canReview}}">
+          <text class="field-label">审核说明（不予通过时必填）</text>
+          <textarea class="reason-input" value="{{reviewReason}}" placeholder="请填写具体原因，方便申请人核对或补充资料" maxlength="1000" bindinput="onReasonInput" disabled="{{submitting}}" />
+          <view class="button-row">
+            <button class="secondary" bindtap="rejectApplication" disabled="{{submitting}}">不予通过</button>
+            <button class="primary" bindtap="approveApplication" loading="{{submitting}}" disabled="{{submitting}}">通过申请</button>
+          </view>
+        </block>
+      </view>
+    </block>
+    <block wx:else>
+      <view wx:if="{{applications.length === 0 && !error}}" class="trial-card muted">{{filterStatus === 'PENDING' ? '暂无待审核申请' : '暂无申请记录'}}</view>
+      <view wx:for="{{applications}}" wx:key="id" class="trial-card application-entry" data-id="{{item.id}}" bindtap="openApplication">
+        <text class="card-title">{{item.organization_name}}</text>
+        <text class="status">{{item.status_label}}</text>
+        <text wx:if="{{item.created_at}}" class="muted">{{item.created_at}}</text>
+        <text class="entry-label">查看申请 ›</text>
+      </view>
+      <button wx:if="{{hasMore}}" class="secondary" bindtap="loadMore" loading="{{loadingMore}}" disabled="{{loadingMore}}">加载更多</button>
+    </block>
+    <text wx:if="{{feedback}}" class="feedback">{{feedback}}</text>
+    <text wx:if="{{error}}" class="error page-error">{{error}}</text>
+  </view>
+</theme-shell>

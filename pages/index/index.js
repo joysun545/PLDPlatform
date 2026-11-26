@@ -3,28 +3,39 @@ const app = getApp();
 
 Page({
   onShow() {
+    this._active = true;
     this.waitForLogin();
   },
 
-  waitForLogin() {
-    const check = () => {
-      const role = app.globalData.role;
+  onHide() {
+    this._active = false;
+  },
 
-      if (!role) {
-        setTimeout(check, 50);
+  onUnload() {
+    this._active = false;
+  },
+
+  waitForLogin() {
+    if (this._loginPending) return;
+    this._loginPending = true;
+    app.ensureLogin(ok => {
+      this._loginPending = false;
+      if (!this._active) return;
+      if (!ok) {
+        wx.showModal({
+          title: '微信登录未完成',
+          content: '暂时无法确认当前账号身份，请检查网络后重新登录。',
+          confirmText: '重新登录',
+          cancelText: '稍后重试',
+          success: result => {
+            if (result.confirm && this._active) this.waitForLogin();
+          }
+        });
         return;
       }
-
-      // 角色判断（后续可根据新角色扩展）
-      if (role === 'tourist') {
-        // 游客直接去扫码页（后续创建 pages/scan/scan/scan）
-        wx.switchTab({ url: '/pages/scan/scan/scan' });
-      } else {
-        // 其他角色进入首页
-        wx.switchTab({ url: '/pages/home/index/index' });
-      }
-    };
-
-    check();
+      const globalData = app.globalData;
+      const isGuest = !globalData.is_platform_admin && (!globalData.role || globalData.role === 'tourist');
+      wx.switchTab({ url: isGuest ? '/pages/scan/scan/scan' : '/pages/home/index/index' });
+    });
   }
 });

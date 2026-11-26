@@ -80,3 +80,25 @@
 }
 
 
+/* PLDP_ROOT_TRIAL_SCAN_V1 */
+.root-trial-entry {
+  width: 85%;
+  margin-top: 48rpx;
+  padding: 28rpx;
+  box-sizing: border-box;
+  border-radius: 22rpx;
+  background: var(--ui-surface, #fff);
+}
+.root-trial-button {
+  color: white;
+  background: var(--ui-primary-bright);
+  font-size: 28rpx;
+  border-radius: 14rpx;
+}
+.root-trial-tip {
+  display: block;
+  margin-top: 18rpx;
+  color: var(--ui-muted);
+  font-size: 25rpx;
+  line-height: 1.6;
+}

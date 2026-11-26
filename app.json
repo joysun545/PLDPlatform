@@ -62,7 +62,9 @@
     "pages/theme/setting/setting",
     "pages/aftersale/material_return/material_return",
     "pages/stock/recovered_machine/recovered_machine",
-    "pages/sales/replacement_supply/replacement_supply"
+    "pages/sales/replacement_supply/replacement_supply",
+    "pages/account/root_application/root_application",
+    "pages/account/root_application_review/root_application_review"
   ],
   "window": {
     "backgroundTextStyle": "light",

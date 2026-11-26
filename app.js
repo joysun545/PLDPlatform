@@ -94,7 +94,7 @@ App({
           openid: data.openid || '',
           access_token: data.access_token || '',
           role: data.role || '',
-          role_name: data.role_name || '',
+          role_name: data.is_platform_admin && !data.organization_id ? '超级管理员' : (data.role_name || ''),
           nickname: data.nickname || '',
           avatar_url: data.avatar_url || '',
           real_name: data.real_name || '',
@@ -172,7 +172,7 @@ App({
     Object.assign(this.globalData, {
       openid: data.openid || this.globalData.openid || '',
       role: data.role || 'tourist',
-      role_name: data.role_name || '游客',
+      role_name: data.is_platform_admin && !nextOrganizationId ? '超级管理员' : (data.role_name || '游客'),
       nickname: data.nickname || '',
       avatar_url: data.avatar_url || '',
       real_name: '',
@@ -371,7 +371,7 @@ App({
 
   autoRedirectIfLogged() {
     const role = this.globalData.role;
-    if (!role) return;
+    if (!role || !this.globalData.openid || !this.globalData.access_token) return;
 
     const pages = getCurrentPages();
     const currentRoute = pages.length ? pages[pages.length - 1].route : '';
@@ -389,12 +389,14 @@ App({
       const canReadMaterials = canManageMaterials || ['supplier_owner', 'supplier_sales'].includes(role);
       const isMaterialForm = currentRoute === 'pages/material_inventory/form/form';
       if (!(isMaterialForm ? canManageMaterials : canReadMaterials)) {
-        wx.switchTab({ url: role === 'tourist' ? '/pages/scan/scan/scan' : '/pages/home/index/index' });
+        wx.switchTab({ url: role === 'tourist' && !this.globalData.is_platform_admin ? '/pages/scan/scan/scan' : '/pages/home/index/index' });
       }
       return;
     }
 
     const protectedRoutes = [
+      'pages/account/root_application/root_application',
+      'pages/account/root_application_review/root_application_review',
       'pages/stock/batch_scan/batch_scan',
       'pages/stock/goods_transfer/goods_transfer',
       'pages/stock/goods_transfer_list/goods_transfer_list',

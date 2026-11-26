@@ -45,7 +45,7 @@ Component({
       const globalData = (app && app.globalData) || {};
       this.setData({
         selected,
-        hidden: globalData.role === 'tourist',
+        hidden: globalData.role === 'tourist' && !globalData.is_platform_admin,
         badge: Number(globalData.taskCount) || 0
       });
     },

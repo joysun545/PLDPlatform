@@ -2,6 +2,7 @@ const theme = require('../../utils/theme');
 const { getRouteMeta } = require('../../utils/theme-routes');
 
 function rootLabel(root) {
+  if (root?.state === 'platform_review') return '平台审核 · 厂家试用申请';
   if (root?.state === 'task_list') return '根组织 · 见任务卡片';
   const name = typeof root?.name === 'string' ? root.name.trim() : '';
   if (!name) return '';
@@ -110,8 +111,10 @@ Component({
       const workspaceRoot = this.data.pageLevel === 'tab'
         ? rootLabel(globalData.operationRoot)
         : rootLabel({ id: globalData.factory_root_id, name: globalData.factory_root_name });
+      const platformWorkspace = globalData.is_platform_admin && !globalData.organization_id
+        ? '平台管理' : '';
       this.setData({
-        organizationName: businessRoot || (isBusinessPage ? '根组织未确认' : workspaceRoot)
+        organizationName: businessRoot || (isBusinessPage ? '根组织未确认' : (workspaceRoot || platformWorkspace))
       });
     },
 
@@ -126,7 +129,8 @@ Component({
         routeTitle: this.data.title || routeMeta.title,
         pageLevel: this.data.level || routeMeta.level,
         canGoBack: pages.length > 1 && routeMeta.level !== 'tab',
-        roleName: globalData.role_name || '游客',
+        roleName: globalData.is_platform_admin && !globalData.organization_id
+          ? '超级管理员' : (globalData.role_name || '游客'),
         welcomeName: globalData.real_name || globalData.nickname || '用户'
       });
       this.resolveOrganizationLine();
