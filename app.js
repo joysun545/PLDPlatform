@@ -1,10 +1,10 @@
 const theme = typeof require === 'function'
   ? require('./utils/theme')
   : {
-      normalize: value => value || { color_scheme: 'jade', style_scheme: 'flow' },
+      normalize: value => value || { color_scheme: 'ash', style_scheme: 'flow' },
       readPersonalAppearance: () => null,
       savePersonalAppearance: () => false,
-      apply: value => value || { color_scheme: 'jade', style_scheme: 'flow' }
+      apply: value => value || { color_scheme: 'ash', style_scheme: 'flow' }
     };
 
 function confirmedRoot(root) {

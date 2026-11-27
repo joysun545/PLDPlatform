@@ -39,7 +39,7 @@ Component({
   data: {
     routeTitle: '',
     pageLevel: 'primary',
-    themeClass: 'theme-color-jade theme-style-flow',
+    themeClass: 'theme-color-ash theme-style-flow',
     themeStyle: '',
     statusHeight: 20,
     navHeight: 44,

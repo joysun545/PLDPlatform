@@ -12,7 +12,7 @@ page {
 .page-header {
   margin: 0 -28rpx 24rpx;
   padding: 44rpx 40rpx 56rpx;
-  color: #fff;
+  color: var(--ui-on-primary, #fff);
   background: linear-gradient(140deg, var(--ui-gradient-start) 0%, var(--ui-primary) 62%, var(--ui-gradient-end) 100%);
   border-radius: 0 0 44rpx 44rpx;
 }
@@ -84,11 +84,11 @@ page {
 
 .filter-item.active {
   background: var(--ui-primary-strong);
-  color: #fff;
+  color: var(--ui-on-primary, #fff);
 }
 
 .state-card {
-  background: #fff;
+  background: var(--ui-surface, #fff);
   text-align: center;
 }
 
@@ -115,7 +115,7 @@ button::after {
   padding: 28rpx;
   border: 1rpx solid #e1ebe6;
   border-radius: 24rpx;
-  background: #fff;
+  background: var(--ui-surface, #fff);
   box-shadow: 0 8rpx 28rpx rgba(29, 78, 55, 0.06);
 }
 
@@ -344,7 +344,7 @@ button::after {
   margin-top: 20rpx;
   border-radius: 14rpx;
   background: var(--ui-primary-strong);
-  color: #fff;
+  color: var(--ui-on-primary, #fff);
   font-size: 25rpx;
   line-height: 82rpx;
 }
@@ -376,7 +376,7 @@ button::after {
   margin-top: 20rpx;
   border-radius: 14rpx;
   background: var(--ui-primary-strong);
-  color: #fff;
+  color: var(--ui-on-primary, #fff);
   font-size: 25rpx;
   line-height: 82rpx;
 }
@@ -516,7 +516,7 @@ button::after {
   margin-top: 20rpx;
   border-radius: 14rpx;
   background: var(--ui-primary-strong);
-  color: #fff;
+  color: var(--ui-on-primary, #fff);
   font-size: 25rpx;
   line-height: 82rpx;
 }
@@ -550,7 +550,7 @@ button::after {
   padding: 0 18rpx;
   border: 1rpx solid #b9d8c7;
   border-radius: 10rpx;
-  background: #fff;
+  background: var(--ui-surface, #fff);
   color: #17251e;
   font-size: 24rpx;
 }

@@ -47,7 +47,7 @@
     </view>
 
     <view class="menu-item" bindtap="goFactoryPayments" wx:if="{{showFactoryPayments}}">
-      <image src="/images/menu_icons/{{iconTheme}}/order-plans.png" class="icon" mode="aspectFit" />
+      <image src="/images/menu_icons/{{iconTheme}}/factory-payments.png" class="icon" mode="aspectFit" />
       <text>{{factoryPaymentsTitle}}</text>
     </view>
 

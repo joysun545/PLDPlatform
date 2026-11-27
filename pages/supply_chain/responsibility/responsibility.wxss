@@ -4,7 +4,7 @@ page { background: var(--ui-primary-pale); color: #18332d; }
 .eyebrow { color: #08a874; font-size: 24rpx; letter-spacing: 4rpx; }
 .title { font-size: 48rpx; font-weight: 700; margin-top: 10rpx; }
 .subtitle { margin-top: 12rpx; color: #71827e; font-size: 28rpx; }
-.tip-card, .form-card, .state-card { background: #fff; border-radius: 28rpx; padding: 30rpx; margin-bottom: 24rpx; box-shadow: 0 12rpx 34rpx rgba(31, 72, 62, .07); }
+.tip-card, .form-card, .state-card { background: var(--ui-surface, #fff); border-radius: 28rpx; padding: 30rpx; margin-bottom: 24rpx; box-shadow: 0 12rpx 34rpx rgba(31, 72, 62, .07); }
 .tip-card { display: flex; flex-direction: column; gap: 12rpx; color: #647873; font-size: 26rpx; line-height: 1.7; }
 .priority { color: #078b62; font-weight: 600; }
 .state-card { text-align: center; color: #71827e; line-height: 1.8; }
@@ -28,5 +28,5 @@ page { background: var(--ui-primary-pale); color: #18332d; }
 .target-code, .target-category { color: #87938f; font-size: 23rpx; margin-top: 6rpx; }
 .occupied { color: #b17622; background: #fff6e5; border-radius: 10rpx; padding: 8rpx 12rpx; font-size: 22rpx; margin-top: 10rpx; }
 .empty-target { text-align: center; color: #84918e; padding: 50rpx 0; }
-.save-button { background: var(--ui-primary-bright); color: #fff; border-radius: 22rpx; font-weight: 600; }
+.save-button { background: var(--ui-primary-bright); color: var(--ui-on-primary, #fff); border-radius: 22rpx; font-weight: 600; }
 .save-button::after { border: none; }

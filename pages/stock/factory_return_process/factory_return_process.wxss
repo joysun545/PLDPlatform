@@ -22,7 +22,7 @@
   margin-bottom: 24rpx;
   padding: 28rpx;
   border-radius: 22rpx;
-  background: #fff;
+  background: var(--ui-surface, #fff);
   box-shadow: 0 10rpx 28rpx rgba(20, 45, 40, 0.06);
 }
 
@@ -75,7 +75,7 @@
 .workflow-read-hint { color: var(--ui-primary); }
 .workflow-rule { margin-top: 18rpx; color: #7c8582; font-size: 21rpx; line-height: 1.55; }
 
-.hero-card { color: #fff; background: linear-gradient(135deg, var(--ui-gradient-start), var(--ui-gradient-end)); }
+.hero-card { color: var(--ui-on-primary, #fff); background: linear-gradient(135deg, var(--ui-gradient-start), var(--ui-gradient-end)); }
 .hero-head,
 .device-head,
 .account-head,
@@ -119,7 +119,7 @@
 .locked-text,
 .credit-rule { margin-top: 12rpx; color: #6d6250; font-size: 24rpx; line-height: 1.65; }
 .credit-card { border: 1rpx solid var(--ui-primary-soft); background: #f8fffb; }
-.money-input-row { display: flex; align-items: center; margin-top: 20rpx; padding: 18rpx 22rpx; border: 1rpx solid #cfe1d9; border-radius: 14rpx; background: #fff; }
+.money-input-row { display: flex; align-items: center; margin-top: 20rpx; padding: 18rpx 22rpx; border: 1rpx solid #cfe1d9; border-radius: 14rpx; background: var(--ui-surface, #fff); }
 .currency { color: var(--ui-primary); font-size: 34rpx; font-weight: 700; }
 .money-input { flex: 1; margin-left: 14rpx; font-size: 32rpx; }
 
@@ -163,7 +163,7 @@
 .posting-textarea { box-sizing: border-box; width: 100%; min-height: 150rpx; }
 .classified-info { margin-top: 20rpx; padding: 18rpx; border-radius: 12rpx; color: #59615f; background: #f6f8f7; font-size: 23rpx; }
 
-.primary-button { margin-top: 22rpx; border-radius: 14rpx; color: #fff; background: var(--ui-primary); font-size: 28rpx; }
+.primary-button { margin-top: 22rpx; border-radius: 14rpx; color: var(--ui-on-primary, #fff); background: var(--ui-primary); font-size: 28rpx; }
 .primary-button::after,
 .account-button::after,
 .secondary-button::after,
@@ -264,7 +264,7 @@
   padding: 20rpx;
   border: 1rpx solid #dfe6e3;
   border-radius: 14rpx;
-  background: #fff;
+  background: var(--ui-surface, #fff);
   font-size: 25rpx;
 }
 
@@ -299,7 +299,7 @@
   padding: 20rpx;
   border: 1rpx solid #dfe8e4;
   border-radius: 14rpx;
-  background: #fff;
+  background: var(--ui-surface, #fff);
 }
 
 .fault-option.selected {
@@ -391,7 +391,7 @@
   padding: 18rpx;
   border: 1rpx solid #dfe6e3;
   border-radius: 12rpx;
-  background: #fff;
+  background: var(--ui-surface, #fff);
   font-size: 24rpx;
 }
 

@@ -17,7 +17,7 @@ page {
   padding: 28rpx;
   border: 1rpx solid #e0ebe5;
   border-radius: 24rpx;
-  background: #fff;
+  background: var(--ui-surface, #fff);
   box-shadow: 0 8rpx 26rpx rgba(29, 78, 55, 0.06);
 }
 
@@ -51,7 +51,7 @@ page {
   margin: 0 -24rpx 24rpx;
   padding: 44rpx 40rpx 58rpx;
   border-radius: 0 0 42rpx 42rpx;
-  color: #fff;
+  color: var(--ui-on-primary, #fff);
   background: linear-gradient(140deg, var(--ui-gradient-start) 0%, var(--ui-primary) 58%, var(--ui-gradient-end) 100%);
 }
 
@@ -199,7 +199,7 @@ page {
   border: 4rpx solid #d5e2db;
   border-radius: 50%;
   color: #fff;
-  background: #fff;
+  background: var(--ui-surface, #fff);
   font-size: 16rpx;
   font-weight: 700;
 }
@@ -615,7 +615,7 @@ page {
   border: 1rpx solid #cfe4d8;
   border-radius: 12rpx;
   color: #203c2e;
-  background: #fff;
+  background: var(--ui-surface, #fff);
   font-size: 26rpx;
 }
 
@@ -658,7 +658,7 @@ page {
   width: 50%;
   margin: 0;
   border-radius: 14rpx;
-  color: #fff;
+  color: var(--ui-on-primary, #fff);
   background: linear-gradient(135deg, var(--ui-gradient-start), var(--ui-gradient-end));
   font-size: 25rpx;
 }
@@ -683,7 +683,7 @@ page {
 .action-button {
   margin-top: 16rpx;
   border-radius: 18rpx;
-  color: #fff;
+  color: var(--ui-on-primary, #fff);
   background: linear-gradient(135deg, var(--ui-gradient-start), var(--ui-gradient-end));
   font-size: 30rpx;
   font-weight: 650;

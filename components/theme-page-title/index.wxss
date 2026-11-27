@@ -7,7 +7,7 @@
   padding: 16rpx 28rpx 14rpx;
   overflow: hidden;
   box-sizing: border-box;
-  color: #fff;
+  color: var(--ui-on-primary, #fff);
   background: linear-gradient(135deg, var(--ui-gradient-start), var(--ui-gradient-end));
   border-radius: var(--ui-card-radius, 28rpx);
   box-shadow: 0 14rpx 34rpx rgba(0, 0, 0, .1);
@@ -24,7 +24,7 @@
 .global-page-title-eyebrow {
   min-width: 0;
   overflow: hidden;
-  color: rgba(255, 255, 255, .78);
+  color: var(--ui-on-primary, #fff);
   font-size: 21rpx;
   line-height: 30rpx;
   text-overflow: ellipsis;
@@ -37,7 +37,7 @@
   align-items: center;
   justify-content: flex-end;
   flex: 0 0 54rpx;
-  color: #fff;
+  color: var(--ui-on-primary, #fff);
   font-size: 46rpx;
   line-height: 30rpx;
 }
@@ -57,7 +57,7 @@
   height: 48rpx;
   margin-top: 0;
   overflow: hidden;
-  color: #fff;
+  color: var(--ui-on-primary, #fff);
   font-size: 32rpx;
   font-weight: 700;
   line-height: 44rpx;
@@ -70,7 +70,7 @@
   margin-left: 12rpx;
   overflow: hidden;
   flex: 0 0 auto;
-  color: rgba(255, 255, 255, .92);
+  color: var(--ui-on-primary, #fff);
   font-size: 22rpx;
   font-weight: 600;
   line-height: 32rpx;
@@ -84,7 +84,7 @@
   height: 42rpx;
   margin-top: 2rpx;
   overflow: hidden;
-  color: rgba(255, 255, 255, .86);
+  color: var(--ui-on-primary, #fff);
   font-size: 22rpx;
   line-height: 1.35;
   text-overflow: ellipsis;

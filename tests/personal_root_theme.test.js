@@ -56,7 +56,7 @@ function session(storage = new Map()) {
     app, theme, wx, pending, respond, list, toasts,
     login(data) {
       app.onLaunch();
-      assert.equal(theme.get().option_code, 'jade-flow');
+      assert.equal(theme.get().option_code, 'ash-flow');
       respond('/account/login/', data);
     },
     editor(options) {
@@ -83,7 +83,7 @@ function profile({ openid = 'supplier', role = 'supplier_owner', orgId = 12 } = 
     factory_root_id: orgId ? alpha.id : null,
     factory_root_name: orgId ? alpha.name : '',
     appearance: orgId ? {
-      color_scheme: 'ocean',
+      color_scheme: 'splashed',
       style_scheme: 'flow',
       owner_organization_id: alpha.id,
       owner_organization_name: alpha.name
@@ -101,36 +101,36 @@ test('a supplier can independently set and switch themes for two roots', () => {
   const disk = new Map();
   const current = session(disk);
   current.login(profile());
-  assert.equal(current.theme.get().option_code, 'ocean-flow');
+  assert.equal(current.theme.get().option_code, 'splashed-flow');
   const first = current.editor();
   assert.equal(first.data.canManage, true);
   assert.equal(first.data.editingRoot.id, alpha.id);
-  choose(first, 'amber', 'order');
+  choose(first, 'mars', 'order');
   first.onUnload();
-  assert.equal(current.theme.get().option_code, 'amber-order');
+  assert.equal(current.theme.get().option_code, 'mars-order');
 
   current.list(beta);
-  assert.equal(current.theme.get().option_code, 'amber-order');
+  assert.equal(current.theme.get().option_code, 'mars-order');
   assert(current.app.selectOperationRoot(beta.id));
-  assert.equal(current.theme.get().option_code, 'jade-flow');
+  assert.equal(current.theme.get().option_code, 'ash-flow');
   const second = current.editor();
   assert.equal(second.data.editingRoot.id, beta.id);
-  choose(second, 'ocean', 'flow');
+  choose(second, 'splashed', 'flow');
   second.onUnload();
-  assert.equal(current.theme.get().option_code, 'ocean-flow');
+  assert.equal(current.theme.get().option_code, 'splashed-flow');
 
   current.app.openUserTask(1, () => {}, { switchOperationRoot: true });
   current.respond('/workflow/task/open/', { code: 0, data: { root_organization: alpha } });
-  assert.equal(current.theme.viewModel(current.theme.get()).className, 'theme-color-amber theme-style-order');
-  assert.equal(current.app.globalData.appearance.option_code, 'amber-order');
+  assert.equal(current.theme.viewModel(current.theme.get()).className, 'theme-color-mars theme-style-order');
+  assert.equal(current.app.globalData.appearance.option_code, 'mars-order');
   assert(!current.pending.some(request => request.url.endsWith('/account/appearance/')));
 
   const reopened = session(disk);
   reopened.login(profile());
-  assert.equal(reopened.theme.get().option_code, 'amber-order');
+  assert.equal(reopened.theme.get().option_code, 'mars-order');
   reopened.list(beta);
   assert(reopened.app.selectOperationRoot(beta.id));
-  assert.equal(reopened.theme.get().option_code, 'ocean-flow');
+  assert.equal(reopened.theme.get().option_code, 'splashed-flow');
 });
 
 test('an account with no organization can save its own theme and it does not follow another login', () => {
@@ -140,12 +140,12 @@ test('an account with no organization can save its own theme and it does not fol
   const editor = guest.editor();
   assert.equal(editor.data.editingRoot, null);
   assert.equal(editor.data.canManage, true);
-  choose(editor, 'amber', 'order');
-  assert.equal(guest.theme.get().option_code, 'amber-order');
+  choose(editor, 'mars', 'order');
+  assert.equal(guest.theme.get().option_code, 'mars-order');
   assert.match(source('pages/scan/scan/scan.wxml'), /role === 'tourist'[^\n]+\/pages\/theme\/setting\/setting/);
   const next = session(disk);
   next.login(profile({ openid: 'second', role: 'merchant_stock', orgId: 11 }));
-  assert.equal(next.theme.get().option_code, 'ocean-flow');
+  assert.equal(next.theme.get().option_code, 'splashed-flow');
 });
 
 test('a pending edit cannot save to a different root, and a failed save keeps the old theme', () => {
@@ -154,37 +154,37 @@ test('a pending edit cannot save to a different root, and a failed save keeps th
   current.list(beta);
   const editor = current.editor();
   const previousKey = current.app.personalAppearanceKey();
-  editor.selectColor({ currentTarget: { dataset: { code: 'amber' } } });
+  editor.selectColor({ currentTarget: { dataset: { code: 'mars' } } });
   current.app.selectOperationRoot(beta.id);
   assert.equal(editor.data.editingRoot.id, beta.id);
-  assert.equal(editor.data.selectedColor, 'jade');
-  assert.equal(current.app.savePersonalAppearance(previousKey, { color_scheme: 'amber', style_scheme: 'order' }), false);
+  assert.equal(editor.data.selectedColor, 'ash');
+  assert.equal(current.app.savePersonalAppearance(previousKey, { color_scheme: 'mars', style_scheme: 'order' }), false);
   assert.equal(current.app.savePersonalAppearance(current.app.personalAppearanceKey(), { color_scheme: '__proto__', style_scheme: 'order' }), false);
   current.wx.setStorageSync = () => { throw Error('storage full'); };
-  choose(editor, 'amber', 'order');
+  choose(editor, 'mars', 'order');
   assert.equal(editor.data.errorMessage, '个人主题保存失败，请重试');
-  assert.equal(current.theme.get().option_code, 'jade-flow');
+  assert.equal(current.theme.get().option_code, 'ash-flow');
 });
 
 test('only the organization settings path uses the protected shared-theme write', () => {
   const current = session();
   current.login(profile({ role: 'factory_admin', orgId: 1 }));
   const personal = current.editor();
-  choose(personal, 'amber', 'order');
+  choose(personal, 'mars', 'order');
   personal.onUnload();
   const manager = current.editor({ scope: 'organization' });
   current.respond('/account/appearance/', {
     code: 0, data: { can_manage: true, appearance: profile().appearance }
   }, 'GET');
-  assert.equal(manager.data.selectedColor, 'ocean');
-  const shared = { ...profile().appearance, color_scheme: 'jade', style_scheme: 'order' };
+  assert.equal(manager.data.selectedColor, 'splashed');
+  const shared = { ...profile().appearance, color_scheme: 'ash', style_scheme: 'order' };
   choose(manager, shared.color_scheme, shared.style_scheme);
   const posted = current.respond('/account/appearance/', {
     code: 0, data: { appearance: shared }
   }, 'POST');
-  assert.equal(posted.data.color_scheme, 'jade');
-  assert.equal(current.app.globalData.organizationAppearance.option_code, 'jade-order');
-  assert.equal(current.theme.get().option_code, 'amber-order');
+  assert.equal(posted.data.color_scheme, 'ash');
+  assert.equal(current.app.globalData.organizationAppearance.option_code, 'ash-order');
+  assert.equal(current.theme.get().option_code, 'mars-order');
 
   const keeper = session();
   keeper.login(profile({ role: 'merchant_stock', orgId: 15 }));
@@ -192,6 +192,6 @@ test('only the organization settings path uses the protected shared-theme write'
   keeper.respond('/account/appearance/', {
     code: 0, data: { can_manage: false, appearance: profile().appearance }
   }, 'GET');
-  choose(readOnly, 'amber', 'order');
+  choose(readOnly, 'mars', 'order');
   assert(!keeper.pending.some(request => request.url.endsWith('/account/appearance/') && request.method === 'POST'));
 });

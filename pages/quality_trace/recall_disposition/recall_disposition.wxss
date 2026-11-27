@@ -4,7 +4,7 @@
 .hero-sub { margin-top: 14rpx; font-size: 27rpx; opacity: .9; }
 .tip { margin: 24rpx 4rpx; padding: 22rpx; border-radius: 18rpx; color: #537068; background: var(--ui-primary-soft); line-height: 1.6; }
 .section-title { margin: 30rpx 4rpx 20rpx; font-size: 34rpx; font-weight: 700; color: #173e34; }
-.device-card { display: flex; align-items: center; margin-bottom: 22rpx; padding: 28rpx; border: 3rpx solid transparent; border-left: 10rpx solid #12b978; border-radius: 26rpx; background: #fff; box-shadow: 0 10rpx 28rpx rgba(18, 73, 57, .07); }
+.device-card { display: flex; align-items: center; margin-bottom: 22rpx; padding: 28rpx; border: 3rpx solid transparent; border-left: 10rpx solid #12b978; border-radius: 26rpx; background: var(--ui-surface, #fff); box-shadow: 0 10rpx 28rpx rgba(18, 73, 57, .07); }
 .device-card.focused { border-color: #9ee5c8; border-left-color: var(--ui-primary-bright); background: var(--ui-primary-pale); }
 .device-main { flex: 1; min-width: 0; }
 .device-sn { font-size: 34rpx; font-weight: 700; color: #163f34; }
@@ -22,6 +22,6 @@
 .selected-count { margin-bottom: 14rpx; text-align: center; color: #48655d; }
 .action-row { display: flex; gap: 12rpx; }
 .method-btn { flex: 1; height: 88rpx; min-height: 88rpx; margin: 0; padding: 0 8rpx; display: flex; align-items: center; justify-content: center; border-radius: 16rpx; font-size: 28rpx; font-weight: 600; line-height: 1.2; color: #17664f; background: #e8f7f1; }
-.method-btn.primary { color: #fff; background: var(--ui-primary-bright); }
+.method-btn.primary { color: var(--ui-on-primary, #fff); background: var(--ui-primary-bright); }
 .method-btn.danger { color: #ad513f; background: #fff0ec; }
 .error { margin: 20rpx 0; color: #b94f4f; }

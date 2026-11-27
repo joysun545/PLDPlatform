@@ -132,12 +132,12 @@ theme-shell { display: block; min-height: 100vh; }
 .theme-shell .primary-button,
 .theme-shell .primary,
 .theme-shell .create-button,
-.theme-shell .scan-button { background-color: var(--ui-primary-strong); color: #fff; }
+.theme-shell .scan-button { background-color: var(--ui-primary-strong); color: var(--ui-on-primary, #fff); }
 .theme-shell .secondary-button,
 .theme-shell .secondary { background-color: var(--ui-primary-soft); color: var(--ui-primary-strong); border-color: var(--ui-border); }
 .theme-shell .filter-item.active,
 .theme-shell .filter-tab.active,
-.theme-shell .tab-item.selected { background-color: var(--ui-primary-strong); color: #fff; }
+.theme-shell .tab-item.selected { background-color: var(--ui-primary-strong); color: var(--ui-on-primary, #fff); }
 .theme-shell .link-hint,
 .theme-shell .open-tip,
 .theme-shell .section-number,
@@ -164,9 +164,9 @@ theme-shell { display: block; min-height: 100vh; }
 .theme-shell .install-btn,
 .theme-shell .method-btn.primary {
   background-color: var(--ui-primary-strong);
-  color: #fff;
+  color: var(--ui-on-primary, #fff);
 }
-.theme-shell .tabs .active { background-color: var(--ui-primary-strong); color: #fff; }
+.theme-shell .tabs .active { background-color: var(--ui-primary-strong); color: var(--ui-on-primary, #fff); }
 
 .theme-shell .scope-tip,
 .theme-shell .material-flow-tip,
@@ -176,4 +176,12 @@ theme-shell { display: block; min-height: 100vh; }
   background-color: var(--ui-primary-soft);
   color: var(--ui-primary-strong);
   border-color: var(--ui-border);
+}
+
+.theme-two-tone.theme-style-order .theme-page-body > .page,
+.theme-two-tone.theme-style-order .theme-page-body > .container { background-image: none; }
+
+.theme-two-tone button:not([class]) {
+  background: var(--ui-primary);
+  color: var(--ui-on-primary);
 }

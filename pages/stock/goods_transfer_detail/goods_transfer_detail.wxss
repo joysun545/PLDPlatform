@@ -13,14 +13,14 @@ page {
 .section-card,
 .state-card {
   border-radius: 22rpx;
-  background: #fff;
+  background: var(--ui-surface, #fff);
   box-shadow: 0 10rpx 28rpx rgba(15, 77, 54, 0.07);
 }
 
 .hero-card {
   padding: 32rpx;
   background: linear-gradient(135deg, var(--ui-gradient-start), var(--ui-primary) 62%, var(--ui-gradient-end));
-  color: #fff;
+  color: var(--ui-on-primary, #fff);
 }
 
 .hero-head,
@@ -203,14 +203,14 @@ page {
   padding: 20rpx;
   border: 1rpx solid #dfe8e4;
   border-radius: 12rpx;
-  background: #fff;
+  background: var(--ui-surface, #fff);
   font-size: 24rpx;
 }
 
 .material-upload-button {
   margin-top: 18rpx;
   border-radius: 12rpx;
-  color: #fff;
+  color: var(--ui-on-primary, #fff);
   background: var(--ui-primary);
   font-size: 25rpx;
 }
@@ -297,7 +297,7 @@ page {
   margin: 8rpx 18rpx 0 2rpx;
   border: 4rpx solid #93d8bc;
   border-radius: 50%;
-  background: #fff;
+  background: var(--ui-surface, #fff);
 }
 
 .dot.complete {
@@ -328,13 +328,13 @@ page {
 
 .scan-button {
   border: 2rpx solid var(--ui-primary);
-  background: #fff;
+  background: var(--ui-surface, #fff);
   color: var(--ui-primary);
 }
 
 .receipt-button {
   background: var(--ui-primary);
-  color: #fff;
+  color: var(--ui-on-primary, #fff);
 }
 
 .settlement-button {

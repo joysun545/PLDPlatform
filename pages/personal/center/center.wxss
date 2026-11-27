@@ -1,11 +1,11 @@
 .container {
   min-height: 100vh;
-  background: #f5f5f5;
+  background: var(--ui-page-bg);
 }
 
 .header {
   padding: 30rpx 0 60rpx;
-  color: #fff;
+  color: var(--ui-on-primary, #fff);
   text-align: center;
   border-bottom-right-radius: 50rpx;
   border-bottom-left-radius: 50rpx;
@@ -17,9 +17,9 @@
   width: 128rpx;
   height: 128rpx;
   margin: 0 auto 22rpx;
-  border: 6rpx solid rgba(255, 255, 255, 0.86);
+  border: 6rpx solid var(--ui-on-primary);
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--ui-surface);
 }
 
 .avatar-placeholder {
@@ -27,7 +27,7 @@
   align-items: center;
   justify-content: center;
   color: var(--ui-primary-bright);
-  background: #fff;
+  background: var(--ui-surface);
   font-size: 52rpx;
   font-weight: 700;
 }
@@ -54,7 +54,7 @@
   margin: 60rpx 40rpx 40rpx;
   padding: 40rpx;
   border-radius: 30rpx;
-  background: #fff;
+  background: var(--ui-surface);
   box-shadow: 0 8rpx 30rpx rgba(0, 0, 0, 0.08);
 }
 
@@ -63,7 +63,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 15rpx 0;
-  border-bottom: 1rpx solid #eee;
+  border-bottom: 1rpx solid var(--ui-border);
 }
 
 .info-item:last-child {
@@ -73,13 +73,13 @@
 .label {
   width: 180rpx;
   flex-shrink: 0;
-  color: #666;
+  color: var(--ui-muted);
   font-size: 32rpx;
 }
 
 .value {
   flex: 1;
-  color: #333;
+  color: var(--ui-ink);
   text-align: left;
   font-size: 32rpx;
   font-weight: 500;
@@ -89,7 +89,7 @@
   margin: 0 40rpx 40rpx;
   overflow: hidden;
   border-radius: 30rpx;
-  background: #fff;
+  background: var(--ui-surface);
   box-shadow: 0 10rpx 30rpx rgba(0, 0, 0, 0.08);
 }
 
@@ -98,8 +98,8 @@
   display: flex;
   align-items: center;
   padding: 26rpx 34rpx;
-  border-bottom: 1rpx solid #eee;
-  background: #fff;
+  border-bottom: 1rpx solid var(--ui-border);
+  background: var(--ui-surface);
 }
 
 .function-item:last-child {
@@ -107,19 +107,19 @@
 }
 
 .function-item:active {
-  background: #f8f9fa;
+  background: var(--ui-primary-pale);
 }
 
 .text-left {
   flex: 1;
-  color: #333;
+  color: var(--ui-ink);
   text-align: left;
   font-size: 34rpx;
   font-weight: 600;
 }
 
 .arrow {
-  color: #bbb;
+  color: var(--ui-muted);
   font-size: 42rpx;
 }
 

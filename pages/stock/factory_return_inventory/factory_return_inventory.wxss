@@ -16,7 +16,7 @@
   margin-bottom: 24rpx;
   padding: 28rpx;
   border-radius: 22rpx;
-  background: #fff;
+  background: var(--ui-surface, #fff);
   box-shadow: 0 10rpx 28rpx rgba(20, 45, 40, 0.06);
 }
 
@@ -27,7 +27,7 @@
 .retry-button::after,
 .detail-button::after { border: 0; }
 
-.hero-card { color: #fff; background: linear-gradient(135deg, var(--ui-gradient-start), var(--ui-gradient-end)); }
+.hero-card { color: var(--ui-on-primary, #fff); background: linear-gradient(135deg, var(--ui-gradient-start), var(--ui-gradient-end)); }
 .hero-title,
 .hero-org,
 .hero-meta,
@@ -43,7 +43,7 @@
 .hero-meta { margin-top: 12rpx; font-size: 24rpx; opacity: .86; }
 
 .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18rpx; margin-bottom: 24rpx; }
-.summary-card { padding: 24rpx; border-radius: 18rpx; text-align: center; background: #fff; }
+.summary-card { padding: 24rpx; border-radius: 18rpx; text-align: center; background: var(--ui-surface, #fff); }
 .summary-card.reissue { color: var(--ui-primary); background: #e9faf2; }
 .summary-card.repair { color: #b65c00; background: #fff4df; }
 .summary-card.disassembly { color: #8a4c23; background: #fff0e6; }

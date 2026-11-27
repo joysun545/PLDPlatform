@@ -44,7 +44,7 @@ page {
 .safe-tip,
 .channel-warning {
   border-radius: 22rpx;
-  background: #ffffff;
+  background: var(--ui-surface, #ffffff);
   box-shadow: 0 10rpx 30rpx rgba(22, 68, 48, 0.06);
 }
 
@@ -279,7 +279,7 @@ button::after {
   box-sizing: border-box;
   border: 1rpx solid #dce6e1;
   border-radius: 12rpx;
-  background: #ffffff;
+  background: var(--ui-surface, #ffffff);
   font-size: 26rpx;
 }
 
@@ -315,7 +315,7 @@ button::after {
 
 .primary-button {
   background: var(--ui-primary-strong);
-  color: #ffffff;
+  color: var(--ui-on-primary, #ffffff);
 }
 
 .secondary-button {
@@ -391,7 +391,7 @@ button::after {
   margin-top: 16rpx;
   padding: 18rpx;
   border-radius: 12rpx;
-  background: #ffffff;
+  background: var(--ui-surface, #ffffff);
   color: var(--ui-muted);
   font-size: 23rpx;
   line-height: 1.5;
@@ -401,7 +401,7 @@ button::after {
   margin-top: 12rpx;
   border: 1rpx solid var(--ui-border);
   border-radius: 14rpx;
-  background: #ffffff;
+  background: var(--ui-surface, #ffffff);
 }
 
 .draft-brand {
@@ -473,7 +473,7 @@ button::after {
   overflow: hidden;
   border: 1rpx solid var(--ui-border);
   border-radius: 14rpx;
-  background: #ffffff;
+  background: var(--ui-surface, #ffffff);
 }
 
 .choice-row {

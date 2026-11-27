@@ -14,7 +14,7 @@
   padding: 60rpx 32rpx;
   color: #66707a;
   text-align: center;
-  background: #ffffff;
+  background: var(--ui-surface, #ffffff);
   border-radius: 24rpx;
 }
 
@@ -43,7 +43,7 @@
 
 .hero-card {
   padding: 38rpx 34rpx;
-  color: #ffffff;
+  color: var(--ui-on-primary, #ffffff);
   background: linear-gradient(135deg, var(--ui-gradient-start), var(--ui-gradient-end));
   border-radius: 28rpx;
   box-shadow: 0 14rpx 34rpx rgba(0, 153, 112, 0.2);
@@ -98,7 +98,7 @@
 .action-card {
   margin-top: 22rpx;
   padding: 28rpx;
-  background: #ffffff;
+  background: var(--ui-surface, #ffffff);
   border-radius: 22rpx;
   box-shadow: 0 4rpx 18rpx rgba(32, 52, 69, 0.045);
 }
@@ -376,7 +376,7 @@
 }
 
 .primary-btn {
-  color: #ffffff;
+  color: var(--ui-on-primary, #ffffff);
   background: var(--ui-primary-strong);
 }
 
@@ -391,14 +391,14 @@
 .secondary-btn {
   width: 320rpx;
   margin-top: 30rpx;
-  color: #ffffff;
+  color: var(--ui-on-primary, #ffffff);
   background: var(--ui-primary-strong);
 }
 
 .scan-again-btn {
   margin-top: 26rpx;
   color: #4f5a64;
-  background: #ffffff;
+  background: var(--ui-surface, #ffffff);
 }
 
 .modal-root,
@@ -422,7 +422,7 @@
   bottom: 54rpx;
   left: 36rpx;
   padding: 34rpx;
-  background: #ffffff;
+  background: var(--ui-surface, #ffffff);
   border-radius: 28rpx;
 }
 

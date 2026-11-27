@@ -8,7 +8,7 @@
 .group-summary {
   margin-bottom: 24rpx;
   padding: 30rpx;
-  color: #fff;
+  color: var(--ui-on-primary, #fff);
   border-radius: 22rpx;
   background: linear-gradient(135deg, var(--ui-gradient-start), var(--ui-gradient-end));
 }
@@ -72,7 +72,7 @@
   overflow: hidden;
   border-left: 8rpx solid #d9d9d9;
   border-radius: 18rpx;
-  background: #fff;
+  background: var(--ui-surface, #fff);
   box-shadow: 0 6rpx 22rpx rgba(0, 0, 0, 0.05);
 }
 

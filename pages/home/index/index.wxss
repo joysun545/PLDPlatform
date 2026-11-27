@@ -1,12 +1,12 @@
 /* pages/home/index/index.wxss */
 .container {
   min-height: 100vh;
-  background: linear-gradient(#f0f2f5, #ffffff);
+  background: var(--ui-page-bg);
 }
 
 .header {
   background: linear-gradient(135deg, var(--ui-primary-bright), var(--ui-primary));
-  color: white;
+  color: var(--ui-on-primary, white);
   text-align: center;
   padding: 30rpx 0 60rpx;
   border-bottom-left-radius: 50rpx;
@@ -40,7 +40,7 @@
 }
 
 .menu-item {
-  background: white;
+  background: var(--ui-surface);
   border-radius: 30rpx;
   box-shadow: 0 10rpx 30rpx rgba(0,0,0,0.08);
   display: flex;
@@ -71,6 +71,6 @@
   box-sizing: border-box;
   text-align: center;
   font-size: 32rpx;
-  color: #333;
+  color: var(--ui-ink);
   font-weight: 500;
 }

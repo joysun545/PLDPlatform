@@ -12,7 +12,7 @@ page {
 .page-header {
   margin: 0 -28rpx 28rpx;
   padding: 44rpx 40rpx 64rpx;
-  color: #fff;
+  color: var(--ui-on-primary, #fff);
   background: linear-gradient(140deg, var(--ui-gradient-start) 0%, var(--ui-primary) 62%, var(--ui-gradient-end) 100%);
   border-radius: 0 0 44rpx 44rpx;
 }
@@ -54,7 +54,7 @@ page {
 .success-card {
   margin-bottom: 24rpx;
   padding: 30rpx;
-  background: #fff;
+  background: var(--ui-surface, #fff);
   border: 1rpx solid #e5eee9;
   border-radius: 24rpx;
   box-shadow: 0 8rpx 28rpx rgba(29, 78, 55, 0.06);
@@ -177,7 +177,7 @@ page {
   border: 1rpx solid #a4d9bb;
   border-radius: 12rpx;
   color: var(--ui-primary-strong);
-  background: #fff;
+  background: var(--ui-surface, #fff);
   font-size: 22rpx;
   line-height: 58rpx;
 }
@@ -214,7 +214,7 @@ page {
   padding: 20rpx;
   border: 1rpx solid #dce9e2;
   border-radius: 16rpx;
-  background: #fff;
+  background: var(--ui-surface, #fff);
 }
 
 .bom-material-card.deleted {
@@ -390,7 +390,7 @@ page {
   min-height: 112rpx;
   padding: 18rpx;
   border-radius: 14rpx;
-  background: #fff;
+  background: var(--ui-surface, #fff);
   box-sizing: border-box;
 }
 
@@ -561,7 +561,7 @@ button::after {
 .outline-button {
   margin-top: 24rpx;
   color: #078e4c;
-  background: #fff;
+  background: var(--ui-surface, #fff);
   border: 1rpx dashed #54c58d;
 }
 

@@ -1,8 +1,8 @@
 .payments-page { padding: 24rpx; }
-.account-card { display: flex; flex-direction: column; gap: 16rpx; padding: 24rpx; margin-bottom: 24rpx; background: #fff; border-radius: 16rpx; }
+.account-card { display: flex; flex-direction: column; gap: 16rpx; padding: 24rpx; margin-bottom: 24rpx; background: var(--ui-surface); border: var(--ui-border-width) solid var(--ui-border); border-radius: var(--ui-card-radius); }
 .heading { font-weight: 600; font-size: 32rpx; }
-.note { color: #526174; }
-.payment-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12rpx; border-top: 1px solid #e4e8ed; padding-top: 16rpx; }
+.note { color: var(--ui-muted); }
+.payment-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12rpx; border-top: 1px solid var(--ui-border); padding-top: 16rpx; }
 .voucher-preview { width: 120rpx; height: 120rpx; }
 
 .quote-details { display: flex; flex-direction: column; width: 100%; gap: 12rpx; padding: 12rpx 0; }

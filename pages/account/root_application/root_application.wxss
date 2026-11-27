@@ -11,7 +11,7 @@
 .input { padding: 20rpx; min-height: 44rpx; border: 1rpx solid #d9e1e0; border-radius: 12rpx; font-size: 28rpx; }
 .license-image { width: 100%; height: 360rpx; display: block; margin: 22rpx auto; background: rgba(120,130,130,.05); }
 .primary, .secondary { font-size: 28rpx; border-radius: 14rpx; margin-top: 22rpx; }
-.primary { color: white; background: var(--ui-primary-bright); }
+.primary { color: var(--ui-on-primary, white); background: var(--ui-primary-bright); }
 .secondary { color: var(--ui-primary-bright); background: var(--ui-page-bg); }
 .primary[disabled], .secondary[disabled] { opacity: .55; }
 .button-row { display: flex; flex-wrap: wrap; gap: 16rpx; }

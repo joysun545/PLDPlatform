@@ -1,6 +1,6 @@
 page { background: var(--ui-primary-pale); color: #173f32; }
 .page { padding: 28rpx 26rpx 60rpx; }
-.state-card,.section-card { margin-top: 24rpx; padding: 32rpx; background:#fff; border-radius:28rpx; box-shadow:0 8rpx 28rpx rgba(23,63,50,.06); }
+.state-card,.section-card { margin-top: 24rpx; padding: 32rpx; background: var(--ui-surface, #fff); border-radius:28rpx; box-shadow:0 8rpx 28rpx rgba(23,63,50,.06); }
 .state-card { text-align:center; color:#81928b; }
 .state-card.error { color:#c64e4e; }
 .section-head { display:flex; align-items:center; }

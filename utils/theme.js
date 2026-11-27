@@ -1,58 +1,40 @@
 const STORAGE_KEY = 'PLDP_UI_APPEARANCE_V1';
 
+function palette(name, reference, primary, pageBg, tint, twoTone = false) {
+  return {
+    name, reference, primary, pageBg, tint, twoTone,
+    primaryStrong: primary,
+    primaryBright: primary,
+    primarySoft: tint,
+    primaryPale: tint,
+    gradientStart: primary,
+    gradientEnd: twoTone || reference === '#EB6127' ? primary : reference,
+    surface: twoTone ? pageBg : '#FFFDF9',
+    surfaceMuted: tint,
+    fieldBg: twoTone ? pageBg : '#FFFDF9',
+    ink: twoTone ? primary : '#222622',
+    muted: twoTone ? primary : '#535952',
+    border: twoTone ? primary : '#D9D3C8',
+    onPrimary: twoTone ? pageBg : '#FFFFFF'
+  };
+}
+
 const COLOR_SCHEMES = {
-  jade: {
-    name: '翡翠绿',
-    primary: '#087F5B',
-    primaryStrong: '#056146',
-    primaryBright: '#07B66F',
-    primarySoft: '#E7F7F0',
-    primaryPale: '#F3FAF7',
-    gradientStart: '#056146',
-    gradientEnd: '#087F5B',
-    pageBg: '#F3F7F5',
-    surface: '#FFFFFF',
-    surfaceMuted: '#EAF2ED',
-    fieldBg: '#F7FAF8',
-    ink: '#17211D',
-    muted: '#718078',
-    border: '#DDE8E2'
-  },
-  ocean: {
-    name: '深海蓝',
-    primary: '#155EEF',
-    primaryStrong: '#0D3FA8',
-    primaryBright: '#2E7CF6',
-    primarySoft: '#E9F1FF',
-    primaryPale: '#F5F8FF',
-    gradientStart: '#0D3FA8',
-    gradientEnd: '#155EEF',
-    pageBg: '#F3F6FB',
-    surface: '#FFFFFF',
-    surfaceMuted: '#EAF0F9',
-    fieldBg: '#F7F9FD',
-    ink: '#172033',
-    muted: '#6D788C',
-    border: '#DBE3F0'
-  },
-  amber: {
-    name: '琥珀金',
-    primary: '#A85F08',
-    primaryStrong: '#754105',
-    primaryBright: '#D58A21',
-    primarySoft: '#FFF1D9',
-    primaryPale: '#FFF9EF',
-    gradientStart: '#754105',
-    gradientEnd: '#A85F08',
-    pageBg: '#F8F5EF',
-    surface: '#FFFFFF',
-    surfaceMuted: '#F3EBDD',
-    fieldBg: '#FCF9F4',
-    ink: '#2C251B',
-    muted: '#807568',
-    border: '#E8DFD2'
-  }
+  amethyst: palette('晶石紫＋米白', '#690DAD', '#690DAD', '#F7F3EA', '#EFE1F8'),
+  mars: palette('火星橙＋米白', '#EB6127', '#A43D15', '#F7F3EA', '#FBE7D9'),
+  ash: palette('星灰绿＋米白', '#003D37', '#003D37', '#F7F3EA', '#E0ECE5'),
+  splashed: palette('洒蓝＋米白', '#182876', '#182876', '#F7F3EA', '#E5E9F7'),
+  navy_orange: palette('深蓝＋爱马仕橙', '#000026', '#000026', '#FF770F', '#FF770F', true),
+  teal_rose: palette('马尔斯绿＋玫瑰粉', '#01847F', '#005C58', '#F9D2E4', '#F9D2E4', true),
+  prussian_mist: palette('普鲁士蓝＋雾灰', '#003153', '#003153', '#E5DDD7', '#E5DDD7', true),
+  klein_yellow: palette('克莱因蓝＋松花黄', '#002FA7', '#002FA7', '#FFE76F', '#FFE76F', true),
 };
+
+const RETIRED_COLORS = new Map([
+  ['jade', 'ash'],
+  ['ocean', 'splashed'],
+  ['amber', 'mars']
+]);
 
 const STYLE_SCHEMES = {
   flow: {
@@ -74,9 +56,9 @@ const STYLE_SCHEMES = {
 };
 
 const DEFAULT_APPEARANCE = Object.freeze({
-  color_scheme: 'jade',
+  color_scheme: 'ash',
   style_scheme: 'flow',
-  option_code: 'jade-flow',
+  option_code: 'ash-flow',
   owner_organization_id: null,
   owner_organization_name: ''
 });
@@ -86,9 +68,10 @@ const listeners = [];
 
 function normalize(value) {
   const source = value && typeof value === 'object' ? value : {};
-  const color = typeof source.color_scheme === 'string'
-    && Object.prototype.hasOwnProperty.call(COLOR_SCHEMES, source.color_scheme)
-    ? source.color_scheme
+  const requestedColor = RETIRED_COLORS.get(source.color_scheme) || source.color_scheme;
+  const color = typeof requestedColor === 'string'
+    && Object.prototype.hasOwnProperty.call(COLOR_SCHEMES, requestedColor)
+    ? requestedColor
     : DEFAULT_APPEARANCE.color_scheme;
   const style = typeof source.style_scheme === 'string'
     && Object.prototype.hasOwnProperty.call(STYLE_SCHEMES, source.style_scheme)
@@ -113,7 +96,14 @@ function personalSelection(value) {
 
 function readPersonalAppearance(key) {
   if (!key) return null;
-  try { return personalSelection(wx.getStorageSync(key)); } catch (e) { return null; }
+  try {
+    const saved = wx.getStorageSync(key);
+    if (!saved) return null;
+    return personalSelection({
+      ...saved,
+      color_scheme: RETIRED_COLORS.get(saved.color_scheme) || saved.color_scheme
+    });
+  } catch (e) { return null; }
 }
 
 function savePersonalAppearance(key, value) {
@@ -133,6 +123,7 @@ function styleVariables(appearance) {
   const style = STYLE_SCHEMES[selected.style_scheme];
   const variables = {
     '--ui-primary': color.primary,
+    '--ui-on-primary': color.onPrimary,
     '--ui-primary-strong': color.primaryStrong,
     '--ui-primary-bright': color.primaryBright,
     '--ui-primary-soft': color.primarySoft,
@@ -149,8 +140,8 @@ function styleVariables(appearance) {
     '--ui-card-radius': style.cardRadius,
     '--ui-panel-radius': style.panelRadius,
     '--ui-control-radius': style.controlRadius,
-    '--ui-card-shadow': style.cardShadow,
-    '--ui-border-width': style.borderWidth
+    '--ui-card-shadow': color.twoTone ? 'none' : style.cardShadow,
+    '--ui-border-width': color.twoTone ? '1rpx' : style.borderWidth
   };
   return Object.keys(variables)
     .map(key => `${key}:${variables[key]}`)
@@ -198,7 +189,7 @@ function viewModel(value) {
   const appearance = normalize(value || current);
   return {
     appearance,
-    className: `theme-color-${appearance.color_scheme} theme-style-${appearance.style_scheme}`,
+    className: `theme-color-${appearance.color_scheme} theme-style-${appearance.style_scheme}${COLOR_SCHEMES[appearance.color_scheme].twoTone ? ' theme-two-tone' : ''}`,
     style: styleVariables(appearance),
     color: COLOR_SCHEMES[appearance.color_scheme],
     design: STYLE_SCHEMES[appearance.style_scheme]

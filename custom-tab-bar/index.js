@@ -12,7 +12,7 @@ Component({
     hidden: false,
     badge: 0,
     items: ITEMS,
-    themeClass: 'theme-color-jade theme-style-flow',
+    themeClass: 'theme-color-ash theme-style-flow',
     themeStyle: ''
   },
 

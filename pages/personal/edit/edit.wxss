@@ -9,7 +9,7 @@
   margin-bottom: 28rpx;
   padding: 34rpx;
   border-radius: 24rpx;
-  background: #fff;
+  background: var(--ui-surface, #fff);
   box-shadow: 0 8rpx 30rpx rgba(0, 0, 0, 0.06);
 }
 
@@ -125,7 +125,7 @@
 }
 
 .save-button {
-  color: #fff;
+  color: var(--ui-on-primary, #fff);
   background: var(--ui-primary-bright);
   font-size: 32rpx;
 }

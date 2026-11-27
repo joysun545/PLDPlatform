@@ -52,7 +52,7 @@ function harness(route = applicationPage, options = {}) {
   if (route) {
     vm.runInNewContext(fs.readFileSync(path.join(root, route), 'utf8'), {
       getApp: () => app, wx, Page: value => { page = value; },
-      require: name => name.endsWith('/root-trial') ? helper : name.endsWith('/theme') ? { get: () => ({ color_scheme: 'jade' }) } : { sync() {} },
+      require: name => name.endsWith('/root-trial') ? helper : name.endsWith('/theme') ? { get: () => ({ color_scheme: 'ash' }) } : { sync() {} },
       console
     });
     page.data = plain(page.data);

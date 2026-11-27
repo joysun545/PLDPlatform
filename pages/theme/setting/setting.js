@@ -1,11 +1,11 @@
 const app = getApp();
 const theme = require('../../../utils/theme');
 
-const COLORS = [
-  { code: 'jade', name: '翡翠绿', description: '稳健、生命力、适合制造与全生命周期管理' },
-  { code: 'ocean', name: '深海蓝', description: '理性、精密、适合工业与技术型品牌' },
-  { code: 'amber', name: '琥珀金', description: '温暖、品质感、适合强调服务与品牌价值' }
-];
+const COLORS = Object.entries(theme.COLOR_SCHEMES).map(([code, color]) => ({
+  code,
+  name: color.name,
+  swatch: `background:linear-gradient(135deg,${color.reference} 50%,${color.pageBg} 50%);border:1rpx solid ${color.primary}`
+}));
 const STYLES = [
   { code: 'flow', name: '柔和流线', description: '大圆角、柔和渐变和轻盈卡片' },
   { code: 'order', name: '专业秩序', description: '规整边界、低阴影和信息密度优先' }
@@ -21,9 +21,10 @@ Page({
     editingRoot: null,
     colors: COLORS,
     styles: STYLES,
-    selectedColor: 'jade',
+    selectedColor: 'ash',
     selectedStyle: 'flow',
-    originalCode: 'jade-flow',
+    originalCode: 'ash-flow',
+    previewStyle: theme.styleVariables(theme.DEFAULT_APPEARANCE),
     errorMessage: ''
   },
 
@@ -76,8 +77,8 @@ Page({
           const styles = serverStyles.filter(item => item && ALLOWED_STYLE_CODES.has(item.code));
           this.setData({
             canManage: !!data.can_manage,
-            colors: data.options && data.options.colors || COLORS,
             styles: styles.length ? styles : STYLES,
+            previewStyle: theme.styleVariables(appearance),
             selectedColor: appearance.color_scheme,
             selectedStyle: appearance.style_scheme,
             originalCode: appearance.option_code
@@ -96,6 +97,7 @@ Page({
       loading: false,
       canManage: !!this._personalScope,
       editingRoot: app.globalData.operationRoot,
+      previewStyle: theme.styleVariables(appearance),
       selectedColor: appearance.color_scheme,
       selectedStyle: appearance.style_scheme,
       originalCode: appearance.option_code,
@@ -105,12 +107,22 @@ Page({
 
   selectColor(event) {
     if (!this.data.canManage || this.data.saving) return;
-    this.setData({ selectedColor: event.currentTarget.dataset.code });
+    const selectedColor = event.currentTarget.dataset.code;
+    if (!Object.prototype.hasOwnProperty.call(theme.COLOR_SCHEMES, selectedColor)) return;
+    this.setData({
+      selectedColor,
+      previewStyle: theme.styleVariables({ color_scheme: selectedColor, style_scheme: this.data.selectedStyle })
+    });
   },
 
   selectStyle(event) {
     if (!this.data.canManage || this.data.saving) return;
-    this.setData({ selectedStyle: event.currentTarget.dataset.code });
+    const selectedStyle = event.currentTarget.dataset.code;
+    if (!ALLOWED_STYLE_CODES.has(selectedStyle)) return;
+    this.setData({
+      selectedStyle,
+      previewStyle: theme.styleVariables({ color_scheme: this.data.selectedColor, style_scheme: selectedStyle })
+    });
   },
 
   save() {

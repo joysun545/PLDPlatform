@@ -1,9 +1,9 @@
 .page { min-height: 100vh; padding: 28rpx; box-sizing: border-box; background: var(--ui-page-bg); color: var(--ui-ink); }
-.state-card, .hero-card, .info-card, .result-card, .material-card, .privacy-card { margin-bottom: 24rpx; padding: 28rpx; border-radius: 22rpx; background: #fff; box-shadow: 0 10rpx 28rpx rgba(20,45,40,.06); }
+.state-card, .hero-card, .info-card, .result-card, .material-card, .privacy-card { margin-bottom: 24rpx; padding: 28rpx; border-radius: 22rpx; background: var(--ui-surface, #fff); box-shadow: 0 10rpx 28rpx rgba(20,45,40,.06); }
 .state-card { text-align: center; color: #66706d; }
 .state-card.error { color: #b83b2e; }
 .secondary-button { width: 240rpx; margin-top: 24rpx; color: var(--ui-primary); background: var(--ui-primary-soft); }
-.hero-card { color: #fff; background: linear-gradient(135deg, var(--ui-gradient-start), var(--ui-gradient-end)); }
+.hero-card { color: var(--ui-on-primary, #fff); background: linear-gradient(135deg, var(--ui-gradient-start), var(--ui-gradient-end)); }
 .hero-head, .material-head { display: flex; align-items: center; justify-content: space-between; gap: 18rpx; }
 .hero-title { font-size: 34rpx; font-weight: 700; }
 .status-pill { padding: 8rpx 16rpx; border-radius: 999rpx; color: var(--ui-primary-strong); background: var(--ui-primary-soft); font-size: 22rpx; }

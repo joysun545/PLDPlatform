@@ -1,9 +1,9 @@
 page { background: var(--ui-primary-pale); color: #17211d; }
 .page { min-height: 100vh; box-sizing: border-box; padding: 24rpx 24rpx 70rpx; }
-.state-card, .header-card, .case-card, .empty-card { border-radius: 22rpx; background: #fff; box-shadow: 0 10rpx 28rpx rgba(15, 77, 54, .07); }
+.state-card, .header-card, .case-card, .empty-card { border-radius: 22rpx; background: var(--ui-surface, #fff); box-shadow: 0 10rpx 28rpx rgba(15, 77, 54, .07); }
 .state-card, .empty-card { padding: 44rpx 28rpx; text-align: center; color: #718078; }
 .state-card.error { color: #b42318; }
-.header-card { padding: 30rpx; color: #fff; background: linear-gradient(135deg, var(--ui-gradient-start), var(--ui-gradient-end)); }
+.header-card { padding: 30rpx; color: var(--ui-on-primary, #fff); background: linear-gradient(135deg, var(--ui-gradient-start), var(--ui-gradient-end)); }
 .eyebrow, .route, .meta, .case-title, .case-route, .money-label, .money-value, .pair-box text, .detail-box text, .section-title, .section-tip, .candidate-no, .candidate-meta, .history-row text, .confirmed-money { display: block; }
 .eyebrow { font-size: 22rpx; opacity: .82; }
 .header-row, .case-head, .switch-row { display: flex; align-items: center; justify-content: space-between; }
@@ -43,10 +43,10 @@ page { background: var(--ui-primary-pale); color: #17211d; }
 .switch-row { margin-top: 18rpx; color: #475569; font-size: 24rpx; }
 .input { height: 82rpx; box-sizing: border-box; margin-top: 16rpx; padding: 0 20rpx; border: 1rpx solid #cbd5e1; border-radius: 13rpx; background: #f8fafc; font-size: 25rpx; }
 .primary-button, .secondary-button, .danger-button, .small-button, .link-button { margin-top: 16rpx; border-radius: 13rpx; font-size: 25rpx; }
-.primary-button { background: var(--ui-primary-strong); color: #fff; }
+.primary-button { background: var(--ui-primary-strong); color: var(--ui-on-primary, #fff); }
 .secondary-button { background: var(--ui-primary-soft); color: #047857; }
 .danger-button { background: #fff1f2; color: #be123c; }
-.small-button { background: var(--ui-primary-strong); color: #fff; }
+.small-button { background: var(--ui-primary-strong); color: var(--ui-on-primary, #fff); }
 .link-button { margin-left: 0; padding: 0; background: transparent; color: var(--ui-primary-strong); text-align: left; line-height: 54rpx; }
 .primary-button::after, .secondary-button::after, .danger-button::after, .small-button::after, .link-button::after { border: 0; }
 .confirm-amount { display: block; margin-top: 18rpx; color: var(--ui-primary-strong); font-size: 36rpx; font-weight: 700; }

@@ -12,7 +12,7 @@ page {
 .header-card,
 .section-card,
 .money-grid {
-  background: #fff;
+  background: var(--ui-surface, #fff);
   border-radius: 20rpx;
   box-shadow: 0 8rpx 24rpx rgba(15, 23, 42, 0.05);
 }
@@ -28,7 +28,7 @@ page {
 .header-card {
   padding: 30rpx;
   background: linear-gradient(135deg, var(--ui-gradient-start), var(--ui-gradient-end));
-  color: #fff;
+  color: var(--ui-on-primary, #fff);
 }
 
 .eyebrow,
@@ -109,7 +109,7 @@ page {
 
 .remark-input { margin-top: 18rpx; }
 .primary-button, .secondary-button, .link-button { margin-top: 18rpx; border-radius: 14rpx; font-size: 26rpx; }
-.primary-button { background: var(--ui-primary-strong); color: #fff; }
+.primary-button { background: var(--ui-primary-strong); color: var(--ui-on-primary, #fff); }
 .secondary-button { background: var(--ui-primary-soft); color: #047857; }
 .choice-row .secondary-button.half { width: 48%; margin: 18rpx 0 0; }
 .link-button { margin-left: 0; padding: 0; background: transparent; color: var(--ui-primary-strong); text-align: left; line-height: 60rpx; }

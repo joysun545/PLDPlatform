@@ -15,7 +15,7 @@
   margin-bottom: 24rpx;
   padding: 28rpx;
   border-radius: 22rpx;
-  background: #fff;
+  background: var(--ui-surface, #fff);
   box-shadow: 0 10rpx 28rpx rgba(20, 45, 40, 0.06);
 }
 
@@ -39,7 +39,7 @@
 .task-context-hint { display: block; margin-top: 9rpx; color: #68736f; font-size: 22rpx; line-height: 1.5; }
 .task-context-hint { color: var(--ui-primary); }
 
-.hero-card { color: #fff; background: linear-gradient(135deg, var(--ui-gradient-start), var(--ui-gradient-end)); }
+.hero-card { color: var(--ui-on-primary, #fff); background: linear-gradient(135deg, var(--ui-gradient-start), var(--ui-gradient-end)); }
 .hero-title,
 .hero-name,
 .hero-meta,
@@ -68,7 +68,7 @@
 
 .tabs { display: flex; margin-bottom: 24rpx; padding: 7rpx; border-radius: 18rpx; background: #e8eceb; }
 .tab { flex: 1; padding: 20rpx 8rpx; border-radius: 14rpx; color: #68716e; text-align: center; font-size: 25rpx; }
-.tab.active { color: var(--ui-primary); font-weight: 700; background: #fff; box-shadow: 0 5rpx 14rpx rgba(20, 45, 40, 0.08); }
+.tab.active { color: var(--ui-primary); font-weight: 700; background: var(--ui-surface, #fff); box-shadow: 0 5rpx 14rpx rgba(20, 45, 40, 0.08); }
 
 .list-card { border: 2rpx solid transparent; }
 .list-card.material { border-left: 7rpx solid #7c3aed; }

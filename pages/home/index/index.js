@@ -32,7 +32,7 @@ Page({
     showMyDevice: false,
     showQualityTrace: false,
     showThemeSettings: false,
-    iconTheme: 'jade'
+    iconTheme: 'ash'
   },
 
   onLoad() {
@@ -62,9 +62,7 @@ Page({
   updateButtons() {
     const role = (app.globalData.role || 'tourist').trim();
     const appearance = app.globalData.appearance || {};
-    const iconTheme = ['jade', 'ocean', 'amber'].includes(appearance.color_scheme)
-      ? appearance.color_scheme
-      : 'jade';
+    const iconTheme = appearance.color_scheme || 'ash';
 
     this.setData({
       iconTheme,

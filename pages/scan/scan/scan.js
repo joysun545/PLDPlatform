@@ -12,7 +12,7 @@ Page({
     nickname: '',
     role_name: '',
     isPlatformAdmin: false,
-    iconTheme: 'jade',
+    iconTheme: 'ash',
     scanning: false
   },
 
@@ -39,7 +39,7 @@ Page({
       nickname: app.globalData.nickname || '用户',
       role_name: app.globalData.role_name || '游客',
       isPlatformAdmin: !!app.globalData.is_platform_admin,
-      iconTheme: ['jade', 'ocean', 'amber'].includes(colorScheme) ? colorScheme : 'jade'
+      iconTheme: colorScheme
     });
   },
 

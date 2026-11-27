@@ -17,7 +17,7 @@
 
 .menu-item {
   width: 100%; 
-  background: white;
+  background: var(--ui-surface);
   border-radius: var(--ui-card-radius) !important;
   min-height: 240rpx;
   padding: 28rpx 20rpx;
@@ -53,7 +53,7 @@
 
 .menu-item text {
   font-size: 32rpx;
-  color: #333;
+  color: var(--ui-ink);
   font-weight: 500;
 }
 
@@ -80,7 +80,7 @@
 }
 
 .modal-content {
-  background: white;
+  background: var(--ui-surface);
   padding: 60rpx;
   border-radius: 30rpx;
   text-align: center;
@@ -93,7 +93,7 @@
 .modal-title {
   font-size: 44rpx;
   font-weight: bold;
-  color: #333;
+  color: var(--ui-ink);
   margin-bottom: 40rpx;
   display: block;
 }
@@ -119,7 +119,7 @@
 
 .close-btn {
   background: var(--ui-primary-strong);
-  color: white;
+  color: var(--ui-on-primary, white);
   font-size: 36rpx;
   padding: 25rpx 100rpx;
   border-radius: 60rpx;
@@ -155,7 +155,7 @@
   box-sizing: border-box;
   padding: 36rpx 32rpx 28rpx;
   border-radius: 24rpx;
-  background: #fff;
+  background: var(--ui-surface);
 }
 
 .manager-config-title {
@@ -189,7 +189,7 @@
 .manager-title-field input {
   margin-top: 12rpx;
   padding: 12rpx 0;
-  color: #333;
+  color: var(--ui-ink);
   font-size: 28rpx;
 }
 
@@ -235,7 +235,7 @@
 }
 
 .manager-confirm {
-  color: #fff;
+  color: var(--ui-on-primary, #fff);
   background-color: var(--ui-primary-strong, var(--ui-primary));
 }
 
@@ -288,7 +288,7 @@
   flex: 0 0 auto;
   box-sizing: border-box;
   border-radius: 999rpx;
-  color: #fff;
+  color: var(--ui-on-primary, #fff);
   background-color: var(--ui-primary-strong, var(--ui-primary));
   font-size: 28rpx;
 }
@@ -313,7 +313,7 @@
 }
 
 .manager-share-btn {
-  color: #fff;
+  color: var(--ui-on-primary, #fff);
   background-color: var(--ui-primary-strong, var(--ui-primary));
 }
 

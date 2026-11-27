@@ -9,10 +9,10 @@ const appConfig = require(path.join(ROOT, 'app.json'));
 const theme = require(path.join(ROOT, 'utils/theme'));
 const { ROUTES } = require(path.join(ROOT, 'utils/theme-routes'));
 
-test('three colours and two supported styles produce exactly six valid combinations', () => {
+test('eight palettes and two supported styles produce sixteen valid combinations', () => {
   const colors = Object.keys(theme.COLOR_SCHEMES);
   const styles = Object.keys(theme.STYLE_SCHEMES);
-  assert.deepEqual(colors, ['jade', 'ocean', 'amber']);
+  assert.deepEqual(colors, ['amethyst', 'mars', 'ash', 'splashed', 'navy_orange', 'teal_rose', 'prussian_mist', 'klein_yellow']);
   assert.deepEqual(styles, ['flow', 'order']);
   const codes = new Set();
   for (const color_scheme of colors) {
@@ -24,10 +24,17 @@ test('three colours and two supported styles produce exactly six valid combinati
       assert.match(variables, /--ui-card-radius:/);
       assert.match(variables, /--ui-surface:/);
       assert.match(variables, /--ui-field-bg:/);
+      const palette = theme.COLOR_SCHEMES[color_scheme];
+      if (palette.twoTone) {
+        assert.equal(palette.surface, palette.pageBg);
+        assert.equal(palette.fieldBg, palette.pageBg);
+        assert.equal(palette.onPrimary, palette.pageBg);
+        assert.equal(palette.ink, palette.primary);
+      }
     }
   }
-  assert.equal(codes.size, 6);
-  assert.equal(theme.normalize({ color_scheme: 'amber', style_scheme: 'layer' }).style_scheme, 'flow');
+  assert.equal(codes.size, 16);
+  assert.equal(theme.normalize({ color_scheme: 'mars', style_scheme: 'layer' }).style_scheme, 'flow');
 });
 
 test('every registered page has one explicit hierarchy and uses the theme shell', () => {
@@ -211,11 +218,17 @@ test('custom tab icons use local-resource-safe WXSS primitives', () => {
   assert.equal(/background(?:-image)?\s*:\s*url\(/.test(styles), false);
 });
 
-test('secondary page invitation and scan pictograms have all three theme variants', () => {
-  for (const scheme of ['jade', 'ocean', 'amber']) {
+test('secondary page invitation and scan pictograms have all eight theme variants', () => {
+  for (const scheme of Object.keys(theme.COLOR_SCHEMES)) {
     for (const icon of ['invite-role.png', 'scan-qrcode.png']) {
       const asset = path.join(ROOT, 'images', 'theme_icons', scheme, icon);
       assert.ok(fs.existsSync(asset), `missing themed icon: ${scheme}/${icon}`);
+    }
+  }
+  const home = fs.readFileSync(path.join(ROOT, 'pages/home/index/index.wxml'), 'utf8');
+  for (const [, icon] of home.matchAll(/menu_icons\/\{\{iconTheme\}\}\/([^"]+\.png)/g)) {
+    for (const scheme of Object.keys(theme.COLOR_SCHEMES)) {
+      assert.ok(fs.existsSync(path.join(ROOT, 'images', 'menu_icons', scheme, icon)), `missing ${scheme}/${icon}`);
     }
   }
   const invite = fs.readFileSync(path.join(ROOT, 'pages/home/invite/invite/invite.wxml'), 'utf8');

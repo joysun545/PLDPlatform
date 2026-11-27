@@ -11,10 +11,9 @@
       <text class="section-title">第一步 · 选择色系</text>
       <view class="option-list">
         <view wx:for="{{colors}}" wx:key="code" class="option color-option color-{{item.code}} {{selectedColor === item.code ? 'selected' : ''}}" data-code="{{item.code}}" bindtap="selectColor">
-          <view class="color-swatch"></view>
+          <view class="color-swatch" style="{{item.swatch}}"></view>
           <view class="option-copy">
             <text class="option-name">{{item.name}}</text>
-            <text class="option-description">{{item.description}}</text>
           </view>
           <text class="check">{{selectedColor === item.code ? '✓' : ''}}</text>
         </view>
@@ -35,10 +34,9 @@
       </view>
     </view>
 
-    <view class="combination-card color-{{selectedColor}} style-{{selectedStyle}}">
+    <view class="combination-card style-{{selectedStyle}}" style="{{previewStyle}}">
       <text class="combination-label">当前组合预览</text>
-      <text class="combination-code">{{selectedColor}} × {{selectedStyle}}</text>
-      <view class="mock-card"><text>页面头部</text><text>内容卡片与操作按钮</text></view>
+      <view class="mock-card"><image class="preview-icon" src="/images/menu_icons/{{selectedColor}}/order-plans.png" mode="aspectFit" /><text>订单计划</text></view>
     </view>
 
     <button wx:if="{{canManage}}" class="save-button" loading="{{saving}}" disabled="{{saving}}" bindtap="save">{{organizationMode ? '保存组织默认主题' : '保存个人主题'}}</button>

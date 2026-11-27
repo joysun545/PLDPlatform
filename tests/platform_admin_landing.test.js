@@ -45,7 +45,7 @@ function loadPage(rel, app, wx, getCurrentPages = () => []) {
   const sync = tabSync(app);
   vm.runInNewContext(read(rel), {
     Page: value => { page = value; }, getApp: () => app, wx, getCurrentPages,
-    require: name => name.endsWith('/tab-bar') ? { sync } : name.endsWith('/theme') ? { get: () => ({ color_scheme: 'jade' }) } : {},
+    require: name => name.endsWith('/tab-bar') ? { sync } : name.endsWith('/theme') ? { get: () => ({ color_scheme: 'ash' }) } : {},
     console
   });
   page.data = plain(page.data || {});
@@ -181,7 +181,7 @@ test('same OpenID handover clears merchant root, task cache and late task respon
     ...oldAdmin, role: 'merchant_owner', role_name: '商家负责人', is_platform_admin: false,
     organization_id: 18, organization_name: '原直属商家', company_name: '原直属商家',
     factory_root_id: 2, factory_root_name: '原厂家',
-    appearance: { color_scheme: 'jade', style_scheme: 'flow', owner_organization_id: 18, owner_organization_name: '原直属商家' }
+    appearance: { color_scheme: 'ash', style_scheme: 'flow', owner_organization_id: 18, owner_organization_name: '原直属商家' }
   };
   const h = appHarness(merchant);
   h.app.restoreUserFromCache();

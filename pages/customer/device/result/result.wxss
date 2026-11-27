@@ -3,7 +3,7 @@ page { background: #f3f6f8; color: #17202a; }
 .state { margin-top: 180rpx; text-align: center; color: #718096; }
 .state.error { display: flex; flex-direction: column; gap: 20rpx; }
 .state-title { color: #d64545; font-size: 34rpx; font-weight: 700; }
-.hero { padding: 34rpx; border-radius: 24rpx; color: #fff; background: linear-gradient(145deg, var(--ui-gradient-start), var(--ui-gradient-end)); box-shadow: 0 14rpx 30rpx rgba(7,143,121,.2); display: flex; flex-direction: column; gap: 8rpx; }
+.hero { padding: 34rpx; border-radius: 24rpx; color: var(--ui-on-primary, #fff); background: linear-gradient(145deg, var(--ui-gradient-start), var(--ui-gradient-end)); box-shadow: 0 14rpx 30rpx rgba(7,143,121,.2); display: flex; flex-direction: column; gap: 8rpx; }
 .hero.activated { background: linear-gradient(145deg, var(--ui-gradient-start), var(--ui-gradient-end)); }
 .hero-top { display: flex; justify-content: space-between; margin-bottom: 14rpx; }
 .badge, .state-badge { padding: 8rpx 14rpx; border-radius: 999rpx; background: rgba(255,255,255,.18); font-size: 23rpx; }
@@ -12,7 +12,7 @@ page { background: #f3f6f8; color: #17202a; }
 .device-sn { margin-top: 15rpx; padding-top: 15rpx; border-top: 1rpx solid rgba(255,255,255,.25); font-family: monospace; }
 .list-btn { margin: 18rpx 0 0; padding: 0; color: var(--ui-primary); background: transparent; text-align: left; font-size: 25rpx; line-height: 58rpx; }
 .list-btn::after { border: 0; }
-.card, .activate-card, .activated-card { margin-top: 24rpx; padding: 28rpx; background: #fff; border-radius: 20rpx; box-shadow: 0 8rpx 22rpx rgba(31,45,61,.06); }
+.card, .activate-card, .activated-card { margin-top: 24rpx; padding: 28rpx; background: var(--ui-surface, #fff); border-radius: 20rpx; box-shadow: 0 8rpx 22rpx rgba(31,45,61,.06); }
 .card-title { margin-bottom: 18rpx; font-size: 30rpx; font-weight: 700; }
 .card-title-row { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; }
 .card-title-row .card-title { margin-bottom: 0; }
@@ -31,7 +31,7 @@ page { background: #f3f6f8; color: #17202a; }
 .device-code-scan { margin-top: 8rpx; }
 .scanned-code { display: block; margin-top: 18rpx; color: var(--ui-primary); font-family: monospace; word-break: break-all; }
 .scan-code-btn { margin-top: 18rpx; color: var(--ui-primary); background: var(--ui-primary-soft); border-radius: var(--ui-control-radius); }
-.activate-btn { margin-top: 24rpx; height: 88rpx; line-height: 88rpx; color: #fff; background: var(--ui-primary-strong); border-radius: 14rpx; font-weight: 700; }
+.activate-btn { margin-top: 24rpx; height: 88rpx; line-height: 88rpx; color: var(--ui-on-primary, #fff); background: var(--ui-primary-strong); border-radius: 14rpx; font-weight: 700; }
 .activate-btn[disabled] { color: #789187; background: #dbe8e2; }
 .activated-card { color: #176d47; background: #ebf9f1; line-height: 1.7; }
 .activated-title { display: block; margin-bottom: 10rpx; font-size: 31rpx; font-weight: 700; }
@@ -65,7 +65,7 @@ page { background: #f3f6f8; color: #17202a; }
 .timeline-route, .timeline-meta { display: block; margin-top: 8rpx; color: #69767f; font-size: 23rpx; line-height: 1.5; }
 .timeline-meta { color: #929ca3; font-size: 21rpx; }
 .aftersale-btn { margin-top: 24rpx; color: #fff; background: #07a85c; border-radius: 14rpx; }
-.home-btn, .secondary-btn { margin: 28rpx 0 48rpx; color: #44515c; background: #fff; border-radius: 14rpx; }
+.home-btn, .secondary-btn { margin: 28rpx 0 48rpx; color: #44515c; background: var(--ui-surface, #fff); border-radius: 14rpx; }
 
 
 .fold-header { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; min-height: 44rpx; }

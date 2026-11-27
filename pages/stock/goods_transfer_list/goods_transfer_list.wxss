@@ -13,7 +13,7 @@ page {
 .state-card,
 .flow-card {
   border-radius: 22rpx;
-  background: #fff;
+  background: var(--ui-surface, #fff);
   box-shadow: 0 10rpx 28rpx rgba(15, 77, 54, 0.07);
 }
 
@@ -23,7 +23,7 @@ page {
   justify-content: space-between;
   padding: 30rpx;
   background: linear-gradient(135deg, var(--ui-gradient-start), var(--ui-gradient-end));
-  color: #fff;
+  color: var(--ui-on-primary, #fff);
 }
 
 .eyebrow,

@@ -22,7 +22,7 @@
 .action-row { display: flex; gap: 18rpx; margin-top: 8rpx; }
 .action-row button { display: flex; flex: 1; min-width: 0; min-height: 88rpx; align-items: center; justify-content: center; box-sizing: border-box; margin: 0; padding: 0 12rpx; border-radius: 999rpx; font-size: 27rpx; font-weight: 600; line-height: 1.4; text-align: center; }
 .action-row button[disabled] { opacity: .62; }
-.approve-button { color: #fff; background: var(--ui-primary, #079b69); }
+.approve-button { color: var(--ui-on-primary, #fff); background: var(--ui-primary, #079b69); }
 .reject-button { color: var(--ui-primary, #079b69); background: var(--ui-primary-soft, #eaf7f2); }
 .error-card .secondary-button { align-self: center; }
 button::after { border: 0; }

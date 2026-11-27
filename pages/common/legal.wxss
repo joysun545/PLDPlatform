@@ -5,7 +5,7 @@
   margin: 0 auto;
   padding: 32rpx 36rpx 64rpx;
   color: #17211d;
-  background: #fff;
+  background: var(--ui-surface, #fff);
 }
 
 .legal-title {

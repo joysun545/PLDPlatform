@@ -33,14 +33,14 @@ page { background: var(--ui-page-bg); color: var(--ui-ink); }
 .phone-missing { margin: 10rpx 0 0; color: #b54708; }
 .notice-section { margin-top: 34rpx; padding: 22rpx; background: var(--ui-primary-soft); border-radius: var(--ui-control-radius); }
 .notice-item { display: flex; align-items: flex-start; gap: 12rpx; margin: 12rpx 0; }
-.notice-index { display: flex; width: 34rpx; height: 34rpx; flex: 0 0 34rpx; align-items: center; justify-content: center; color: #fff; background: var(--ui-primary-strong); border-radius: 50%; font-size: 20rpx; }
+.notice-index { display: flex; width: 34rpx; height: 34rpx; flex: 0 0 34rpx; align-items: center; justify-content: center; color: var(--ui-on-primary, #fff); background: var(--ui-primary-strong); border-radius: 50%; font-size: 20rpx; }
 .notice-copy { color: var(--ui-ink); font-size: 23rpx; line-height: 1.55; }
 .agree-row { display: flex; align-items: center; margin-top: 20rpx; color: var(--ui-primary-strong); font-size: 24rpx; }
 .submit-feedback { margin-top: 24rpx; padding: 16rpx 20rpx; color: var(--ui-primary-strong); background: var(--ui-primary-soft); border: 1rpx solid var(--ui-border); border-radius: var(--ui-control-radius); font-size: 24rpx; line-height: 1.5; }
 .submit-feedback.error { color: #9f1d18; background: #fff1f0; border-color: #f3c2bf; }
 .submit-feedback.pending { color: var(--ui-muted); background: var(--ui-field-bg); }
 .submit-feedback.success { color: var(--ui-primary-strong); background: var(--ui-primary-soft); }
-.submit-button { margin: 28rpx 0 4rpx; color: #fff; background: var(--ui-primary-strong); border-radius: var(--ui-control-radius); font-size: 28rpx; }
+.submit-button { margin: 28rpx 0 4rpx; color: var(--ui-on-primary, #fff); background: var(--ui-primary-strong); border-radius: var(--ui-control-radius); font-size: 28rpx; }
 .submit-button[disabled] { opacity: .6; }
 .notice-title { display: block; margin-bottom: 12rpx; color: var(--ui-primary-strong); font-size: 29rpx; font-weight: 700; }
 .notice-card .notice-copy { display: block; color: var(--ui-muted); }

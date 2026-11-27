@@ -15,14 +15,14 @@
   margin-bottom: 24rpx;
   padding: 28rpx;
   border-radius: 22rpx;
-  background: #fff;
+  background: var(--ui-surface, #fff);
   box-shadow: 0 10rpx 28rpx rgba(20, 45, 40, 0.06);
 }
 
 .state-card { text-align: center; color: #66706d; }
 .state-card.error { color: #b83b2e; }
 .secondary-button { width: 240rpx; margin-top: 24rpx; color: var(--ui-primary); background: var(--ui-primary-soft); }
-.hero-card { color: #fff; background: linear-gradient(135deg, var(--ui-gradient-start), var(--ui-gradient-end)); }
+.hero-card { color: var(--ui-on-primary, #fff); background: linear-gradient(135deg, var(--ui-gradient-start), var(--ui-gradient-end)); }
 .hero-head,
 .material-head { display: flex; align-items: center; justify-content: space-between; gap: 18rpx; }
 .hero-title { font-size: 34rpx; font-weight: 700; }
@@ -55,7 +55,7 @@
 .material-line,
 .material-note { margin-top: 12rpx; color: #67736f; font-size: 23rpx; line-height: 1.55; }
 .material-note { padding: 14rpx; border-radius: 10rpx; color: var(--ui-ink); background: var(--ui-primary-soft); }
-.primary-button { margin-top: 24rpx; border-radius: 14rpx; color: #fff; background: var(--ui-primary); font-size: 28rpx; }
+.primary-button { margin-top: 24rpx; border-radius: 14rpx; color: var(--ui-on-primary, #fff); background: var(--ui-primary); font-size: 28rpx; }
 .complete-card { color: var(--ui-primary-strong); background: var(--ui-primary-soft); }
 .primary-button::after,
 .secondary-button::after { border: 0; }

@@ -4,7 +4,7 @@ const app = getApp();
 Page({
   data: {
     themeStyle: '',
-    iconTheme: 'jade',
+    iconTheme: 'ash',
     availableRoles: [],
     isPlatformAdmin: false,
     factoryInvitationForm: { organization_name: '', region: '', address: '' },
