@@ -602,7 +602,7 @@ test('order plan list keeps wx:else separate from its repeated plan card', () =>
   assert.doesNotMatch(template, /wx:else\s+wx:for=/);
 });
 
-test('all factory V2 awareness roles retain the order-plan entry on the home page', () => {
+test('current factory V2 awareness roles retain the order-plan entry on the home page', () => {
   let page;
   const app = {
     globalData: { role: 'factory_admin', role_name: '厂家负责人', nickname: '测试', real_name: '测试' },
@@ -622,11 +622,14 @@ test('all factory V2 awareness roles retain the order-plan entry on the home pag
   page.data = JSON.parse(JSON.stringify(page.data || {}));
   page.setData = values => Object.assign(page.data, values);
 
-  for (const role of ['factory_admin', 'factory_manager', 'factory_chief_engineer']) {
+  for (const role of ['factory_admin', 'factory_chief_engineer']) {
     app.globalData.role = role;
     page.updateButtons();
     assert.equal(page.data.showOrderPlanList, true, role);
   }
+  app.globalData.role = 'factory_manager';
+  page.updateButtons();
+  assert.equal(page.data.showOrderPlanList, false);
   const source = fs.readFileSync(path.join(root, 'pages/home/index/index.wxml'), 'utf8');
   assert.match(source, /厂家成品库存/);
 });

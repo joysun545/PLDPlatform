@@ -46,6 +46,11 @@
       <text>订单计划列表</text>
     </view>
 
+    <view class="menu-item" bindtap="goFactoryPayments" wx:if="{{showFactoryPayments}}">
+      <image src="/images/menu_icons/{{iconTheme}}/order-plans.png" class="icon" mode="aspectFit" />
+      <text>{{factoryPaymentsTitle}}</text>
+    </view>
+
     <!-- 供应商负责人配置本组织销售经理责任范围 -->
     <view class="menu-item" bindtap="goSupplierResponsibility" wx:if="{{showSupplierResponsibility}}">
       <image src="/images/menu_icons/{{iconTheme}}/supplier-responsibility.png" class="icon" mode="aspectFit" />

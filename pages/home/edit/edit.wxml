@@ -59,6 +59,20 @@
         >{{item.channel && item.channel.configured ? '已配置' : '待配置'}}</text>
       </view>
 
+      <view wx:if="{{manager.is_owner_role && item.organization.id === manager.organization_id && (item.role.code === 'factory_senior_manager' || item.role.code === 'merchant_senior_manager')}}">
+        <button class="secondary-button small" data-user-id="{{item.user.id}}" bindtap="openManagedRoles">设置分管岗位</button>
+        <view wx:if="{{managedRoleEditor.managerId === item.user.id}}">
+          <checkbox-group bindchange="selectManagedRoles">
+            <label class="info-row" wx:for="{{managedRoleEditor.options}}" wx:for-item="roleOption" wx:key="code">
+              <checkbox value="{{roleOption.code}}" checked="{{roleOption.selected}}" disabled="{{roleOption.reserved || managedRoleEditor.saving}}" />
+              <text>{{roleOption.name}}{{roleOption.reserved ? '（已有分管人）' : ''}}</text>
+            </label>
+          </checkbox-group>
+          <button class="secondary-button small" disabled="{{managedRoleEditor.saving}}" bindtap="closeManagedRoles">取消</button>
+          <button class="primary-button small" loading="{{managedRoleEditor.saving}}" disabled="{{managedRoleEditor.saving}}" bindtap="saveManagedRoles">保存</button>
+        </view>
+      </view>
+
       <view class="info-list">
         <view class="info-row">
           <text class="info-label">所属组织</text>

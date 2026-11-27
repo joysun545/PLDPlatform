@@ -15,7 +15,7 @@
       <view class="finance-account" wx:for="{{financeAccounts}}" wx:key="key">
         <view class="finance-head"><text class="finance-counterparty">{{item.counterparty_name}}</text><text class="finance-side {{item.side === 'PAYABLE' ? 'payable' : ''}}">{{item.sideName}}</text></view>
         <view class="warehouse-subtitle">{{item.sourceName}} · {{item.document_count}} 单</view>
-        <view class="finance-balance"><text>{{item.side === 'PAYABLE' ? '当前未付余额' : '当前未收余额'}}</text><text>¥{{item.outstanding_amount}}</text></view>
+        <view class="finance-balance"><text>{{item.side === 'PAYABLE' ? '应付往来余额' : '应收往来余额'}}</text><text>¥{{item.balance_amount}}</text></view>
         <view class="finance-numbers">
           <view><text>{{item.side === 'PAYABLE' ? '原始应付' : '原始应收'}}</text><text>¥{{item.receivable_amount}}</text></view>
           <view><text>{{item.side === 'PAYABLE' ? '对方确认收款' : '确认到账'}}</text><text>¥{{item.received_amount}}</text></view>

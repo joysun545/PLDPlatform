@@ -33,6 +33,12 @@
         </view>
         <button wx:if="{{vehicle.can_share_driver}}" class="share-btn" open-type="share" data-token="{{vehicle.shareToken}}" data-vehicle="{{vehicle.vehicle_no}}" disabled="{{!vehicle.shareToken}}">一键分享给司机</button>
       </view>
+      <view wx:if="{{vehicle.can_share_driver}}">
+        <view class="vehicle-head" wx:for="{{vehicle.shared_drivers}}" wx:for-item="driver" wx:key="user_id">
+          <text class="sharing-text">{{driver.nickname}}</text>
+          <button class="share-btn" bindtap="revokeDriverShare" data-vehicle-id="{{vehicle.id}}" data-driver-id="{{driver.user_id}}" data-name="{{driver.nickname}}" disabled="{{revokingDriver}}">取消分享</button>
+        </view>
+      </view>
     <view class="device-card" wx:for="{{vehicle.devices}}" wx:key="id" data-id="{{item.id}}" bindtap="openDevice">
       <view class="device-head">
         <view class="device-heading">

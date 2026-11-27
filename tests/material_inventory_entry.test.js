@@ -88,6 +88,8 @@ test('returning from background preserves authorized material pages and redirect
   });
   for (const role of ['factory_material_stock', 'supplier_owner', 'supplier_sales', 'factory_logistics', 'tourist']) {
     app.globalData.role = role;
+    app.globalData.openid = "test-openid";
+    app.globalData.access_token = "test-token";
     for (const name of ['list', 'detail', 'form', 'warranty_list']) {
       currentRoute = `pages/material_inventory/${name}/${name}`;
       navigations.length = 0;

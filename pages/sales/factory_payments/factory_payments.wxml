@@ -1,0 +1,56 @@
+<theme-shell title-eyebrow="{{title}}">
+  <view class="payments-page">
+    <text wx:if="{{loading}}">正在读取厂家往来账…</text>
+    <view wx:elif="{{error}}">
+      <text>{{error}}</text>
+      <button bindtap="load">重新加载</button>
+    </view>
+    <text wx:elif="{{!accounts.length}}">暂无可办理的厂家直属往来账</text>
+    <view class="account-card" wx:for="{{accounts}}" wx:for-item="account" wx:key="merchant_id">
+      <text class="heading">{{account.can_submit ? account.factory_name : account.merchant_name}}</text>
+      <text>订单 {{account.order_count}} 单</text>
+      <text>订单应收 ¥{{account.receivable_amount}}</text>
+      <button wx:if="{{!account.can_submit}}" size="mini" data-id="{{account.merchant_id}}" bindtap="toggleAccount">{{expanded[account.merchant_id] ? '收起明细' : '展开明细'}}</button>
+      <block wx:if="{{account.can_submit || expanded[account.merchant_id]}}">
+      <text>累计设备应收 ¥{{account.device_receivable}} · 累计配件应收 ¥{{account.accessory_receivable}}</text>
+      <text wx:if="{{account.unclassified_receivable && account.unclassified_receivable !== '0.00'}}">历史未拆分应收 ¥{{account.unclassified_receivable}}</text>
+      <text>确认收款 ¥{{account.received_amount}}</text>
+      <text>退货冲抵 ¥{{account.return_credit_amount}}</text>
+      <text>往来余额 ¥{{account.balance_amount}}</text>
+      <text wx:if="{{account.is_prepaid}}" class="note">负数为直属商家余款，可用于后续订单</text>
+      <button wx:if="{{account.can_submit}}" data-factory="{{account.factory_id}}" bindtap="chooseVoucher" disabled="{{busy}}">选择付款凭证</button>
+      <view wx:if="{{draft && draft.factoryId === account.factory_id}}" class="payment-row">
+        <image src="{{draft.filePath}}" mode="aspectFit" class="voucher-preview" />
+        <button bindtap="submitVoucher" loading="{{busy}}" disabled="{{busy}}">提交付款凭证</button>
+        <button bindtap="clearVoucher" disabled="{{busy}}">取消</button>
+      </view>
+      <view id="order-{{order.id}}" class="payment-row" wx:for="{{account.orders}}" wx:for-item="order" wx:key="id">
+        <text>{{order.code}} · {{order.status}}</text>
+        <text wx:if="{{order.receivable !== null}}">应收 ¥{{order.receivable}} · 已收 ¥{{order.received || '0.00'}} · 冲抵 ¥{{order.credit || '0.00'}} · 余额 ¥{{order.outstanding || '—'}}</text>
+        <text wx:else>应收待确认</text>
+        <text wx:if="{{order.device_subtotal != null}}">设备 ¥{{order.device_subtotal}} · 配件 ¥{{order.accessory_subtotal}}</text>
+        <button wx:if="{{order.can_price}}" size="mini" data-id="{{order.id}}" bindtap="openQuote" disabled="{{busy}}">查看计价清单</button>
+        <view wx:if="{{quote && quote.id === order.id}}" class="quote-details">
+          <text wx:if="{{quote.version}}">档位 {{quote.version}}</text>
+          <text wx:for="{{quote.lines}}" wx:for-item="line" wx:key="line_key">{{line.name}} × {{line.quantity}}{{line.unit}} · {{line.unit_price == null ? '待维护价格' : '¥' + line.unit_price}} · {{line.subtotal == null ? '—' : '¥' + line.subtotal}}</text>
+          <text wx:if="{{quote.device_subtotal != null}}">设备应收 ¥{{quote.device_subtotal}}</text>
+          <text wx:if="{{quote.accessory_subtotal != null}}">配件应收 ¥{{quote.accessory_subtotal}}</text>
+          <text wx:if="{{quote.total !== null}}">本单合计 ¥{{quote.total}}</text>
+          <text wx:if="{{quote.blocked_reason}}">{{quote.blocked_reason}}</text>
+          <text wx:elif="{{!quote.can_confirm && !quote.confirmed}}">请先在 Web 维护商家档位和型号价格。</text>
+          <button wx:if="{{quote.can_confirm}}" bindtap="confirmQuote" disabled="{{busy}}">确认应收</button>
+          <button bindtap="copyPricingWebLink">复制 Web 工作台地址</button>
+        </view>
+      </view>
+      <view class="payment-row" wx:for="{{account.order_payments}}" wx:for-item="row" wx:key="id">
+        <text>原订单付款 · {{row.order_code}} · {{row.amount === null ? '待确认' : '¥' + row.amount}}</text>
+      </view>
+      <view id="payment-{{payment.id}}" class="payment-row" wx:for="{{account.payments}}" wx:for-item="payment" wx:key="id">
+        <text>{{payment.is_credit ? '退货冲抵' : (payment.amount === null ? '待确认收款' : '已确认收款')}} {{payment.amount === null ? '' : '¥' + payment.amount}}</text>
+        <button wx:if="{{payment.voucher_url}}" size="mini" data-url="{{payment.voucher_url}}" bindtap="viewVoucher">查看凭证</button>
+        <button wx:if="{{payment.can_confirm}}" size="mini" data-id="{{payment.id}}" bindtap="confirmPayment" disabled="{{busy}}">确认实际到账</button>
+      </view>
+      </block>
+    </view>
+  </view>
+</theme-shell>

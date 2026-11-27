@@ -153,24 +153,7 @@
           <text>{{triage.candidates[triage.candidateIndex].role_name}}　{{triage.candidates[triage.candidateIndex].phone}}</text>
           <text>{{triage.candidates[triage.candidateIndex].address || triage.candidates[triage.candidateIndex].unavailable_reason}}</text>
         </view>
-        <block wx:if="{{triage.route === 'THIRD_PARTY'}}">
-          <input class="field" data-field="thirdPartyName" bindinput="onTriageThirdInput" placeholder="第三方维修店名称" />
-          <input class="field" data-field="thirdPartyContactName" bindinput="onTriageThirdInput" placeholder="联系人姓名（可选）" />
-          <input class="field" data-field="thirdPartyPhone" bindinput="onTriageThirdInput" placeholder="联系电话" />
-          <input class="field" data-field="thirdPartyAddress" bindinput="onTriageThirdInput" placeholder="详细地址" />
-        </block>
-        <block wx:if="{{triage.route === 'REMOTE'}}">
-          <text class="subheading">远程排障直接结案信息</text>
-          <picker range="{{detail.final_fault_types}}" range-key="label" bindchange="onFinalFault"><view class="picker">最终故障类型：{{finalForm.faultIndex >= 0 ? detail.final_fault_types[finalForm.faultIndex].label : '请选择'}}</view></picker>
-          <picker range="{{detail.solution_types}}" range-key="label" bindchange="onFinalSolution"><view class="picker">最终解决方案：{{finalForm.solutionIndex >= 0 ? detail.solution_types[finalForm.solutionIndex].label : '请选择'}}</view></picker>
-          <checkbox-group bindchange="onFinalMaterials"><label class="check-row" wx:for="{{detail.final_material_options}}" wx:key="material_id"><checkbox value="{{item.bom_item_id || item.material_id}}" />{{item.material_name}} {{item.specification_name}}</label></checkbox-group>
-          <view wx:for="{{finalForm.causeRows}}" wx:key="materialId" class="cause-row">
-            <picker wx:if="{{item.causes.length}}" range="{{item.causes}}" range-key="label" data-material-id="{{item.materialId}}" bindchange="onFinalCause"><view class="picker">{{item.materialName}}根因：{{item.causeIndex >= 0 ? item.causes[item.causeIndex].label : '请选择'}}</view></picker>
-            <text wx:else class="tip">{{item.materialName}}尚未维护根因列表</text>
-          </view>
-          <textarea value="{{finalForm.solutionNote}}" bindinput="onFinalNote" placeholder="填写最终解决方案说明"></textarea>
-        </block>
-        <button loading="{{submitting}}" disabled="{{submitting}}" bindtap="submitTriage">{{triage.route === 'SERVICE_STATION' ? '确认并通知厂家与服务站' : '确认认定并派送/结案'}}</button>
+        <button loading="{{submitting}}" disabled="{{submitting}}" bindtap="submitTriage">{{triage.route === 'SERVICE_STATION' ? '确认并通知厂家与服务站' : '确认认定并派工'}}</button>
       </block>
     </view>
 
@@ -482,7 +465,7 @@
           <picker wx:if="{{item.causes.length}}" range="{{item.causes}}" range-key="label" data-material-id="{{item.materialId}}" bindchange="onFinalCause"><view class="picker">{{item.materialName}}根因：{{item.causeIndex >= 0 ? item.causes[item.causeIndex].label : '请选择'}}</view></picker>
           <text wx:else class="tip">{{item.materialName}}尚未维护根因列表</text>
         </view>
-        <textarea value="{{finalForm.solutionNote}}" bindinput="onFinalNote" placeholder="最终解决方案、责任归因及后续建议"></textarea>
+        <textarea value="{{finalForm.solutionNote}}" bindinput="onFinalNote" placeholder="最终解决方案、责任归因及后续建议（可注明远程排障情况）"></textarea>
         <button loading="{{submitting}}" disabled="{{submitting}}" bindtap="submitFactoryClose">{{detail.factory_transport ? '确认归因，交厂家物流返件' : '确认整个售后服务完成'}}</button>
       </block>
     </view>

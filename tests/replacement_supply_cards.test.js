@@ -14,11 +14,18 @@ function setup(route) {
   const requests = [];
   const routes = [];
   const scrolls = [];
+  const timers = new Map();
+  let timerId = 0;
   const identity = { openid: 'merchant-stock', access_token: 'access', organization_id: 18, role: 'merchant_stock',
     factory_root_id: 1, operationRoot: { id: 1 }, apiBase: '/api' };
   vm.runInNewContext(fs.readFileSync(path.resolve(__dirname, '../' + route + '.js'), 'utf8'), {
     getApp: () => ({ globalData: identity, authHeader: () => ({}), ensureLogin: done => done(true) }),
     Page: value => { page = value; },
+    setInterval: (callback, delay) => {
+      timers.set(++timerId, { callback, delay });
+      return timerId;
+    },
+    clearInterval: id => timers.delete(id),
     wx: {
       request: options => requests.push(options),
       navigateTo: options => routes.push(options.url),
@@ -30,7 +37,7 @@ function setup(route) {
     Object.assign(page.data, values);
     if (callback) callback();
   };
-  return { page, requests, routes, scrolls, identity };
+  return { page, requests, routes, scrolls, identity, timers };
 }
 
 function finish(request, data) {
@@ -80,6 +87,26 @@ test('normal receipt and receivable keep 10 sales machines separate from the sin
   assert.equal(s.page.data.shipments[0].status, 'RECEIVED');
   assert.equal(s.page.data.shipments[0].quantityText, '10 台');
   assert.equal(s.page.data.finance.receivable_amount, '1000.00');
+});
+
+test('merchant order progress refreshes in the foreground and stops when hidden', () => {
+  const s = setup(order);
+  s.page.onLoad({ order_plan_id: 17 });
+  finish(s.requests[0], orderDetail([], 'AUTHORIZED'));
+  s.page.onShow();
+  finish(s.requests[1], orderDetail([], 'OUTBOUNDED'));
+  const [timer] = s.timers.values();
+  assert.equal(timer.delay, 15000);
+  timer.callback();
+  finish(s.requests[2], {
+    ...orderDetail([], 'SHIPPED'),
+    timeline: [{ code: 'MERCHANT_RECEIPT', state: 'CURRENT', state_label: '当前进度' }]
+  });
+  assert.equal(s.page.data.shipments[0].status, 'SHIPPED');
+  assert.equal(s.page.data.timeline[0].stateText, '当前进度');
+  assert.equal(s.page.data.timeline[0].active, false);
+  s.page.onHide();
+  assert.equal(s.timers.size, 0);
 });
 
 test('only loaded and authorized rows can open a case, and the legacy alias cannot add a card', () => {

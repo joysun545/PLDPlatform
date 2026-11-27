@@ -561,6 +561,9 @@ function normalizeFinance(value, orderPlanId) {
   const isCurrent = !rolling || (rolling.is_current === true && hasActiveEntry && activeId === Number(orderPlanId));
   return {
     ...value,
+    priced_lines: asArray(value.priced_lines).map(line => ({
+      ...line, line_key: line.line_key || `device-${line.item_id}`, unit: line.unit || '台'
+    })),
     rolling_receivables: rolling,
     isCurrentReceivable: isCurrent,
     showCurrentFinanceLink: !!(rolling && hasActiveEntry && activeId !== Number(orderPlanId)),
@@ -578,9 +581,6 @@ function normalizeFinance(value, orderPlanId) {
 
 function financeDraftAllowed(draft, finance) {
   if (!draft || !finance) return false;
-  if (draft.action === 'statement') return finance.can_submit_statement === true;
-  if (draft.action === 'payment') return finance.can_upload_payment === true &&
-    (draft.sequenceNo === undefined || Number(draft.sequenceNo) === Number(finance.next_sequence_no));
   return draft.action === 'confirm' && finance.payments.some(row => (
     Number(row.id) === draft.paymentId && row.can_confirm === true
   ));
@@ -645,6 +645,15 @@ Page({
   },
 
   onShow() {
+    this.onHide();
+    const role = app.globalData.role;
+    if (['merchant_owner', 'merchant_sales', 'merchant_stock', 'merchant_senior_manager'].includes(role)) {
+      this._merchantProgressTimer = setInterval(() => {
+        if (this.data.plan && !this.logisticsBusy() && !this.data.financeDraft) {
+          this.loadDetail(null, true);
+        }
+      }, 15000);
+    }
     const refreshPlanId = Number(app.globalData.orderDeliveryReceiptRefreshPlanId);
     if (refreshPlanId && refreshPlanId === this.data.orderPlanId) {
       app.globalData.orderDeliveryReceiptRefreshPlanId = null;
@@ -655,10 +664,15 @@ Page({
     this.loadDetail();
   },
 
+  onHide() {
+    if (this._merchantProgressTimer != null) clearInterval(this._merchantProgressTimer);
+    this._merchantProgressTimer = null;
+  },
+
   onUnload() {
+    this.onHide();
     this._unloaded = true;
     if (this._logisticsUploadTask) this._logisticsUploadTask.abort();
-    if (this._financeUploadTask) this._financeUploadTask.abort();
   },
 
   onPullDownRefresh() {
@@ -669,7 +683,7 @@ Page({
     this.loadDetail();
   },
 
-  loadDetail(done) {
+  loadDetail(done, silent = false) {
     if (!this.data.orderPlanId || this._loadingDetail || this.data.uploadingLogisticsDocument ||
       this._logisticsConfirming || this._financeConfirming || this._actionConfirming || this._splitConfirming) {
       done && done();
@@ -677,7 +691,7 @@ Page({
     }
     this._loadingDetail = true;
     const viewerKey = replacementViewerKey();
-    this.setData({ loading: !this.data.plan, refreshing: !!this.data.plan, errorMessage: '' });
+    if (!silent) this.setData({ loading: !this.data.plan, refreshing: !!this.data.plan, errorMessage: '' });
     wx.request({
       url: `${app.globalData.apiBase}/sales/order-plans/${this.data.orderPlanId}/material-flow/detail/`,
       method: 'GET',
@@ -695,15 +709,17 @@ Page({
         }
         const body = res.data || {};
         if (body.code !== 0 || !body.data) {
-          this.setData({ errorMessage: body.msg || '订单计划详情加载失败' });
+          if (!silent) this.setData({ errorMessage: body.msg || '订单计划详情加载失败' });
           return;
         }
         this.applyDetail(body.data);
       },
-      fail: () => this.setData({ errorMessage: '网络连接失败，请稍后重试' }),
+      fail: () => {
+        if (!silent && !this._unloaded) this.setData({ errorMessage: '网络连接失败，请稍后重试' });
+      },
       complete: () => {
         this._loadingDetail = false;
-        this.setData({ loading: false, refreshing: false });
+        if (!silent && !this._unloaded) this.setData({ loading: false, refreshing: false });
         done && done();
       }
     });
@@ -790,6 +806,7 @@ Page({
     }
     this._replacementViewerKey = replacementViewerKey();
     this.setData({
+      errorMessage: '',
       replacementSupplyItems: asArray(payload.replacement_supply_items),
       plan,
       viewer: payload.viewer || plan.viewer || null,
@@ -1166,20 +1183,21 @@ Page({
     });
   },
 
+  openFactoryPayments(event) {
+    const order = event.currentTarget.dataset.pricing ? '?order_plan_id=' + this.data.orderPlanId : '';
+    wx.navigateTo({ url: '/pages/sales/factory_payments/factory_payments' + order });
+  },
+
   openFinanceAction(e) {
     if (this.logisticsBusy()) return;
-    const action = e.currentTarget.dataset.financeAction;
+    const action = "confirm";
     const paymentId = Number(e.currentTarget.dataset.paymentId) || null;
     const payment = this.data.finance && this.data.finance.payments.find(row => Number(row.id) === paymentId);
     const draft = {
       action,
       paymentId,
-      sequenceNo: this.data.finance && this.data.finance.next_sequence_no,
-      title: action === 'statement' ? '制作订单清单' : action === 'payment'
-        ? `上传第 ${this.data.finance.next_sequence_no} 笔付款凭证`
-        : `确认第 ${payment ? payment.sequence_no : ''} 笔实际到账`,
+      title: `确认第 ${payment ? payment.sequence_no : ''} 笔实际到账`,
       amountInput: '',
-      filePath: '',
       requestId: newFinanceRequestId(),
       errorMessage: ''
     };
@@ -1222,43 +1240,6 @@ Page({
     } });
   },
 
-  chooseFinanceImage(e) {
-    if (this.logisticsBusy() || !this.data.financeDraft) return;
-    const draft = this.data.financeDraft;
-    const source = e.currentTarget.dataset.source === 'camera' ? 'camera' : 'album';
-    wx.chooseMedia({
-      count: 1,
-      mediaType: ['image'],
-      sourceType: [source],
-      sizeType: ['compressed'],
-      success: result => {
-        if (this._unloaded || !this.data.financeDraft || this.data.financeDraft.requestId !== draft.requestId) return;
-        const file = asArray(result.tempFiles)[0];
-        if (!file || !file.tempFilePath) return;
-        if (file.size > 10 * 1024 * 1024) {
-          wx.showToast({ title: '图片不能超过10MB', icon: 'none' });
-          return;
-        }
-        this.setData({ financeDraft: { ...this.data.financeDraft, filePath: file.tempFilePath, errorMessage: '' } });
-      },
-      fail: error => {
-        if (String(error.errMsg || '').indexOf('cancel') < 0) {
-          wx.showToast({ title: '选择图片失败，请重试', icon: 'none' });
-        }
-      }
-    });
-  },
-
-  removeFinanceImage() {
-    if (this.logisticsBusy() || !this.data.financeDraft) return;
-    this.setData({ financeDraft: { ...this.data.financeDraft, filePath: '' } });
-  },
-
-  previewFinanceDraftImage() {
-    const path = this.data.financeDraft && this.data.financeDraft.filePath;
-    if (path) wx.previewImage({ urls: [path], current: path });
-  },
-
   previewFinanceImage(e) {
     const finance = this.data.finance;
     if (!finance) return;
@@ -1276,22 +1257,14 @@ Page({
     const draft = this.data.financeDraft;
     if (!financeDraftAllowed(draft, this.data.finance)) return;
     const amount = String(draft.amountInput || '').trim();
-    if (draft.action !== 'payment' && (!/^\d{1,12}(\.\d{1,2})?$/.test(amount) || Number(amount) <= 0)) {
+    if (!/^\d{1,12}(\.\d{1,2})?$/.test(amount) || Number(amount) <= 0) {
       this.setData({ financeDraft: { ...draft, errorMessage: '请填写大于0的金额，最多12位整数、2位小数。' } });
-      return;
-    }
-    if (draft.action !== 'confirm' && !draft.filePath) {
-      this.setData({ financeDraft: { ...draft, errorMessage: draft.action === 'statement' ? '请添加订单清单截图。' : '请添加付款凭证图片。' } });
       return;
     }
     this._financeConfirming = true;
     wx.showModal({
       title: draft.title,
-      content: draft.action === 'confirm'
-        ? `本笔实际到账金额为 ¥${amount}。请按真实到账填写，系统将先冲抵较早订单的欠款，再更新累计余额；多收款项保留为预收余额。`
-        : draft.action === 'statement'
-          ? `确认提交订单清单，本单应收总额为 ¥${amount}？只填写本单金额，历史未付货款由系统自动累计。`
-          : '确认上传本笔付款凭证，等待厂家销售助理核实实际到账金额？',
+      content: `本笔实际到账金额为 ¥${amount}。系统将优先冲抵较早订单的欠款，余款保留为预收余额。`,
       confirmText: '确认提交',
       success: result => {
         this._financeConfirming = false;
@@ -1333,30 +1306,15 @@ Page({
       },
       fail: () => updateError('网络连接中断，提交结果暂未确认。请刷新核对财务记录后再操作。'),
       complete: () => {
-        this._financeUploadTask = null;
         wx.hideLoading();
         if (!this._unloaded) this.setData({ submittingActionKey: '' });
       }
     };
-    if (draft.action === 'confirm') {
-      wx.request({
-        url: `${base}/payments/${draft.paymentId}/confirm/`,
-        method: 'POST',
-        header: app.authHeader('application/json'),
-        data: { confirmed_amount: amount },
-        ...callbacks
-      });
-      return;
-    }
-    this._financeUploadTask = wx.uploadFile({
-      url: `${base}/${draft.action === 'statement' ? 'statement' : 'payments'}/`,
-      name: 'file',
-      filePath: draft.filePath,
-      header: app.authHeader(null),
-      timeout: 180000,
-      formData: draft.action === 'statement'
-        ? { receivable_amount: amount }
-        : { client_request_id: draft.requestId },
+    wx.request({
+      url: `${base}/payments/${draft.paymentId}/confirm/`,
+      method: 'POST',
+      header: app.authHeader('application/json'),
+      data: { confirmed_amount: amount },
       ...callbacks
     });
   },

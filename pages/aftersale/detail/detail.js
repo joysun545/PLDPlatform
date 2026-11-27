@@ -1,4 +1,5 @@
 const app = getApp();
+const TRIAGE_ROUTES = new Set(['ORIGINAL_INSTALLER', 'SERVICE_STATION', 'FACTORY_AFTERSALES']);
 
 function uploadFailureMessage(res, body) {
   if (res && res.statusCode === 413) return '视频超过服务器上传限制，请联系管理员调整上传容量';
@@ -89,9 +90,6 @@ Page({
       originalInstallerLoading: false,
       diagnosisNote: '',
       repairPlan: '',
-      thirdPartyName: '',
-      thirdPartyContactName: '',
-      thirdPartyPhone: '',
       thirdPartyAddress: ''
     },
     shipmentCompany: '',
@@ -171,6 +169,15 @@ Page({
     if (!silent) this.setData({ loading: true, error: '' });
     return apiRequest('/lifecycle/after-sales/applications/' + this.data.applicationId + '/')
       .then(detail => {
+        if (detail.triage_options) {
+          detail = {
+            ...detail,
+            triage_options: {
+              ...detail.triage_options,
+              routes: (detail.triage_options.routes || []).filter(route => TRIAGE_ROUTES.has(route.value))
+            }
+          };
+        }
         const dispatch = detail.dispatch || {};
         const currentTriage = this.data.triage;
         const replacementOptions=[{id:'',label:(detail.replacement_flow || {}).supply_normal_order_id ? '请选择本订单已发货批次' : '单独补发，不关联销售批次'}].concat((detail.replacement_flow || {}).shared_shipments || []);
@@ -434,11 +441,6 @@ Page({
       return;
     }
     wx.makePhoneCall({ phoneNumber: candidate.phone });
-  },
-
-  onTriageThirdInput(e) {
-    const field = e.currentTarget.dataset.field;
-    this.setData({ ['triage.' + field]: e.detail.value });
   },
 
   onActionMediaChange(e) {
@@ -795,7 +797,7 @@ Page({
         !triage.originalInstallerCheck || triage.originalInstallerCheck.status !== 'READY')) {
       wx.showToast({title:'原装车库存校验未通过，请查看提示',icon:'none'}); return;
     }
-    if (['ORIGINAL_INSTALLER', 'MERCHANT_ELECTRICIAN', 'FACTORY_AFTERSALES'].includes(route.value)) {
+    if (['ORIGINAL_INSTALLER', 'FACTORY_AFTERSALES'].includes(route.value)) {
       const candidate = triage.candidates[triage.candidateIndex];
       if (!candidate) {
         wx.showToast({ title: '请选择实际维修执行人', icon: 'none' });
@@ -807,30 +809,11 @@ Page({
       }
       data.assigned_user_id = candidate.user_id;
     }
-    if (route.value === 'THIRD_PARTY') {
-      if (!triage.thirdPartyName.trim() || !triage.thirdPartyPhone.trim() || !triage.thirdPartyAddress.trim()) {
-        wx.showToast({ title: '请填写第三方维修店名称、电话和详细地址', icon: 'none' });
-        return;
-      }
-      data.third_party_name = triage.thirdPartyName.trim();
-      data.third_party_contact_name = triage.thirdPartyContactName.trim();
-      data.third_party_phone = triage.thirdPartyPhone.trim();
-      data.third_party_address = triage.thirdPartyAddress.trim();
-    }
     if (route.value === 'FACTORY_AFTERSALES') data.factory_transport_version=1;
-    if (route.value === 'REMOTE') {
-      const finalData = this.finalPayload();
-      if (!finalData) return;
-      Object.assign(data, finalData);
-    }
     this.runAction({
       endpoint: '/triage/',
       data,
-      success: route.value === 'REMOTE'
-        ? '远程排障已结案'
-        : route.value === 'SERVICE_STATION'
-          ? '已通知厂家与服务站'
-          : '判断与派单已完成'
+      success: route.value === 'SERVICE_STATION' ? '已通知厂家与服务站' : '判断与派单已完成'
     });
   },
 

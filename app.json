@@ -28,6 +28,7 @@
     "pages/sales/create_plan/create_plan",
     "pages/sales/order_plan_list/order_plan_list",
     "pages/sales/order_plan_detail/order_plan_detail",
+    "pages/sales/factory_payments/factory_payments",
     "pages/stock/goods_transfer/goods_transfer",
     "pages/stock/goods_transfer_list/goods_transfer_list",
     "pages/stock/goods_transfer_detail/goods_transfer_detail",

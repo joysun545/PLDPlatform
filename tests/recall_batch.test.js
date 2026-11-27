@@ -15,7 +15,7 @@ test('三个厂家全批岗位与仅知晓岗位在页面中保持独立', async
     const observer = ['factory_admin', 'factory_manager'].includes(role);
     page.setData({ role: 'factory_chief_engineer', isFactory: true, isQualityFactory: true });
     qt.request = async () => ({ id: 10, status: 'ACTIVE', device_count: observer ? null : 3,
-      viewer: { role, organization_id: 1, full_campaign_access: full, observer_only: observer },
+      viewer: { role, organization_id: 1, organization_type: "OWNER", full_campaign_access: full, observer_only: observer },
       devices: [], batch_flow: { enabled: false, groups: [] } });
     await page.load();
     assert.equal(page.data.isFactory, full);

@@ -1,4 +1,10 @@
 const ROUTES = {
+  'pages/aftersale/material_return/material_return': { level: 'secondary', title: '三包退料签收' },
+  'pages/stock/recovered_machine/recovered_machine': { level: 'primary', title: '回收机库存' },
+  'pages/sales/replacement_supply/replacement_supply': { level: 'primary', title: '换新补发计划' },
+  'pages/aftersale/service_station/review/review': { level: 'secondary', title: '售后服务站审核' },
+  'pages/common/agreement/agreement': { level: 'secondary', title: '用户服务协议', nativeNavigation: true },
+  'pages/common/privacy/privacy': { level: 'secondary', title: '隐私政策', nativeNavigation: true },
   'pages/index/index': { level: 'none', title: '' },
   'pages/account/root_application/root_application': { level: 'primary', title: '根组织厂家试用申请' },
   'pages/account/root_application_review/root_application_review': { level: 'primary', title: '厂家试用申请审核' },
@@ -29,6 +35,7 @@ const ROUTES = {
   'pages/sales/create_plan/create_plan': { level: 'primary', title: '创建订单计划' },
   'pages/sales/order_plan_list/order_plan_list': { level: 'primary', title: '订单计划列表' },
   'pages/sales/order_plan_detail/order_plan_detail': { level: 'secondary', title: '订单计划详情' },
+  "pages/sales/factory_payments/factory_payments": { level: "primary", title: "厂家往来账" },
 
   'pages/stock/goods_transfer/goods_transfer': { level: 'primary', title: '扫码商品流转' },
   'pages/stock/goods_transfer_list/goods_transfer_list': { level: 'primary', title: '商品流转列表' },

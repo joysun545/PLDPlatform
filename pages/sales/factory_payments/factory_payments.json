@@ -1,0 +1,6 @@
+{
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "theme-shell": "/components/theme-shell/index"
+  }
+}

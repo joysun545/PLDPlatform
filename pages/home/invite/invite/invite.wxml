@@ -44,7 +44,7 @@
           data-role="{{item.role}}"
           data-name="{{item.name}}"
         >
-          <image src="/images/role_manage.png" class="icon" />
+          <image src="/images/theme_icons/{{iconTheme}}/invite-role.png" class="icon" />
           <text>{{item.name}}</text>
           <text class="scope-tip" wx:if="{{item.scope === 'cross_organization'}}">
             建立{{item.organization_type_name}}组织

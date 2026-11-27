@@ -459,7 +459,8 @@
         <text class="row-title">厂家与本商家的累计账款</text>
         <view class="batch-info-row"><text>累计订单应收</text><text>¥{{finance.rolling_receivables.receivable_amount}}</text></view>
         <view class="batch-info-row"><text>累计实际收款</text><text>¥{{finance.rolling_receivables.received_amount}}</text></view>
-        <view class="batch-info-row finance-balance"><text>累计未收余额</text><text>¥{{finance.rolling_receivables.outstanding_amount}}</text></view>
+        <view class="batch-info-row"><text>累计退货冲抵</text><text>¥{{finance.rolling_receivables.return_credit_amount || '0.00'}}</text></view>
+        <view class="batch-info-row finance-balance"><text>累计往来余额</text><text>¥{{finance.rolling_receivables.balance_amount || finance.rolling_receivables.outstanding_amount}}</text></view>
         <view class="batch-info-row"><text>预收余额（超收）</text><text>¥{{finance.rolling_receivables.overpaid_amount}}</text></view>
         <view class="batch-info-row"><text>前期订单未收余额</text><text>¥{{finance.rolling_receivables.carry_forward_amount}}</text></view>
         <text class="row-note">各订单清单金额独立保留；实际收款优先冲抵较早订单的欠款。</text>
@@ -482,7 +483,14 @@
       <view class="batch-info-row"><text>本单超收金额</text><text>¥{{finance.overpaid_amount}}</text></view>
       <text class="row-note" wx:if="{{finance.statementSubmittedText}}">清单提交：{{finance.statementSubmittedText}}</text>
       <button wx:if="{{finance.statement_url}}" class="document-link" bindtap="previewFinanceImage" disabled="{{downloadingDocumentId}}">查看订单清单</button>
-      <button wx:if="{{finance.can_submit_statement}}" class="primary-inline-button full-width finance-operation" data-finance-action="statement" bindtap="openFinanceAction" disabled="{{submittingActionKey !== '' || uploadingLogisticsDocument || refreshing}}">上传订单清单并填写本单应收</button>
+      <button class="document-link" wx:if="{{finance.can_price_order}}" data-pricing="{{true}}" bindtap="openFactoryPayments">在「直属商家往来账」查看计价清单</button>
+      <button wx:if="{{finance.can_open_factory_payment}}" class="document-link" bindtap="openFactoryPayments">请到「向厂家付款」提交付款凭证</button>
+      <view wx:if="{{finance.pricing_version}}" class="finance-payment">
+        <text class="row-title">成交价目档 {{finance.pricing_version}}</text>
+        <view class="batch-info-row"><text>设备应收</text><text>¥{{finance.device_subtotal}}</text></view>
+        <view class="batch-info-row"><text>配件应收</text><text>¥{{finance.accessory_subtotal}}</text></view>
+        <view wx:for="{{finance.priced_lines}}" wx:for-item="line" wx:key="line_key" class="batch-info-row"><text>{{line.name}} × {{line.quantity}}{{line.unit}}</text><text>¥{{line.unit_price}} / {{line.unit || '台'}} · ¥{{line.subtotal}}</text></view>
+      </view>
       <view class="finance-payment" wx:for="{{finance.payments}}" wx:key="id">
         <view class="delivery-head"><text class="row-title">第 {{item.sequence_no}} 笔付款</text><text class="row-note">{{item.status_name}}</text></view>
         <text class="row-note" wx:if="{{item.source_plan_code}}">凭证来源订单：{{item.source_plan_code}}</text>
@@ -496,24 +504,11 @@
         <button wx:if="{{item.voucher_url}}" class="document-link" data-payment-id="{{item.id}}" bindtap="previewFinanceImage" disabled="{{downloadingDocumentId}}">查看本笔付款凭证</button>
         <button wx:if="{{item.can_confirm}}" class="primary-inline-button full-width finance-operation" data-finance-action="confirm" data-payment-id="{{item.id}}" bindtap="openFinanceAction" disabled="{{submittingActionKey !== '' || uploadingLogisticsDocument || refreshing}}">填写并确认本笔实际到账</button>
       </view>
-      <button wx:if="{{finance.can_upload_payment}}" class="primary-inline-button full-width finance-operation" data-finance-action="payment" bindtap="openFinanceAction" disabled="{{submittingActionKey !== '' || uploadingLogisticsDocument || refreshing}}">上传第 {{finance.next_sequence_no}} 笔付款凭证</button>
       <view id="finance-form" class="finance-form" wx:if="{{financeDraft}}">
         <text class="row-title">{{financeDraft.title}}</text>
-        <view class="logistics-field" wx:if="{{financeDraft.action !== 'payment'}}">
-          <text class="field-label">{{financeDraft.action === 'statement' ? '本单应收总额（元）' : '本笔实际到账金额（元）'}}</text>
+        <view class="logistics-field">
+          <text class="field-label">本笔实际到账金额（元）</text>
           <input class="logistics-input" type="digit" maxlength="15" value="{{financeDraft.amountInput}}" placeholder="请输入金额，最多2位小数" bindinput="onFinanceAmountInput" disabled="{{submittingActionKey !== '' || uploadingLogisticsDocument || refreshing}}" />
-        </view>
-        <text class="row-note" wx:if="{{financeDraft.action === 'statement'}}">只填写本订单金额，历史未付货款由系统自动累计。</text>
-        <view wx:if="{{financeDraft.action !== 'confirm'}}">
-          <text class="row-note">请添加{{financeDraft.action === 'statement' ? '订单清单截图' : '付款凭证'}}，支持 JPG、PNG 或 WebP 图片，最大 10MB。</text>
-          <view class="form-button-row">
-            <button class="secondary-button form-half" data-source="camera" bindtap="chooseFinanceImage" disabled="{{submittingActionKey !== '' || uploadingLogisticsDocument || refreshing}}">拍照</button>
-            <button class="secondary-button form-half" data-source="album" bindtap="chooseFinanceImage" disabled="{{submittingActionKey !== '' || uploadingLogisticsDocument || refreshing}}">从相册选择</button>
-          </view>
-          <view class="document-preview" wx:if="{{financeDraft.filePath}}">
-            <image class="evidence-thumbnail" src="{{financeDraft.filePath}}" mode="aspectFill" bindtap="previewFinanceDraftImage" />
-            <button class="text-button" bindtap="removeFinanceImage" disabled="{{submittingActionKey !== '' || uploadingLogisticsDocument || refreshing}}">移除图片</button>
-          </view>
         </view>
         <text class="form-error" wx:if="{{financeDraft.errorMessage}}">{{financeDraft.errorMessage}}</text>
         <view class="form-button-row">

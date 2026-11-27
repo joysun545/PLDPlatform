@@ -145,6 +145,7 @@ function normalizeFinanceAccounts(accounts) {
       received_amount: formatMoney(account.received_amount),
       credit_amount: formatMoney(account.credit_amount),
       outstanding_amount: formatMoney(account.outstanding_amount),
+      balance_amount: formatMoney(account.balance_amount ?? (Number(account.outstanding_amount) - Number(account.overpaid_amount))),
       overpaid_amount: formatMoney(account.overpaid_amount)
     };
   });

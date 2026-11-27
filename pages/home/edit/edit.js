@@ -58,6 +58,7 @@ Page({
     channelError: '',
     manager: null,
     subordinates: [],
+    managedRoleEditor: null,
     editingInvitationId: null,
     editingMerchantId: null,
     regionDraft: '',
@@ -83,6 +84,70 @@ Page({
 
   onPullDownRefresh() {
     this.loadSubordinates(() => wx.stopPullDownRefresh());
+  },
+
+  openManagedRoles(event) {
+    const managerId = event.currentTarget.dataset.userId;
+    wx.request({
+      url: `${app.globalData.apiBase}/account/subordinates/managed-roles/`,
+      data: { manager_id: managerId },
+      header: app.authHeader(),
+      success: res => {
+        const body = res.data || {};
+        if (body.code !== 0 || !body.data) {
+          wx.showToast({ title: body.msg || '无法读取分管岗位', icon: 'none' });
+          return;
+        }
+        const options = body.data.options;
+        this.setData({
+          managedRoleEditor: {
+            managerId, options, selected: options.filter(row => row.selected).map(row => row.code)
+          }
+        });
+      },
+      fail: () => wx.showToast({ title: '读取分管岗位失败', icon: 'none' })
+    });
+  },
+
+  selectManagedRoles(event) {
+    const selected = event.detail.value;
+    this.setData({
+      'managedRoleEditor.selected': selected,
+      'managedRoleEditor.options': this.data.managedRoleEditor.options.map(row => ({
+        ...row, selected: selected.includes(row.code)
+      }))
+    });
+  },
+
+  closeManagedRoles() {
+    this.setData({ managedRoleEditor: null });
+  },
+
+  saveManagedRoles() {
+    const editor = this.data.managedRoleEditor;
+    if (!editor || editor.saving) return;
+    this.setData({ 'managedRoleEditor.saving': true });
+    wx.request({
+      url: `${app.globalData.apiBase}/account/subordinates/managed-roles/`,
+      method: 'POST',
+      header: { ...app.authHeader(), 'content-type': 'application/json' },
+      data: { manager_id: editor.managerId, role_codes: editor.selected },
+      success: res => {
+        const body = res.data || {};
+        if (body.code !== 0) {
+          wx.showToast({ title: body.msg || '保存分管岗位失败', icon: 'none' });
+          return;
+        }
+        this.closeManagedRoles();
+        wx.showToast({ title: '分管岗位已保存' });
+      },
+      fail: () => wx.showToast({ title: '保存分管岗位失败', icon: 'none' }),
+      complete: () => {
+        if (this.data.managedRoleEditor && this.data.managedRoleEditor.managerId === editor.managerId) {
+          this.setData({ 'managedRoleEditor.saving': false });
+        }
+      }
+    });
   },
 
   loadSubordinates(done) {

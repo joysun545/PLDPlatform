@@ -18,8 +18,9 @@
 .menu-item {
   width: 100%; 
   background: white;
-  border-radius: 30rpx;
-  padding: 50rpx 20rpx;
+  border-radius: var(--ui-card-radius) !important;
+  min-height: 240rpx;
+  padding: 28rpx 20rpx;
   margin-bottom: 50rpx;
   box-shadow: 0 10rpx 30rpx rgba(0,0,0,0.08);
   display: flex;
@@ -45,8 +46,8 @@
 }
 
 .icon {
-  width: 140rpx;
-  height: 140rpx;
+  width: 104rpx;
+  height: 104rpx;
   margin-bottom: 30rpx;
 }
 
@@ -117,7 +118,7 @@
 }
 
 .close-btn {
-  background: #07c160;
+  background: var(--ui-primary-strong);
   color: white;
   font-size: 36rpx;
   padding: 25rpx 100rpx;
@@ -235,7 +236,7 @@
 
 .manager-confirm {
   color: #fff;
-  background-color: var(--ui-primary-strong, var(--ui-primary, #168b68));
+  background-color: var(--ui-primary-strong, var(--ui-primary));
 }
 
 
@@ -288,7 +289,7 @@
   box-sizing: border-box;
   border-radius: 999rpx;
   color: #fff;
-  background-color: var(--ui-primary-strong, var(--ui-primary, #168b68));
+  background-color: var(--ui-primary-strong, var(--ui-primary));
   font-size: 28rpx;
 }
 
@@ -313,7 +314,7 @@
 
 .manager-share-btn {
   color: #fff;
-  background-color: var(--ui-primary-strong, var(--ui-primary, #168b68));
+  background-color: var(--ui-primary-strong, var(--ui-primary));
 }
 
 .manager-done-btn {

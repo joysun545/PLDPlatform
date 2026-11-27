@@ -38,6 +38,13 @@ test('every registered page has one explicit hierarchy and uses the theme shell'
       `invalid hierarchy: ${route}`
     );
     const wxml = fs.readFileSync(path.join(ROOT, `${route}.wxml`), 'utf8');
+    if (ROUTES[route].nativeNavigation) {
+      const config = JSON.parse(fs.readFileSync(path.join(ROOT, `${route}.json`), 'utf8'));
+      assert.equal(config.navigationStyle, 'default');
+      assert.equal(config.navigationBarTitleText, ROUTES[route].title);
+      assert.match(wxml, /class="legal-content" user-select="true"/);
+      continue;
+    }
     assert.match(wxml, /^<theme-shell(?:\s[^>]*)?>/, `missing theme shell: ${route}`);
     assert.match(wxml, /<\/theme-shell>\s*$/, `unclosed theme shell: ${route}`);
   }

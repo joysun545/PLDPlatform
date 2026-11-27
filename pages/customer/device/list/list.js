@@ -21,7 +21,8 @@ Page({
     activatedCount: 0,
     pendingActivationCount: 0,
     devices: [],
-    vehicles: []
+    vehicles: [],
+    revokingDriver: false
   },
 
   onLoad() {
@@ -107,6 +108,35 @@ Page({
           if (token) this.setData({ [`vehicles[${index}].shareToken`]: token });
         }
       });
+    });
+  },
+
+  revokeDriverShare(event) {
+    const { vehicleId, driverId, name } = event.currentTarget.dataset;
+    if (!vehicleId || !driverId || this.data.revokingDriver) return;
+    wx.showModal({
+      title: '取消车辆分享',
+      content: `取消后，${name || '该司机'}将无法查看或处理这辆车的设备任务，之前生成的未领取分享链接也会失效。`,
+      success: ({ confirm }) => {
+        if (!confirm || this.data.revokingDriver) return;
+        this.setData({ revokingDriver: true });
+        wx.request({
+          url: `${app.globalData.apiBase}/lifecycle/customer/vehicles/${vehicleId}/drivers/${driverId}/revoke/`,
+          method: 'POST',
+          header: app.authHeader(),
+          success: res => {
+            const result = res.data || {};
+            if (result.code !== 0) {
+              wx.showToast({ title: result.msg || '取消分享失败', icon: 'none' });
+              return;
+            }
+            wx.showToast({ title: '已取消分享' });
+            this.loadDevices(true);
+          },
+          fail: () => wx.showToast({ title: '取消分享失败', icon: 'none' }),
+          complete: () => this.setData({ revokingDriver: false })
+        });
+      }
     });
   },
 

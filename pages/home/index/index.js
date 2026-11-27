@@ -14,6 +14,8 @@ Page({
     showManageSubordinates: false,
     showCreateOrderPlan: false,
     showOrderPlanList: false,
+    showFactoryPayments: false,
+    factoryPaymentsTitle: "",
     showSupplierResponsibility: false,
     showMaterialInventory: false,
     showSupplierWarranty: false,
@@ -67,13 +69,14 @@ Page({
     this.setData({
       iconTheme,
       showCreateOrderPlan: role === 'factory_sales',
+      showFactoryPayments: ["merchant_owner", "factory_sales_assistant"].includes(role),
+      factoryPaymentsTitle: role === "merchant_owner" ? "向厂家付款" : "直属商家往来账",
       showThemeSettings: role === 'factory_admin',
       showOrderPlanList: [
         // These are V2 awareness roles.  The server decides which plans they
         // can read and returns no action button unless a real task belongs to
         // them; the home entry must not hide the dynamic order card first.
         'factory_admin',
-        'factory_manager',
         'factory_chief_engineer',
         'factory_sales',
         'factory_sales_assistant',
@@ -147,24 +150,17 @@ Page({
         'factory_sales_assistant',
         'factory_matching',
         'factory_production',
-        'factory_purchase',
         'factory_stock',
         'factory_material_stock',
         'factory_logistics',
         'factory_aftersales',
         'merchant_owner',
         'merchant_senior_manager',
-        'merchant_manager',
         'merchant_sales',
         'merchant_stock',
-        'merchant_assistant',
         'merchant_electrician',
         'supplier_owner',
-        'supplier_manager',
-        'supplier_sales',
-        'supplier_technical',
-        'service_owner',
-        'service_electrician'
+        'supplier_sales'
       ].includes(role),
 
       // 终端用户需要从首页持续查看自己发起的服务单；不应只能依靠
@@ -252,6 +248,10 @@ Page({
 
   goCreateOrderPlan() {
     wx.navigateTo({ url: '/pages/sales/create_plan/create_plan' });
+  },
+
+  goFactoryPayments() {
+    wx.navigateTo({ url: "/pages/sales/factory_payments/factory_payments" });
   },
 
   goOrderPlanList() {

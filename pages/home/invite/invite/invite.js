@@ -4,6 +4,7 @@ const app = getApp();
 Page({
   data: {
     themeStyle: '',
+    iconTheme: 'jade',
     availableRoles: [],
     isPlatformAdmin: false,
     factoryInvitationForm: { organization_name: '', region: '', address: '' },
@@ -61,7 +62,10 @@ Page({
 
   syncThemeStyle() {
     const appearance = app.globalData.appearance || theme.get();
-    this.setData({ themeStyle: theme.styleVariables(appearance) });
+    this.setData({
+      themeStyle: theme.styleVariables(appearance),
+      iconTheme: theme.normalize(appearance).color_scheme
+    });
   },
 
   loadAvailableRoles() {

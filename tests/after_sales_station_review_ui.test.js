@@ -7,11 +7,13 @@ const ROOT = path.resolve(__dirname, '..');
 const route = 'pages/aftersale/service_station/review/review';
 
 test('station review page is registered and uses the shared themed page shell', () => {
-  const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'manifest.json'), 'utf8'));
+  const appConfig = JSON.parse(fs.readFileSync(path.join(ROOT, 'app.json'), 'utf8'));
+  const packageRoutes = (appConfig.subPackages || appConfig.subpackages || [])
+    .flatMap(pkg => pkg.pages.map(page => `${pkg.root}/${page}`));
   const markup = fs.readFileSync(path.join(ROOT, `${route}.wxml`), 'utf8');
   const pageConfig = JSON.parse(fs.readFileSync(path.join(ROOT, `${route}.json`), 'utf8'));
 
-  assert.equal(manifest.app_json_route.path, route);
+  assert.ok([...appConfig.pages, ...packageRoutes].includes(route));
   assert.match(markup, /^<theme-shell title-eyebrow="售后服务站审核"/);
   assert.match(markup, /<\/theme-shell>\s*$/);
   assert.equal(pageConfig.navigationStyle, 'custom');
